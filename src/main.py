@@ -5,6 +5,11 @@ import numpy as np
 from concurrent.futures import ProcessPoolExecutor
 from models import SimulationConfig, SimulationParams
 from simulation import simulate_scenario, run_simulation_batch
+from plots.power_plot import plot_power
+from plots.energy_plot import plot_energy
+from plots.surplus_plot import plot_surplus
+from plots.battery_plot import plot_battery
+from plots.empty_hours_plot import plot_empty_hours
 
 def plot_simulation(data, run_empty_hours, total_runs):
     # Unpack data
@@ -51,101 +56,19 @@ def plot_simulation(data, run_empty_hours, total_runs):
             ax.axvline(x=boundary_day, color='#444444', linestyle='-', alpha=0.4, linewidth=1.5)
 
     # Plot 1: Power
-    production_label = f'Production ({water_wheels} Wheels, {large_windmills} L.Wind, {windmills} Wind)'
-    ax1.plot(time_days, power_production, label=production_label, color='#1f77b4', linewidth=1, alpha=0.8)
-    consumption_label = 'Total Factory Consumption'
-    ax1.plot(time_days, power_consumption, label=consumption_label, color='#ff7f0e', linewidth=2)
-    
-    ax1.set_ylabel('Power (hp)')
-    ax1.set_title(f'Power Profile ({days} Days)', pad=35)
-    ax1.legend(loc='upper right')
-    ax1.grid(True, linestyle='--', alpha=0.7)
-    
-    # Add season labels at the top of the first plot
-    for i, (start_day, label) in enumerate(season_boundaries):
-        end_day = season_boundaries[i+1][0] if i+1 < len(season_boundaries) else days
-        mid_point = (start_day + end_day) / 2
-        if mid_point < days:
-            ax1.text(mid_point, 1.01, label, transform=ax1.get_xaxis_transform(), 
-                     ha='center', va='bottom', fontsize=10, fontweight='bold', alpha=0.6)
+    plot_power(ax1, time_days, power_production, power_consumption, season_boundaries, days, water_wheels, large_windmills, windmills)
 
     # Plot 2: Energy
-    ax2.plot(time_days, energy_production, label='Cumulative Energy Produced', color='#1f77b4', linewidth=2)
-    ax2.plot(time_days, energy_consumption, label='Cumulative Energy Consumed', color='#ff7f0e', linewidth=2)
-
-    ax2.set_ylabel('Energy (hph)')
-    ax2.set_title(f'Energy Profile ({days} Days)')
-    ax2.legend(loc='upper right')
-    ax2.grid(True, linestyle='--', alpha=0.7)
+    plot_energy(ax2, time_days, energy_production, energy_consumption, days)
 
     # Plot 3: Surplus Power (Effective)
-    ax3.plot(time_days, power_surplus, color='#D3D3D3', linewidth=1, alpha=0.4, label='Original Surplus/Deficit')
-    ax3.fill_between(time_days, power_surplus, 0, color='#D3D3D3', alpha=0.15)
-    ax3.fill_between(time_days, effective_surplus, 0, where=(effective_surplus > 0), facecolor='green', alpha=0.6, label='Unstored Surplus')
-    ax3.fill_between(time_days, effective_deficit, 0, where=(effective_deficit < 0), facecolor='red', alpha=0.6, label='Uncovered Deficit')
-    
-    ax3.axhline(0, color='black', linewidth=1, linestyle='-')
-    ax3.set_ylabel('Effective Surplus (hp)')
-    ax3.set_title(f'Power Surplus Profile (After Battery Buffering)')
-    ax3.legend(loc='upper right')
-    ax3.grid(True, linestyle='--', alpha=0.7)
+    plot_surplus(ax3, time_days, power_surplus, effective_surplus, effective_deficit)
 
     # Plot 4: Battery Charge
-    ax4.plot(time_days, battery_charge, label=f'Battery Charge (Max: {total_battery_capacity} hph)', color='#9467bd', linewidth=2)
-    ax4.axhline(total_battery_capacity, color='black', linestyle='--', label='Max Capacity')
-    ax4.fill_between(time_days, battery_charge, 0, color='#9467bd', alpha=0.3)
-    
-    ax4.set_ylabel('Stored Energy (hph)')
-    ax4.set_xlabel('Time (days)')
-    ax4.set_title(f'Battery Status ({batteries} Batteries @ {battery_height}m)')
-    ax4.legend(loc='upper right')
-    ax4.grid(True, linestyle='--', alpha=0.7)
+    plot_battery(ax4, time_days, battery_charge, total_battery_capacity, batteries, battery_height)
 
     # Plot 5: Empty Battery Duration Distribution
-    
-    # Create bins of 1 hour width (default) instead of 2
-    if run_empty_hours:
-        max_val = max(run_empty_hours)
-        # Ensure we have at least one bin if max_val is 0
-        if max_val == 0:
-            bins = np.arange(0, 2, 1) # 0-1, 1-2
-        else:
-            bins = np.arange(0, max_val + 2, 1)
-            
-        # Plot the histogram
-        n, bins, patches = ax5.hist(run_empty_hours, bins=bins, color='red', alpha=0.7, edgecolor='black')
-        
-        # Style the first bar (0-1 hours) to be grey with diagonal hatching
-        if len(patches) > 0:
-            patches[0].set_facecolor('lightgrey')
-            patches[0].set_hatch('//')
-            patches[0].set_edgecolor('black')
-        
-        # Scale the y-axis ignoring the first bin (0-1 hours)
-        # The first bin corresponds to n[0]
-        if len(n) > 1:
-            max_freq_excluding_first = max(n[1:])
-            # Add some headroom (e.g., 10%)
-            ax5.set_ylim(0, max_freq_excluding_first * 1.1)
-            
-        # Calculate percentiles and mean for ALL runs
-        if run_empty_hours:
-            p5 = np.percentile(run_empty_hours, 5)
-            p50 = np.percentile(run_empty_hours, 50)
-            p95 = np.percentile(run_empty_hours, 95)
-            mean_val = np.mean(run_empty_hours)
-            
-            # Add vertical lines for percentiles
-            ax5.axvline(p5, color='blue', linestyle='--', linewidth=1.5, label=f'5th % ({p5:.1f}h)')
-            ax5.axvline(p50, color='green', linestyle='--', linewidth=1.5, label=f'Median ({p50:.1f}h)')
-            ax5.axvline(mean_val, color='orange', linestyle='-', linewidth=1.5, label=f'Mean ({mean_val:.1f}h)')
-            ax5.axvline(p95, color='purple', linestyle='--', linewidth=1.5, label=f'95th % ({p95:.1f}h)')
-            ax5.legend(loc='upper right')
-    
-    ax5.set_title(f'Distribution of Time Spent with Empty Battery ({total_runs} Runs)')
-    ax5.set_xlabel('Hours with Empty Battery')
-    ax5.set_ylabel('Number of Runs')
-    ax5.grid(True, linestyle='--', alpha=0.5)
+    plot_empty_hours(ax5, run_empty_hours, total_runs)
 
     plt.tight_layout()
     plt.show()

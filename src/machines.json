@@ -1,0 +1,22 @@
+{
+  "machines": {
+    "lumber_mill": { "power": 50, "role": "consumer" },
+    "gear_workshop": { "power": 120, "role": "consumer" },
+    "steel_factory": { "power": 200, "role": "consumer" },
+    "wood_workshop": { "power": 250, "role": "consumer" },
+    "paper_mill": { "power": 80, "role": "consumer" },
+    "printing_press": { "power": 150, "role": "consumer" },
+    "observatory": { "power": 200, "role": "consumer" },
+    "bot_part_factory": { "power": 150, "role": "consumer" },
+    "bot_assembler": { "power": 250, "role": "consumer" },
+    "explosives_factory": { "power": 150, "role": "consumer" },
+    "grillmist": { "power": 60, "role": "consumer" },
+    "water_wheel": { "power": 150, "role": "producer" },
+    "large_windmill": { "power": 300, "role": "producer" },
+    "windmill": { "power": 150, "role": "producer" }
+  },
+  "battery": {
+    "base_capacity": 4000,
+    "capacity_per_height": 2000
+  }
+}

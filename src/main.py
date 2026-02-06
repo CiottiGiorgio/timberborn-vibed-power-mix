@@ -97,7 +97,7 @@ def plot_simulation(data, run_empty_hours, total_runs):
     # Plot 5: Empty Battery Duration Distribution
     plot_empty_hours(ax5, run_empty_hours, total_runs)
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.97])
+    plt.tight_layout(rect=(0, 0.03, 1, 0.97))
     plt.show()
 
 

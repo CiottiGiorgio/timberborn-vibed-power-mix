@@ -4,56 +4,27 @@ import numpy as np
 import consts
 
 
-class Machine(BaseModel):
-    power: float
-    cost: int = 0
-
-
-class BatteryConfig(BaseModel):
-    base_capacity: float
-    capacity_per_height: float
-    base_cost: int = 0
-    cost_per_height: int = 0
-
-
-class SimulationConfig(BaseModel):
-    machines: Dict[str, Machine]
-    battery: BatteryConfig
-
-    @classmethod
-    def from_json_file(cls, filepath: str) -> "SimulationConfig":
-        with open(filepath, "r") as f:
-            json_content = f.read()
-        return cls.model_validate_json(json_content)
-
-
 class FactoryParams(BaseModel):
-    lumber_mills: int = Field(default=consts.DEFAULT_LUMBER_MILLS)
-    gear_workshops: int = Field(default=consts.DEFAULT_GEAR_WORKSHOPS)
-    steel_factories: int = Field(default=consts.DEFAULT_STEEL_FACTORIES)
-    wood_workshops: int = Field(default=consts.DEFAULT_WOOD_WORKSHOPS)
-    paper_mills: int = Field(default=consts.DEFAULT_PAPER_MILLS)
-    printing_presses: int = Field(default=consts.DEFAULT_PRINTING_PRESSES)
-    observatories: int = Field(default=consts.DEFAULT_OBSERVATORIES)
-    bot_part_factories: int = Field(default=consts.DEFAULT_BOT_PART_FACTORIES)
-    bot_assemblers: int = Field(default=consts.DEFAULT_BOT_ASSEMBLERS)
-    explosives_factories: int = Field(default=consts.DEFAULT_EXPLOSIVES_FACTORIES)
-    grillmists: int = Field(default=consts.DEFAULT_GRILLMISTS)
+    counts: Dict[str, int] = Field(default_factory=dict)
+
+    def __getattr__(self, item):
+        # Allow access like params.factories.lumber_mills
+        if item in self.counts:
+            return self.counts[item]
+        raise AttributeError(f"'FactoryParams' object has no attribute '{item}'")
 
 
 class EnergyMixParams(BaseModel):
-    water_wheels: int = Field(default=consts.DEFAULT_WATER_WHEELS)
-    large_windmills: int = Field(default=consts.DEFAULT_LARGE_WINDMILLS)
-    windmills: int = Field(default=consts.DEFAULT_WINDMILLS)
-    batteries: int = Field(default=consts.DEFAULT_BATTERIES)
-    battery_height: Union[int, List[int]] = Field(default=consts.DEFAULT_BATTERY_HEIGHT)
+    water_wheels: int = 0
+    large_windmills: int = 0
+    windmills: int = 0
+    batteries: int = 0
+    battery_height: Union[int, List[int]] = 0
 
     @field_validator("battery_height")
     @classmethod
     def validate_battery_height(cls, v, info):
         if isinstance(v, list):
-            # We need to access the 'batteries' field.
-            # In Pydantic v2, we can access other fields via info.data
             batteries = info.data.get("batteries")
             if batteries is not None and len(v) != batteries:
                 raise ValueError(

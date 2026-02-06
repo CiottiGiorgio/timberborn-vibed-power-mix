@@ -1,76 +1,78 @@
 import numpy as np
-from models import SimulationConfig, SimulationParams, SimulationResult
+from models import SimulationParams, SimulationResult
+from machines import MachineDatabase
 import consts
 
 
-def simulate_scenario(
-    config: SimulationConfig, params: SimulationParams
-) -> SimulationResult:
+def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
-    machines = config.machines
-    battery_info = config.battery
-
-    # Helper to safely get power, defaulting to 0 if machine not in config (though validation ensures structure)
-    # We assume the keys in JSON match the variable names we expect, or we map them.
-    # The previous code assumed keys like 'lumber_mill'.
-
+    # Helper to safely get power
     def get_power(name):
-        return machines[name].power
+        if hasattr(MachineDatabase, name):
+            return getattr(MachineDatabase, name).power
+        return 0
 
     def get_cost(name):
-        return machines[name].cost
+        if hasattr(MachineDatabase, name):
+            return getattr(MachineDatabase, name).cost
+        return 0
 
     # Consumption
-    lumber_mill_consumption = get_power("lumber_mill")
-    gear_workshop_consumption = get_power("gear_workshop")
-    steel_consumption = get_power("steel_factory")
-    wood_workshop_consumption = get_power("wood_workshop")
-    paper_mill_consumption = get_power("paper_mill")
-    printing_press_consumption = get_power("printing_press")
-    observatory_consumption = get_power("observatory")
-    bot_part_factory_consumption = get_power("bot_part_factory")
-    bot_assembler_consumption = get_power("bot_assembler")
-    explosives_factory_consumption = get_power("explosives_factory")
-    grillmist_consumption = get_power("grillmist")
+    total_consumption_rate = 0
+
+    # Iterate over all consumers in MachineDatabase
+    for name, spec in MachineDatabase.iter_consumers():
+        count = 0
+        # Check if count is provided in params.factories
+        if hasattr(params.factories, name):
+            count = getattr(params.factories, name)
+        elif name in params.factories.counts:
+            count = params.factories.counts[name]
+        else:
+            # Fallback to 0 if not specified
+            count = 0
+
+        total_consumption_rate += count * spec.power
 
     # Production
-    wheel_production = get_power("water_wheel")
-    large_windmill_production = get_power("large_windmill")
-    windmill_production = get_power("windmill")
+    wheel_production = MachineDatabase.water_wheel.power
+    large_windmill_production = MachineDatabase.large_windmill.power
+    windmill_production = MachineDatabase.windmill.power
 
-    # Costs
-    wheel_cost = get_cost("water_wheel")
-    large_windmill_cost = get_cost("large_windmill")
-    windmill_cost = get_cost("windmill")
+    wheel_cost = MachineDatabase.water_wheel.cost
+    large_windmill_cost = MachineDatabase.large_windmill.cost
+    windmill_cost = MachineDatabase.windmill.cost
+
+    # Get counts from params.energy_mix
+    num_water_wheels = params.energy_mix.water_wheels
+    num_large_windmills = params.energy_mix.large_windmills
+    num_windmills = params.energy_mix.windmills
+    num_batteries = params.energy_mix.batteries
 
     # Battery Constants
-    base_capacity = battery_info.base_capacity
-    capacity_per_height = battery_info.capacity_per_height
-    
+    battery_info = MachineDatabase.battery
+
     # Handle battery height (int or list of ints)
     battery_heights = params.energy_mix.battery_height
     if isinstance(battery_heights, int):
         # If it's a single int, treat it as a list of identical heights
-        battery_heights = [battery_heights] * params.energy_mix.batteries
-    
+        battery_heights = [battery_heights] * num_batteries
+
     # Calculate total capacity and cost by summing over individual batteries
     total_battery_capacity = 0
     total_battery_cost = 0
-    
-    base_cost = battery_info.base_cost
-    cost_per_height = battery_info.cost_per_height
 
     for h in battery_heights:
-        capacity = base_capacity + (h * capacity_per_height)
-        cost = base_cost + (h * cost_per_height)
+        capacity = battery_info.calculate_capacity(h)
+        cost = battery_info.calculate_cost(h)
         total_battery_capacity += capacity
         total_battery_cost += cost
 
     # Total Cost Calculation
     total_cost = (
-        (params.energy_mix.water_wheels * wheel_cost)
-        + (params.energy_mix.large_windmills * large_windmill_cost)
-        + (params.energy_mix.windmills * windmill_cost)
+        (num_water_wheels * wheel_cost)
+        + (num_large_windmills * large_windmill_cost)
+        + (num_windmills * windmill_cost)
         + total_battery_cost
     )
 
@@ -80,23 +82,8 @@ def simulate_scenario(
     time_hours = np.arange(total_hours)
     time_days = time_hours / consts.HOURS_PER_DAY
 
-    # Power values (hp)
-    total_consumption_rate = (
-        (params.factories.lumber_mills * lumber_mill_consumption)
-        + (params.factories.gear_workshops * gear_workshop_consumption)
-        + (params.factories.steel_factories * steel_consumption)
-        + (params.factories.wood_workshops * wood_workshop_consumption)
-        + (params.factories.paper_mills * paper_mill_consumption)
-        + (params.factories.printing_presses * printing_press_consumption)
-        + (params.factories.observatories * observatory_consumption)
-        + (params.factories.bot_part_factories * bot_part_factory_consumption)
-        + (params.factories.bot_assemblers * bot_assembler_consumption)
-        + (params.factories.explosives_factories * explosives_factory_consumption)
-        + (params.factories.grillmists * grillmist_consumption)
-    )
-
     # Production components
-    water_wheel_production_rate = params.energy_mix.water_wheels * wheel_production
+    water_wheel_production_rate = num_water_wheels * wheel_production
 
     # Simulate wind variability based on Timberborn Wiki mechanics
     # Strength: 0-100%, Duration: 5-12 hours
@@ -124,8 +111,8 @@ def simulate_scenario(
         wind_strength * windmill_production,
         0,
     )
-    wind_production = (params.energy_mix.large_windmills * large_wind_unit_prod) + (
-        params.energy_mix.windmills * small_wind_unit_prod
+    wind_production = (num_large_windmills * large_wind_unit_prod) + (
+        num_windmills * small_wind_unit_prod
     )
 
     # Calculate hour of the day for each time step
@@ -238,12 +225,12 @@ def simulate_scenario(
     )
 
 
-def run_simulation_task(config: SimulationConfig, params: SimulationParams):
+def run_simulation_task(params: SimulationParams):
     """
     Runs a single simulation and returns the results.
     Returns a tuple: (hours_empty, simulation_data)
     """
-    data = simulate_scenario(config, params)
+    data = simulate_scenario(params)
 
     # Check if battery reached 0 after day 1 (24 hours)
     battery_after_day1 = data.battery_charge[24:]

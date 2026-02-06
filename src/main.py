@@ -1,7 +1,7 @@
-import argparse
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import click
 from concurrent.futures import ProcessPoolExecutor
 from models import SimulationConfig, SimulationParams
 from simulation import simulate_scenario, run_simulation_batch
@@ -10,6 +10,7 @@ from plots.energy_plot import plot_energy
 from plots.surplus_plot import plot_surplus
 from plots.battery_plot import plot_battery
 from plots.empty_hours_plot import plot_empty_hours
+import consts
 
 def plot_simulation(data, run_empty_hours, total_runs):
     # Unpack data
@@ -73,39 +74,41 @@ def plot_simulation(data, run_empty_hours, total_runs):
     plt.tight_layout()
     plt.show()
 
-def main():
-    parser = argparse.ArgumentParser(description='Visualize power and energy profiles for an industrial complex.')
-    parser.add_argument('--days', type=int, help='Number of days for the simulation')
-    parser.add_argument('--working-hours', type=int, help='Number of working hours per day')
-    parser.add_argument('--lumber-mills', type=int, help='Number of lumber mills')
-    parser.add_argument('--gear-workshops', type=int, help='Number of gear workshops')
-    parser.add_argument('--steel-factories', type=int, help='Number of steel factories')
-    parser.add_argument('--wood-workshops', type=int, help='Number of wood workshops')
-    parser.add_argument('--paper-mills', type=int, help='Number of paper mills')
-    parser.add_argument('--printing-presses', type=int, help='Number of printing presses')
-    parser.add_argument('--observatories', type=int, help='Number of observatories')
-    parser.add_argument('--bot-part-factories', type=int, help='Number of bot part factories')
-    parser.add_argument('--bot-assemblers', type=int, help='Number of bot assemblers')
-    parser.add_argument('--explosives-factories', type=int, help='Number of explosives factories')
-    parser.add_argument('--grillmists', type=int, help='Number of grillmists')
-    parser.add_argument('--water-wheels', type=int, help='Number of water wheels')
-    parser.add_argument('--large-windmills', type=int, help='Number of large windmills')
-    parser.add_argument('--windmills', type=int, help='Number of windmills')
-    parser.add_argument('--batteries', type=int, help='Number of gravity batteries')
-    parser.add_argument('--battery-height', type=int, help='Height of gravity batteries in meters')
-    parser.add_argument('--wet-season-days', type=int, help='Duration of wet season in days')
-    parser.add_argument('--dry-season-days', type=int, help='Duration of dry season in days')
-    parser.add_argument('--badtide-season-days', type=int, help='Duration of badtide season in days')
-    parser.add_argument('--runs', type=int, default=1, help='Number of simulation runs')
-    parser.add_argument('--machine-data', type=str, default='machines.json', help='Path to machine data JSON file')
-
-    args = parser.parse_args()
+@click.command()
+@click.option('--days', type=int, default=consts.DEFAULT_DAYS, help='Number of days for the simulation')
+@click.option('--working-hours', type=int, default=consts.DEFAULT_WORKING_HOURS, help='Number of working hours per day')
+@click.option('--lumber-mills', type=int, default=consts.DEFAULT_LUMBER_MILLS, help='Number of lumber mills')
+@click.option('--gear-workshops', type=int, default=consts.DEFAULT_GEAR_WORKSHOPS, help='Number of gear workshops')
+@click.option('--steel-factories', type=int, default=consts.DEFAULT_STEEL_FACTORIES, help='Number of steel factories')
+@click.option('--wood-workshops', type=int, default=consts.DEFAULT_WOOD_WORKSHOPS, help='Number of wood workshops')
+@click.option('--paper-mills', type=int, default=consts.DEFAULT_PAPER_MILLS, help='Number of paper mills')
+@click.option('--printing-presses', type=int, default=consts.DEFAULT_PRINTING_PRESSES, help='Number of printing presses')
+@click.option('--observatories', type=int, default=consts.DEFAULT_OBSERVATORIES, help='Number of observatories')
+@click.option('--bot-part-factories', type=int, default=consts.DEFAULT_BOT_PART_FACTORIES, help='Number of bot part factories')
+@click.option('--bot-assemblers', type=int, default=consts.DEFAULT_BOT_ASSEMBLERS, help='Number of bot assemblers')
+@click.option('--explosives-factories', type=int, default=consts.DEFAULT_EXPLOSIVES_FACTORIES, help='Number of explosives factories')
+@click.option('--grillmists', type=int, default=consts.DEFAULT_GRILLMISTS, help='Number of grillmists')
+@click.option('--water-wheels', type=int, default=consts.DEFAULT_WATER_WHEELS, help='Number of water wheels')
+@click.option('--large-windmills', type=int, default=consts.DEFAULT_LARGE_WINDMILLS, help='Number of large windmills')
+@click.option('--windmills', type=int, default=consts.DEFAULT_WINDMILLS, help='Number of windmills')
+@click.option('--batteries', type=int, default=consts.DEFAULT_BATTERIES, help='Number of gravity batteries')
+@click.option('--battery-height', type=int, default=consts.DEFAULT_BATTERY_HEIGHT, help='Height of gravity batteries in meters')
+@click.option('--wet-season-days', type=int, default=consts.DEFAULT_WET_SEASON_DAYS, help='Duration of wet season in days')
+@click.option('--dry-season-days', type=int, default=consts.DEFAULT_DRY_SEASON_DAYS, help='Duration of dry season in days')
+@click.option('--badtide-season-days', type=int, default=consts.DEFAULT_BADTIDE_SEASON_DAYS, help='Duration of badtide season in days')
+@click.option('--runs', type=int, default=1, help='Number of simulation runs')
+@click.option('--machine-data', type=str, default='machines.json', help='Path to machine data JSON file')
+def main(days, working_hours, lumber_mills, gear_workshops, steel_factories, wood_workshops, paper_mills,
+         printing_presses, observatories, bot_part_factories, bot_assemblers, explosives_factories,
+         grillmists, water_wheels, large_windmills, windmills, batteries, battery_height,
+         wet_season_days, dry_season_days, badtide_season_days, runs, machine_data):
+    """Visualize power and energy profiles for an industrial complex."""
 
     # Load machine data
     try:
         # Resolve path relative to script location if not absolute
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        machine_data_path = args.machine_data
+        machine_data_path = machine_data
         if not os.path.isabs(machine_data_path):
             machine_data_path = os.path.join(script_dir, machine_data_path)
             
@@ -114,14 +117,35 @@ def main():
         print(f"Error loading machine data: {e}")
         return
 
-    # Create SimulationParams from args, filtering out None values to use defaults from the model
-    # We only include keys that are present in SimulationParams fields
-    param_fields = SimulationParams.model_fields.keys()
-    params_dict = {k: v for k, v in vars(args).items() if v is not None and k in param_fields}
+    # Create SimulationParams from args
+    # We construct the dict manually since we have individual args now
+    params_dict = {
+        'days': days,
+        'working_hours': working_hours,
+        'lumber_mills': lumber_mills,
+        'gear_workshops': gear_workshops,
+        'steel_factories': steel_factories,
+        'wood_workshops': wood_workshops,
+        'paper_mills': paper_mills,
+        'printing_presses': printing_presses,
+        'observatories': observatories,
+        'bot_part_factories': bot_part_factories,
+        'bot_assemblers': bot_assemblers,
+        'explosives_factories': explosives_factories,
+        'grillmists': grillmists,
+        'water_wheels': water_wheels,
+        'large_windmills': large_windmills,
+        'windmills': windmills,
+        'batteries': batteries,
+        'battery_height': battery_height,
+        'wet_season_days': wet_season_days,
+        'dry_season_days': dry_season_days,
+        'badtide_season_days': badtide_season_days
+    }
     
     params = SimulationParams(**params_dict)
 
-    if args.runs > 1:
+    if runs > 1:
         run_empty_hours = []
         worst_run_data = None
         max_hours_empty = -1
@@ -130,14 +154,14 @@ def main():
         num_workers = os.cpu_count() or 1
         
         # Calculate runs per worker
-        runs_per_worker = args.runs // num_workers
-        remainder = args.runs % num_workers
+        runs_per_worker = runs // num_workers
+        remainder = runs % num_workers
         
         batch_sizes = [runs_per_worker + (1 if i < remainder else 0) for i in range(num_workers)]
         # Filter out 0s if runs < workers
         batch_sizes = [b for b in batch_sizes if b > 0]
         
-        print(f"Running {args.runs} simulations across {len(batch_sizes)} processes...")
+        print(f"Running {runs} simulations across {len(batch_sizes)} processes...")
 
         with ProcessPoolExecutor(max_workers=num_workers) as executor:
             futures = [executor.submit(run_simulation_batch, config, params, size) for size in batch_sizes]
@@ -156,7 +180,7 @@ def main():
                     if worst_run_data is None:
                         worst_run_data = data
         
-        plot_simulation(worst_run_data, run_empty_hours, args.runs)
+        plot_simulation(worst_run_data, run_empty_hours, runs)
 
     else:
         data = simulate_scenario(config, params)

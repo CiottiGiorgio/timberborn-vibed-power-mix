@@ -177,21 +177,17 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
         'params': params
     }
 
-def run_simulation_batch(config: SimulationConfig, params: SimulationParams, num_runs: int):
+def run_simulation_task(config: SimulationConfig, params: SimulationParams):
     """
-    Runs a batch of simulations and returns the results.
-    Returns a list of tuples: (hours_empty, simulation_data)
+    Runs a single simulation and returns the results.
+    Returns a tuple: (hours_empty, simulation_data)
     """
-    results = []
-    for _ in range(num_runs):
-        data = simulate_scenario(config, params)
-        
-        # Check if battery reached 0 after day 1 (24 hours)
-        battery_after_day1 = data['battery_charge'][24:]
-        
-        # Count hours where battery is 0 or less
-        hours_empty = np.sum(battery_after_day1 <= 0)
-        
-        results.append((hours_empty, data))
-        
-    return results
+    data = simulate_scenario(config, params)
+    
+    # Check if battery reached 0 after day 1 (24 hours)
+    battery_after_day1 = data['battery_charge'][24:]
+    
+    # Count hours where battery is 0 or less
+    hours_empty = np.sum(battery_after_day1 <= 0)
+    
+    return hours_empty, data

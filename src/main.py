@@ -4,7 +4,7 @@ import numpy as np
 import click
 from concurrent.futures import ProcessPoolExecutor
 from models import SimulationConfig, SimulationParams
-from simulation import simulate_scenario, run_simulation_batch
+from simulation import simulate_scenario, run_simulation_task
 from plots.power_plot import plot_power
 from plots.energy_plot import plot_energy
 from plots.surplus_plot import plot_surplus
@@ -97,18 +97,17 @@ def plot_simulation(data, run_empty_hours, total_runs):
 @click.option('--dry-season-days', type=int, default=consts.DEFAULT_DRY_SEASON_DAYS, help='Duration of dry season in days')
 @click.option('--badtide-season-days', type=int, default=consts.DEFAULT_BADTIDE_SEASON_DAYS, help='Duration of badtide season in days')
 @click.option('--runs', type=int, default=1, help='Number of simulation runs')
-@click.option('--machine-data', type=str, default='machines.json', help='Path to machine data JSON file')
 def main(days, working_hours, lumber_mills, gear_workshops, steel_factories, wood_workshops, paper_mills,
          printing_presses, observatories, bot_part_factories, bot_assemblers, explosives_factories,
          grillmists, water_wheels, large_windmills, windmills, batteries, battery_height,
-         wet_season_days, dry_season_days, badtide_season_days, runs, machine_data):
+         wet_season_days, dry_season_days, badtide_season_days, runs):
     """Visualize power and energy profiles for an industrial complex."""
 
     # Load machine data
     try:
         # Resolve path relative to script location if not absolute
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        machine_data_path = machine_data
+        machine_data_path = 'machines.json'
         if not os.path.isabs(machine_data_path):
             machine_data_path = os.path.join(script_dir, machine_data_path)
             
@@ -150,35 +149,26 @@ def main(days, working_hours, lumber_mills, gear_workshops, steel_factories, woo
         worst_run_data = None
         max_hours_empty = -1
         
-        # Determine number of workers (cores)
-        num_workers = os.cpu_count() or 1
-        
-        # Calculate runs per worker
-        runs_per_worker = runs // num_workers
-        remainder = runs % num_workers
-        
-        batch_sizes = [runs_per_worker + (1 if i < remainder else 0) for i in range(num_workers)]
-        # Filter out 0s if runs < workers
-        batch_sizes = [b for b in batch_sizes if b > 0]
-        
-        print(f"Running {runs} simulations across {len(batch_sizes)} processes...")
+        print(f"Running {runs} simulations...")
 
-        with ProcessPoolExecutor(max_workers=num_workers) as executor:
-            futures = [executor.submit(run_simulation_batch, config, params, size) for size in batch_sizes]
+        # Let ProcessPoolExecutor handle worker count automatically (defaults to os.cpu_count())
+        with ProcessPoolExecutor() as executor:
+            # Submit individual tasks instead of batches
+            futures = [executor.submit(run_simulation_task, config, params) for _ in range(runs)]
             
             for future in futures:
-                batch_results = future.result()
-                for hours_empty, data in batch_results:
-                    # Collect data for ALL runs
-                    run_empty_hours.append(hours_empty)
-                    
-                    if hours_empty > max_hours_empty:
-                        max_hours_empty = hours_empty
-                        worst_run_data = data
-                    
-                    # If worst_run_data is still None, keep the last one just in case
-                    if worst_run_data is None:
-                        worst_run_data = data
+                hours_empty, data = future.result()
+                
+                # Collect data for ALL runs
+                run_empty_hours.append(hours_empty)
+                
+                if hours_empty > max_hours_empty:
+                    max_hours_empty = hours_empty
+                    worst_run_data = data
+                
+                # If worst_run_data is still None, keep the last one just in case
+                if worst_run_data is None:
+                    worst_run_data = data
         
         plot_simulation(worst_run_data, run_empty_hours, runs)
 

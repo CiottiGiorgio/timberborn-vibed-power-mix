@@ -101,6 +101,28 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     plt.show()
 
 
+class IntOrIntList(click.ParamType):
+    name = "int_or_int_list"
+
+    def convert(self, value, param, ctx):
+        if isinstance(value, int):
+            return value
+        if isinstance(value, list):
+            return value
+        
+        # Try to parse as a single int
+        try:
+            return int(value)
+        except ValueError:
+            pass
+            
+        # Try to parse as a comma-separated list of ints
+        try:
+            return [int(x.strip()) for x in value.split(",")]
+        except ValueError:
+            self.fail(f"{value!r} is not a valid integer or comma-separated list of integers", param, ctx)
+
+
 @click.command()
 @click.option(
     "--days",
@@ -206,9 +228,9 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
 )
 @click.option(
     "--battery-height",
-    type=int,
+    type=IntOrIntList(),
     default=consts.DEFAULT_BATTERY_HEIGHT,
-    help="Height of gravity batteries in meters",
+    help="Height of gravity batteries in meters. Can be a single int or a comma-separated list of ints.",
 )
 @click.option(
     "--wet-season-days",

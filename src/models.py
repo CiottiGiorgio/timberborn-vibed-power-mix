@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Dict, Literal, List, Tuple
+from pydantic import BaseModel, Field, field_validator
+from typing import Dict, Literal, List, Tuple, Union
 import numpy as np
 import consts
 
@@ -47,7 +47,19 @@ class EnergyMixParams(BaseModel):
     large_windmills: int = Field(default=consts.DEFAULT_LARGE_WINDMILLS)
     windmills: int = Field(default=consts.DEFAULT_WINDMILLS)
     batteries: int = Field(default=consts.DEFAULT_BATTERIES)
-    battery_height: int = Field(default=consts.DEFAULT_BATTERY_HEIGHT)
+    battery_height: Union[int, List[int]] = Field(default=consts.DEFAULT_BATTERY_HEIGHT)
+
+    @field_validator("battery_height")
+    def validate_battery_height(cls, v, info):
+        if isinstance(v, list):
+            # We need to access the 'batteries' field.
+            # In Pydantic v2, we can access other fields via info.data
+            batteries = info.data.get("batteries")
+            if batteries is not None and len(v) != batteries:
+                raise ValueError(
+                    f"Length of battery_height list ({len(v)}) must match number of batteries ({batteries})"
+                )
+        return v
 
 
 class SimulationParams(BaseModel):

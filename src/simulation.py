@@ -46,14 +46,25 @@ def simulate_scenario(
     # Battery Constants
     base_capacity = battery_info.base_capacity
     capacity_per_height = battery_info.capacity_per_height
-    battery_capacity = base_capacity + (params.energy_mix.battery_height * capacity_per_height)
-    total_battery_capacity = params.energy_mix.batteries * battery_capacity
-
-    # Battery Costs
+    
+    # Handle battery height (int or list of ints)
+    battery_heights = params.energy_mix.battery_height
+    if isinstance(battery_heights, int):
+        # If it's a single int, treat it as a list of identical heights
+        battery_heights = [battery_heights] * params.energy_mix.batteries
+    
+    # Calculate total capacity and cost by summing over individual batteries
+    total_battery_capacity = 0
+    total_battery_cost = 0
+    
     base_cost = battery_info.base_cost
     cost_per_height = battery_info.cost_per_height
-    battery_cost = base_cost + (params.energy_mix.battery_height * cost_per_height)
-    total_battery_cost = params.energy_mix.batteries * battery_cost
+
+    for h in battery_heights:
+        capacity = base_capacity + (h * capacity_per_height)
+        cost = base_cost + (h * cost_per_height)
+        total_battery_capacity += capacity
+        total_battery_cost += cost
 
     # Total Cost Calculation
     total_cost = (

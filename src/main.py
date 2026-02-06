@@ -26,6 +26,7 @@ def plot_simulation(data, run_empty_hours, total_runs):
     total_battery_capacity = data['total_battery_capacity']
     season_boundaries = data['season_boundaries']
     params = data['params']
+    total_cost = data['total_cost']
     
     days = params.days
     water_wheels = params.water_wheels
@@ -38,6 +39,9 @@ def plot_simulation(data, run_empty_hours, total_runs):
     # Always create 5 plots
     num_plots = 5
     fig, axes = plt.subplots(num_plots, 1, figsize=(12, 5 * num_plots), sharex=False)
+    
+    # Add title with total cost
+    fig.suptitle(f"Simulation Results (Total Cost: {total_cost} logs)", fontsize=16, y=0.99)
     
     (ax1, ax2, ax3, ax4, ax5) = axes
 
@@ -71,7 +75,7 @@ def plot_simulation(data, run_empty_hours, total_runs):
     # Plot 5: Empty Battery Duration Distribution
     plot_empty_hours(ax5, run_empty_hours, total_runs)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.03, 1, 0.97])
     plt.show()
 
 @click.command()

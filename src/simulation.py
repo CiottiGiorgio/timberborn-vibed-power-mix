@@ -14,6 +14,9 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
     def get_power(name):
         return machines[name].power
 
+    def get_cost(name):
+        return machines[name].cost
+
     # Consumption
     lumber_mill_consumption = get_power('lumber_mill')
     gear_workshop_consumption = get_power('gear_workshop')
@@ -31,12 +34,31 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
     wheel_production = get_power('water_wheel')
     large_windmill_production = get_power('large_windmill')
     windmill_production = get_power('windmill')
+
+    # Costs
+    wheel_cost = get_cost('water_wheel')
+    large_windmill_cost = get_cost('large_windmill')
+    windmill_cost = get_cost('windmill')
     
     # Battery Constants
     base_capacity = battery_info.base_capacity
     capacity_per_height = battery_info.capacity_per_height
     battery_capacity = base_capacity + (params.battery_height * capacity_per_height)
     total_battery_capacity = params.batteries * battery_capacity
+
+    # Battery Costs
+    base_cost = battery_info.base_cost
+    cost_per_height = battery_info.cost_per_height
+    battery_cost = base_cost + (params.battery_height * cost_per_height)
+    total_battery_cost = params.batteries * battery_cost
+
+    # Total Cost Calculation
+    total_cost = (
+        (params.water_wheels * wheel_cost) +
+        (params.large_windmills * large_windmill_cost) +
+        (params.windmills * windmill_cost) +
+        total_battery_cost
+    )
 
     total_hours = params.days * consts.HOURS_PER_DAY
     
@@ -174,7 +196,8 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
         'energy_consumption': energy_consumption,
         'total_battery_capacity': total_battery_capacity,
         'season_boundaries': season_boundaries,
-        'params': params
+        'params': params,
+        'total_cost': total_cost
     }
 
 def run_simulation_task(config: SimulationConfig, params: SimulationParams):

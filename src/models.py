@@ -5,10 +5,13 @@ import consts
 class Machine(BaseModel):
     power: float
     role: Literal['consumer', 'producer']
+    cost: int = 0
 
 class BatteryConfig(BaseModel):
     base_capacity: float
     capacity_per_height: float
+    base_cost: int = 0
+    cost_per_height: int = 0
 
 class SimulationConfig(BaseModel):
     machines: Dict[str, Machine]

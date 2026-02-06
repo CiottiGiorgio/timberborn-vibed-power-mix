@@ -2,10 +2,12 @@ from pydantic import BaseModel, Field
 from typing import Dict, Literal
 import consts
 
+
 class Machine(BaseModel):
     power: float
-    role: Literal['consumer', 'producer']
+    role: Literal["consumer", "producer"]
     cost: int = 0
+
 
 class BatteryConfig(BaseModel):
     base_capacity: float
@@ -13,15 +15,17 @@ class BatteryConfig(BaseModel):
     base_cost: int = 0
     cost_per_height: int = 0
 
+
 class SimulationConfig(BaseModel):
     machines: Dict[str, Machine]
     battery: BatteryConfig
 
     @classmethod
     def from_json_file(cls, filepath: str) -> "SimulationConfig":
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             json_content = f.read()
         return cls.model_validate_json(json_content)
+
 
 class SimulationParams(BaseModel):
     days: int = Field(default=consts.DEFAULT_DAYS)

@@ -1,12 +1,11 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Literal, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 import numpy as np
 import consts
 
 
 class Machine(BaseModel):
     power: float
-    role: Literal["consumer", "producer"]
     cost: int = 0
 
 
@@ -50,6 +49,7 @@ class EnergyMixParams(BaseModel):
     battery_height: Union[int, List[int]] = Field(default=consts.DEFAULT_BATTERY_HEIGHT)
 
     @field_validator("battery_height")
+    @classmethod
     def validate_battery_height(cls, v, info):
         if isinstance(v, list):
             # We need to access the 'batteries' field.

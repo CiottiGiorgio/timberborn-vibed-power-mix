@@ -1,9 +1,11 @@
 import numpy as np
-from models import SimulationConfig, SimulationParams
+from models import SimulationConfig, SimulationParams, SimulationResult
 import consts
 
 
-def simulate_scenario(config: SimulationConfig, params: SimulationParams):
+def simulate_scenario(
+    config: SimulationConfig, params: SimulationParams
+) -> SimulationResult:
 
     machines = config.machines
     battery_info = config.battery
@@ -44,20 +46,20 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
     # Battery Constants
     base_capacity = battery_info.base_capacity
     capacity_per_height = battery_info.capacity_per_height
-    battery_capacity = base_capacity + (params.battery_height * capacity_per_height)
-    total_battery_capacity = params.batteries * battery_capacity
+    battery_capacity = base_capacity + (params.energy_mix.battery_height * capacity_per_height)
+    total_battery_capacity = params.energy_mix.batteries * battery_capacity
 
     # Battery Costs
     base_cost = battery_info.base_cost
     cost_per_height = battery_info.cost_per_height
-    battery_cost = base_cost + (params.battery_height * cost_per_height)
-    total_battery_cost = params.batteries * battery_cost
+    battery_cost = base_cost + (params.energy_mix.battery_height * cost_per_height)
+    total_battery_cost = params.energy_mix.batteries * battery_cost
 
     # Total Cost Calculation
     total_cost = (
-        (params.water_wheels * wheel_cost)
-        + (params.large_windmills * large_windmill_cost)
-        + (params.windmills * windmill_cost)
+        (params.energy_mix.water_wheels * wheel_cost)
+        + (params.energy_mix.large_windmills * large_windmill_cost)
+        + (params.energy_mix.windmills * windmill_cost)
         + total_battery_cost
     )
 
@@ -69,21 +71,21 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
 
     # Power values (hp)
     total_consumption_rate = (
-        (params.lumber_mills * lumber_mill_consumption)
-        + (params.gear_workshops * gear_workshop_consumption)
-        + (params.steel_factories * steel_consumption)
-        + (params.wood_workshops * wood_workshop_consumption)
-        + (params.paper_mills * paper_mill_consumption)
-        + (params.printing_presses * printing_press_consumption)
-        + (params.observatories * observatory_consumption)
-        + (params.bot_part_factories * bot_part_factory_consumption)
-        + (params.bot_assemblers * bot_assembler_consumption)
-        + (params.explosives_factories * explosives_factory_consumption)
-        + (params.grillmists * grillmist_consumption)
+        (params.factories.lumber_mills * lumber_mill_consumption)
+        + (params.factories.gear_workshops * gear_workshop_consumption)
+        + (params.factories.steel_factories * steel_consumption)
+        + (params.factories.wood_workshops * wood_workshop_consumption)
+        + (params.factories.paper_mills * paper_mill_consumption)
+        + (params.factories.printing_presses * printing_press_consumption)
+        + (params.factories.observatories * observatory_consumption)
+        + (params.factories.bot_part_factories * bot_part_factory_consumption)
+        + (params.factories.bot_assemblers * bot_assembler_consumption)
+        + (params.factories.explosives_factories * explosives_factory_consumption)
+        + (params.factories.grillmists * grillmist_consumption)
     )
 
     # Production components
-    water_wheel_production_rate = params.water_wheels * wheel_production
+    water_wheel_production_rate = params.energy_mix.water_wheels * wheel_production
 
     # Simulate wind variability based on Timberborn Wiki mechanics
     # Strength: 0-100%, Duration: 5-12 hours
@@ -111,8 +113,8 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
         wind_strength * windmill_production,
         0,
     )
-    wind_production = (params.large_windmills * large_wind_unit_prod) + (
-        params.windmills * small_wind_unit_prod
+    wind_production = (params.energy_mix.large_windmills * large_wind_unit_prod) + (
+        params.energy_mix.windmills * small_wind_unit_prod
     )
 
     # Calculate hour of the day for each time step
@@ -208,21 +210,21 @@ def simulate_scenario(config: SimulationConfig, params: SimulationParams):
         season_boundaries.append((curr, "Badtide"))
         curr += params.badtide_season_days
 
-    return {
-        "time_days": time_days,
-        "power_production": power_production,
-        "power_consumption": power_consumption,
-        "power_surplus": power_surplus,
-        "effective_surplus": effective_surplus,
-        "effective_deficit": effective_deficit,
-        "battery_charge": battery_charge,
-        "energy_production": energy_production,
-        "energy_consumption": energy_consumption,
-        "total_battery_capacity": total_battery_capacity,
-        "season_boundaries": season_boundaries,
-        "params": params,
-        "total_cost": total_cost,
-    }
+    return SimulationResult(
+        time_days=time_days,
+        power_production=power_production,
+        power_consumption=power_consumption,
+        power_surplus=power_surplus,
+        effective_surplus=effective_surplus,
+        effective_deficit=effective_deficit,
+        battery_charge=battery_charge,
+        energy_production=energy_production,
+        energy_consumption=energy_consumption,
+        total_battery_capacity=total_battery_capacity,
+        season_boundaries=season_boundaries,
+        params=params,
+        total_cost=total_cost,
+    )
 
 
 def run_simulation_task(config: SimulationConfig, params: SimulationParams):
@@ -233,7 +235,7 @@ def run_simulation_task(config: SimulationConfig, params: SimulationParams):
     data = simulate_scenario(config, params)
 
     # Check if battery reached 0 after day 1 (24 hours)
-    battery_after_day1 = data["battery_charge"][24:]
+    battery_after_day1 = data.battery_charge[24:]
 
     # Count hours where battery is 0 or less
     hours_empty = np.sum(battery_after_day1 <= 0)

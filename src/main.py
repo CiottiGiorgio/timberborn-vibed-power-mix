@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import click
 from concurrent.futures import ProcessPoolExecutor
-from models import SimulationConfig, SimulationParams
+from models import SimulationConfig, SimulationParams, SimulationResult, FactoryParams, EnergyMixParams
 from simulation import simulate_scenario, run_simulation_task
 from plots.power_plot import plot_power
 from plots.energy_plot import plot_energy
@@ -13,28 +13,28 @@ from plots.empty_hours_plot import plot_empty_hours
 import consts
 
 
-def plot_simulation(data, run_empty_hours, total_runs):
+def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     # Unpack data
-    time_days = data["time_days"]
-    power_production = data["power_production"]
-    power_consumption = data["power_consumption"]
-    power_surplus = data["power_surplus"]
-    effective_surplus = data["effective_surplus"]
-    effective_deficit = data["effective_deficit"]
-    battery_charge = data["battery_charge"]
-    energy_production = data["energy_production"]
-    energy_consumption = data["energy_consumption"]
-    total_battery_capacity = data["total_battery_capacity"]
-    season_boundaries = data["season_boundaries"]
-    params = data["params"]
-    total_cost = data["total_cost"]
+    time_days = data.time_days
+    power_production = data.power_production
+    power_consumption = data.power_consumption
+    power_surplus = data.power_surplus
+    effective_surplus = data.effective_surplus
+    effective_deficit = data.effective_deficit
+    battery_charge = data.battery_charge
+    energy_production = data.energy_production
+    energy_consumption = data.energy_consumption
+    total_battery_capacity = data.total_battery_capacity
+    season_boundaries = data.season_boundaries
+    params = data.params
+    total_cost = data.total_cost
 
     days = params.days
-    water_wheels = params.water_wheels
-    large_windmills = params.large_windmills
-    windmills = params.windmills
-    batteries = params.batteries
-    battery_height = params.battery_height
+    water_wheels = params.energy_mix.water_wheels
+    large_windmills = params.energy_mix.large_windmills
+    windmills = params.energy_mix.windmills
+    batteries = params.energy_mix.batteries
+    battery_height = params.energy_mix.battery_height
 
     # Visualization
     # Always create 5 plots
@@ -269,32 +269,37 @@ def main(
         return
 
     # Create SimulationParams from args
-    # We construct the dict manually since we have individual args now
-    params_dict = {
-        "days": days,
-        "working_hours": working_hours,
-        "lumber_mills": lumber_mills,
-        "gear_workshops": gear_workshops,
-        "steel_factories": steel_factories,
-        "wood_workshops": wood_workshops,
-        "paper_mills": paper_mills,
-        "printing_presses": printing_presses,
-        "observatories": observatories,
-        "bot_part_factories": bot_part_factories,
-        "bot_assemblers": bot_assemblers,
-        "explosives_factories": explosives_factories,
-        "grillmists": grillmists,
-        "water_wheels": water_wheels,
-        "large_windmills": large_windmills,
-        "windmills": windmills,
-        "batteries": batteries,
-        "battery_height": battery_height,
-        "wet_season_days": wet_season_days,
-        "dry_season_days": dry_season_days,
-        "badtide_season_days": badtide_season_days,
-    }
+    factories = FactoryParams(
+        lumber_mills=lumber_mills,
+        gear_workshops=gear_workshops,
+        steel_factories=steel_factories,
+        wood_workshops=wood_workshops,
+        paper_mills=paper_mills,
+        printing_presses=printing_presses,
+        observatories=observatories,
+        bot_part_factories=bot_part_factories,
+        bot_assemblers=bot_assemblers,
+        explosives_factories=explosives_factories,
+        grillmists=grillmists,
+    )
 
-    params = SimulationParams(**params_dict)
+    energy_mix = EnergyMixParams(
+        water_wheels=water_wheels,
+        large_windmills=large_windmills,
+        windmills=windmills,
+        batteries=batteries,
+        battery_height=battery_height,
+    )
+
+    params = SimulationParams(
+        days=days,
+        working_hours=working_hours,
+        wet_season_days=wet_season_days,
+        dry_season_days=dry_season_days,
+        badtide_season_days=badtide_season_days,
+        factories=factories,
+        energy_mix=energy_mix,
+    )
 
     if runs > 1:
         run_empty_hours = []
@@ -333,7 +338,7 @@ def main(
         # But usually single run visualization focuses on the time series.
         # However, to be consistent with "Always show the fifth graph", let's pass it.
         # We need to calculate hours_empty for this single run to pass it.
-        battery_after_day1 = data["battery_charge"][24:]
+        battery_after_day1 = data.battery_charge[24:]
         hours_empty = np.sum(battery_after_day1 <= 0)
         plot_simulation(data, [hours_empty], 1)
 

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import Dict, Literal
+from typing import Dict, Literal, List, Tuple
+import numpy as np
 import consts
 
 
@@ -27,9 +28,7 @@ class SimulationConfig(BaseModel):
         return cls.model_validate_json(json_content)
 
 
-class SimulationParams(BaseModel):
-    days: int = Field(default=consts.DEFAULT_DAYS)
-    working_hours: int = Field(default=consts.DEFAULT_WORKING_HOURS)
+class FactoryParams(BaseModel):
     lumber_mills: int = Field(default=consts.DEFAULT_LUMBER_MILLS)
     gear_workshops: int = Field(default=consts.DEFAULT_GEAR_WORKSHOPS)
     steel_factories: int = Field(default=consts.DEFAULT_STEEL_FACTORIES)
@@ -41,11 +40,40 @@ class SimulationParams(BaseModel):
     bot_assemblers: int = Field(default=consts.DEFAULT_BOT_ASSEMBLERS)
     explosives_factories: int = Field(default=consts.DEFAULT_EXPLOSIVES_FACTORIES)
     grillmists: int = Field(default=consts.DEFAULT_GRILLMISTS)
+
+
+class EnergyMixParams(BaseModel):
     water_wheels: int = Field(default=consts.DEFAULT_WATER_WHEELS)
     large_windmills: int = Field(default=consts.DEFAULT_LARGE_WINDMILLS)
     windmills: int = Field(default=consts.DEFAULT_WINDMILLS)
     batteries: int = Field(default=consts.DEFAULT_BATTERIES)
     battery_height: int = Field(default=consts.DEFAULT_BATTERY_HEIGHT)
+
+
+class SimulationParams(BaseModel):
+    days: int = Field(default=consts.DEFAULT_DAYS)
+    working_hours: int = Field(default=consts.DEFAULT_WORKING_HOURS)
     wet_season_days: int = Field(default=consts.DEFAULT_WET_SEASON_DAYS)
     dry_season_days: int = Field(default=consts.DEFAULT_DRY_SEASON_DAYS)
     badtide_season_days: int = Field(default=consts.DEFAULT_BADTIDE_SEASON_DAYS)
+    factories: FactoryParams = Field(default_factory=FactoryParams)
+    energy_mix: EnergyMixParams = Field(default_factory=EnergyMixParams)
+
+
+class SimulationResult(BaseModel):
+    time_days: np.ndarray
+    power_production: np.ndarray
+    power_consumption: np.ndarray
+    power_surplus: np.ndarray
+    effective_surplus: np.ndarray
+    effective_deficit: np.ndarray
+    battery_charge: np.ndarray
+    energy_production: np.ndarray
+    energy_consumption: np.ndarray
+    total_battery_capacity: float
+    season_boundaries: List[Tuple[float, str]]
+    params: SimulationParams
+    total_cost: float
+
+    class Config:
+        arbitrary_types_allowed = True

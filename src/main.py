@@ -103,25 +103,25 @@ def plot_simulation(data, run_empty_hours, total_runs):
 
     # Plot 5: Empty Battery Duration Distribution
     
-    # Create bins of 2 hours width, including the first bin (0-2)
+    # Create bins of 1 hour width (default) instead of 2
     if run_empty_hours:
         max_val = max(run_empty_hours)
         # Ensure we have at least one bin if max_val is 0
         if max_val == 0:
-            bins = np.arange(0, 4, 2) # 0-2, 2-4
+            bins = np.arange(0, 2, 1) # 0-1, 1-2
         else:
-            bins = np.arange(0, max_val + 4, 2)
+            bins = np.arange(0, max_val + 2, 1)
             
         # Plot the histogram
         n, bins, patches = ax5.hist(run_empty_hours, bins=bins, color='red', alpha=0.7, edgecolor='black')
         
-        # Style the first bar (0-2 hours) to be grey with diagonal hatching
+        # Style the first bar (0-1 hours) to be grey with diagonal hatching
         if len(patches) > 0:
             patches[0].set_facecolor('lightgrey')
             patches[0].set_hatch('//')
             patches[0].set_edgecolor('black')
         
-        # Scale the y-axis ignoring the first bin (0-2 hours)
+        # Scale the y-axis ignoring the first bin (0-1 hours)
         # The first bin corresponds to n[0]
         if len(n) > 1:
             max_freq_excluding_first = max(n[1:])

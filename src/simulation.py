@@ -239,3 +239,13 @@ def run_simulation_task(params: SimulationParams):
     hours_empty = np.sum(battery_after_day1 <= 0)
 
     return hours_empty, data
+
+
+def run_simulation_batch(params: SimulationParams, runs: int):
+    """
+    Runs a batch of simulations and returns a list of results.
+    """
+    results = []
+    for _ in range(runs):
+        results.append(run_simulation_task(params))
+    return results

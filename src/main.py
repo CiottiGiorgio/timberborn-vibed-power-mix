@@ -1,6 +1,7 @@
 import numpy as np
+import os
 from concurrent.futures import ProcessPoolExecutor
-from simulation import simulate_scenario, run_simulation_task
+from simulation import simulate_scenario, run_simulation_batch
 from plots.canvas import plot_simulation
 from cli import create_cli, parse_params
 
@@ -18,26 +19,41 @@ def main(**kwargs):
 
         print(f"Running {runs} simulations...")
 
-        # Let ProcessPoolExecutor handle worker count automatically (defaults to os.cpu_count())
-        with ProcessPoolExecutor() as executor:
-            # Submit individual tasks instead of batches
+        # Determine number of workers
+        num_workers = os.cpu_count() or 1
+        
+        # Calculate chunk size to split work evenly
+        chunk_size = runs // num_workers
+        remainder = runs % num_workers
+        
+        batches = []
+        for i in range(num_workers):
+            # Distribute remainder among the first few workers
+            count = chunk_size + (1 if i < remainder else 0)
+            if count > 0:
+                batches.append(count)
+
+        with ProcessPoolExecutor(max_workers=num_workers) as executor:
+            # Submit batch tasks
             futures = [
-                executor.submit(run_simulation_task, params) for _ in range(runs)
+                executor.submit(run_simulation_batch, params, batch_size) 
+                for batch_size in batches
             ]
 
             for future in futures:
-                hours_empty, data = future.result()
+                batch_results = future.result()
+                
+                for hours_empty, data in batch_results:
+                    # Collect data for ALL runs
+                    run_empty_hours.append(hours_empty)
 
-                # Collect data for ALL runs
-                run_empty_hours.append(hours_empty)
+                    if hours_empty > max_hours_empty:
+                        max_hours_empty = hours_empty
+                        worst_run_data = data
 
-                if hours_empty > max_hours_empty:
-                    max_hours_empty = hours_empty
-                    worst_run_data = data
-
-                # If worst_run_data is still None, keep the last one just in case
-                if worst_run_data is None:
-                    worst_run_data = data
+                    # If worst_run_data is still None, keep the last one just in case
+                    if worst_run_data is None:
+                        worst_run_data = data
 
         plot_simulation(worst_run_data, run_empty_hours, runs)
 

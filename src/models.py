@@ -14,7 +14,9 @@ class FactoryParams(BaseModel):
         valid_machines = {name for name, _ in iter_consumers()}
         for name in v:
             if name not in valid_machines:
-                raise ValueError(f"Unknown factory: {name}. Must be one of {valid_machines}")
+                raise ValueError(
+                    f"Unknown factory: {name}. Must be one of {valid_machines}"
+                )
         return v
 
     def __getattr__(self, item):

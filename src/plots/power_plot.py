@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def plot_power(
     ax,
     time_days,

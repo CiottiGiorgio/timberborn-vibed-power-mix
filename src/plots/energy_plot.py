@@ -1,5 +1,6 @@
 import consts
 
+
 def plot_energy(ax, time_days, energy_production, energy_consumption, days):
     ax.plot(
         time_days,
@@ -19,17 +20,17 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
     # Calculate average power (slope)
     # Total energy / total hours
     total_hours = days * consts.HOURS_PER_DAY
-    
+
     # Ensure we use the last value of the cumulative array
     total_produced = energy_production[-1]
     total_consumed = energy_consumption[-1]
-    
+
     avg_prod_power = total_produced / total_hours
     avg_cons_power = total_consumed / total_hours
-    
+
     # Create lines: y = avg_power * time_hours = avg_power * (time_days * 24)
     # We can just use linear interpolation between (0,0) and (days, total)
-    
+
     ax.plot(
         [0, days],
         [0, total_produced],
@@ -37,9 +38,9 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
         linestyle="--",
         linewidth=1.5,
         alpha=0.7,
-        label=f"Avg Prod Slope ({avg_prod_power:.1f} hp)"
+        label=f"Avg Prod Slope ({avg_prod_power:.1f} hp)",
     )
-    
+
     ax.plot(
         [0, days],
         [0, total_consumed],
@@ -47,7 +48,7 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
         linestyle="--",
         linewidth=1.5,
         alpha=0.7,
-        label=f"Avg Cons Slope ({avg_cons_power:.1f} hp)"
+        label=f"Avg Cons Slope ({avg_cons_power:.1f} hp)",
     )
 
     ax.set_ylabel("Energy (hph)")

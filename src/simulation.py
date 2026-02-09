@@ -1,6 +1,13 @@
 import numpy as np
 from models import SimulationParams, SimulationResult
-from machines import iter_consumers, power_wheel, water_wheel, large_windmill, windmill, BatterySpec
+from machines import (
+    iter_consumers,
+    power_wheel,
+    water_wheel,
+    large_windmill,
+    windmill,
+    BatterySpec,
+)
 import consts
 
 
@@ -159,7 +166,9 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
     # Calculate Battery State of Charge and Effective Surplus/Deficit
     battery_charge = np.zeros(total_hours)
-    effective_balance = np.zeros(total_hours)  # Positive for surplus, negative for deficit
+    effective_balance = np.zeros(
+        total_hours
+    )  # Positive for surplus, negative for deficit
 
     current_charge = total_battery_capacity / 2  # Start at 50% capacity
 

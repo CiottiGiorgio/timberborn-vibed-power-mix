@@ -1,9 +1,13 @@
 import numpy as np
 
 
-def plot_empty_hours_percentage(ax, run_empty_hours, total_runs, total_simulation_hours):
+def plot_empty_hours_percentage(
+    ax, run_empty_hours, total_runs, total_simulation_hours
+):
     # Calculate percentages
-    run_empty_percentages = [(h / total_simulation_hours) * 100 for h in run_empty_hours]
+    run_empty_percentages = [
+        (h / total_simulation_hours) * 100 for h in run_empty_hours
+    ]
 
     # Create bins of 1% width (default)
     if run_empty_percentages:

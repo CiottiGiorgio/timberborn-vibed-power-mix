@@ -32,7 +32,7 @@ class IntOrIntList(click.ParamType):
 
 def add_common_params(func):
     """Decorator to add common simulation parameters to a click command."""
-    
+
     # Consumers
     for name, spec in iter_consumers():
         func = click.option(
@@ -77,20 +77,21 @@ def add_common_params(func):
         default=consts.DEFAULT_DAYS,
         help="Number of days for the simulation",
     )(func)
-    
+
     # Common simulation parameter
     func = click.option(
-        "--samples-per-sim", 
-        type=int, 
-        default=consts.DEFAULT_SAMPLES_PER_SIM, 
-        help="Number of simulation runs per configuration"
+        "--samples-per-sim",
+        type=int,
+        default=consts.DEFAULT_SAMPLES_PER_SIM,
+        help="Number of simulation runs per configuration",
     )(func)
 
     return func
 
+
 def add_energy_mix_params(func):
     """Decorator to add energy mix parameters (for run command)."""
-    
+
     # Battery Height
     func = click.option(
         "--battery-height",
@@ -139,7 +140,7 @@ def add_energy_mix_params(func):
             default=0,
             help="Number of power wheels",
         )(func)
-        
+
     return func
 
 
@@ -157,7 +158,12 @@ def create_cli(run_callback, optimize_callback):
         run_callback(**kwargs)
 
     @cli.command(name="optimize")
-    @click.option("--iterations", type=int, default=consts.DEFAULT_OPTIMIZATION_ITERATIONS, help="Number of optimization iterations")
+    @click.option(
+        "--iterations",
+        type=int,
+        default=consts.DEFAULT_OPTIMIZATION_ITERATIONS,
+        help="Number of optimization iterations",
+    )
     @add_common_params
     def optimize_cmd(**kwargs):
         """Optimize the energy mix for the specified parameters."""

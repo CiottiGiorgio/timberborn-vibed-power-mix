@@ -40,14 +40,14 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     fig.suptitle(
         f"Simulation Results (Total Cost: {total_cost} logs)", fontsize=16, y=0.99
     )
-    
+
     # Handle battery height display
     if isinstance(battery_height, list):
         avg_height = sum(battery_height) / len(battery_height) if battery_height else 0
         height_str = f"Avg: {avg_height:.1f}"
     else:
         height_str = str(battery_height)
-    
+
     # Add Energy Mix Info Box
     mix_info = (
         f"Energy Mix:\n"
@@ -57,15 +57,15 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
         f"  Windmills: {windmills}\n"
         f"  Batteries: {batteries} (Height: {height_str})"
     )
-    
+
     # Place text box in top left corner
     fig.text(
-        0.02, 
-        0.98, 
-        mix_info, 
-        fontsize=10, 
-        verticalalignment='top', 
-        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        0.02,
+        0.98,
+        mix_info,
+        fontsize=10,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
     )
 
     ax1, ax2, ax3, ax4, ax5 = axes
@@ -118,7 +118,11 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
 
     # Plot 5: Empty Battery Duration Distribution (Percentage)
     total_simulation_hours = days * consts.HOURS_PER_DAY
-    plot_empty_hours_percentage(ax5, run_empty_hours, total_runs, total_simulation_hours)
+    plot_empty_hours_percentage(
+        ax5, run_empty_hours, total_runs, total_simulation_hours
+    )
 
-    plt.tight_layout(rect=(0, 0.03, 1, 0.95)) # Adjusted top margin to make room for text box
+    plt.tight_layout(
+        rect=(0, 0.03, 1, 0.95)
+    )  # Adjusted top margin to make room for text box
     plt.show()

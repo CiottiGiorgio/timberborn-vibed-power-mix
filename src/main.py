@@ -4,34 +4,37 @@ from simulation import run_simulation_batch
 from plots.canvas import plot_simulation
 from cli import create_cli, parse_params
 from optimizer import optimize, find_optimal_solutions
-import consts
 
 
 def run_optimization(**kwargs):
     """Runs the optimization process."""
     print("Starting optimization...")
     base_params = parse_params(**kwargs)
-    
+
     iterations = kwargs.get("iterations", 500)
     samples_per_sim = kwargs.get("samples_per_sim", 2000)
-    
+
     # Note: Bounds are not yet configurable via CLI, using defaults.
     results = optimize(
         base_params=base_params,
         iterations=iterations,
-        simulations_per_config=samples_per_sim
+        simulations_per_config=samples_per_sim,
     )
-    
+
     optimal_solutions = find_optimal_solutions(results, max_empty_percent=5.0)
-    
-    print("\n--- Optimal Solutions (Satisfying < 5% Empty Time in 95th Percentile Case) ---")
+
+    print(
+        "\n--- Optimal Solutions (Satisfying < 5% Empty Time in 95th Percentile Case) ---"
+    )
     if not optimal_solutions:
         print("No solutions found satisfying the criteria.")
     else:
         # Print top 5 cheapest solutions
         for i, result in enumerate(optimal_solutions[:5]):
             print(f"Rank {i+1}: {result}")
-    print("-----------------------------------------------------------------------------")
+    print(
+        "-----------------------------------------------------------------------------"
+    )
 
 
 def run_visualization(**kwargs):

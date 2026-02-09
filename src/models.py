@@ -25,6 +25,7 @@ class FactoryParams(BaseModel):
 
 
 class EnergyMixParams(BaseModel):
+    power_wheels: int = 0
     water_wheels: int = 0
     large_windmills: int = 0
     windmills: int = 0

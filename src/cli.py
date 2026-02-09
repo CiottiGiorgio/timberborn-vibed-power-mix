@@ -78,6 +78,16 @@ def create_cli(main_func):
         cli_wrapper.params.append(option)
 
     # Producers (Energy Mix)
+    # Power Wheels
+    if hasattr(MachineDatabase, "power_wheel"):
+        option = click.Option(
+            ["--power-wheels"],
+            type=int,
+            default=0,
+            help="Number of power wheels",
+        )
+        cli_wrapper.params.append(option)
+
     # Water Wheels
     if hasattr(MachineDatabase, "water_wheel"):
         option = click.Option(
@@ -154,6 +164,7 @@ def parse_params(**kwargs) -> SimulationParams:
 
     # Create EnergyMixParams
     # We look for specific keys
+    power_wheels = kwargs.get("power_wheels", 0)
     water_wheels = kwargs.get("water_wheels", 0)
     large_windmills = kwargs.get("large_windmills", 0)
     windmills = kwargs.get("windmills", 0)
@@ -161,6 +172,7 @@ def parse_params(**kwargs) -> SimulationParams:
     battery_height = kwargs.get("battery_height", 0)
 
     energy_mix = EnergyMixParams(
+        power_wheels=power_wheels,
         water_wheels=water_wheels,
         large_windmills=large_windmills,
         windmills=windmills,

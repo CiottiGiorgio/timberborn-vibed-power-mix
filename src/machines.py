@@ -36,6 +36,7 @@ class MachineDatabase:
     explosives_factory = MachineSpec(power=150, cost=0)
     grillmist = MachineSpec(power=60, cost=0)
 
+    power_wheel = MachineSpec(power=50, cost=50, is_producer=True)
     water_wheel = MachineSpec(power=150, cost=50, is_producer=True)
     large_windmill = MachineSpec(power=300, cost=0, is_producer=True)
     windmill = MachineSpec(power=150, cost=40, is_producer=True)

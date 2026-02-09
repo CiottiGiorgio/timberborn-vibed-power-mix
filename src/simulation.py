@@ -23,19 +23,23 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
         total_consumption_rate += count * spec.power
 
     # Production
+    power_wheel_spec = MachineDatabase.power_wheel
     wheel_spec = MachineDatabase.water_wheel
     large_windmill_spec = MachineDatabase.large_windmill
     windmill_spec = MachineDatabase.windmill
 
+    power_wheel_production = power_wheel_spec.power
     wheel_production = wheel_spec.power
     large_windmill_production = large_windmill_spec.power
     windmill_production = windmill_spec.power
 
+    power_wheel_cost = power_wheel_spec.cost
     wheel_cost = wheel_spec.cost
     large_windmill_cost = large_windmill_spec.cost
     windmill_cost = windmill_spec.cost
 
     # Get counts from params.energy_mix
+    num_power_wheels = params.energy_mix.power_wheels
     num_water_wheels = params.energy_mix.water_wheels
     num_large_windmills = params.energy_mix.large_windmills
     num_windmills = params.energy_mix.windmills
@@ -63,7 +67,8 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
     # Total Cost Calculation
     total_cost = (
-        (num_water_wheels * wheel_cost)
+        (num_power_wheels * power_wheel_cost)
+        + (num_water_wheels * wheel_cost)
         + (num_large_windmills * large_windmill_cost)
         + (num_windmills * windmill_cost)
         + total_battery_cost
@@ -131,15 +136,22 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     # Water wheels run in Wet and Badtide seasons (for now)
     is_water_active = is_first_wet | is_second_wet | is_badtide
 
+    # Power wheels run only during working hours
+    is_working_hour = hour_of_day < params.working_hours
+    power_wheel_production_rate = np.where(
+        is_working_hour, num_power_wheels * power_wheel_production, 0
+    )
+
     # Production depends on season (Water Wheel runs only in wet/badtide season)
     # Windmills run all the time with variability
     power_production = (
-        np.where(is_water_active, water_wheel_production_rate, 0) + wind_production
+        np.where(is_water_active, water_wheel_production_rate, 0)
+        + wind_production
+        + power_wheel_production_rate
     )
 
     # Consumption depends on working hours
     # Factories are active only during the first working_hours hours of the day
-    is_working_hour = hour_of_day < params.working_hours
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0)
 
     # Calculate Surplus Power (Production - Consumption)

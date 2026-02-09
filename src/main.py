@@ -3,10 +3,49 @@ from concurrent.futures import ProcessPoolExecutor
 from simulation import run_simulation_batch
 from plots.canvas import plot_simulation
 from cli import create_cli, parse_params
-
+from optimizer import optimize, find_optimal_solutions
+import consts
 
 def main(**kwargs):
-    """Visualize power and energy profiles for an industrial complex."""
+    """
+    Visualize power and energy profiles for an industrial complex,
+    or run an optimization to find the best energy mix.
+    """
+
+    if kwargs.get("optimize", False):
+        run_optimization(**kwargs)
+    else:
+        run_visualization(**kwargs)
+
+def run_optimization(**kwargs):
+    """Runs the optimization process."""
+    print("Starting optimization...")
+    base_params = parse_params(**kwargs)
+    
+    iterations = kwargs.get("iterations", 500)
+    sims_per_config = kwargs.get("sims_per_config", 2000)
+    
+    # Note: Bounds are not yet configurable via CLI, using defaults.
+    results = optimize(
+        base_params=base_params,
+        iterations=iterations,
+        simulations_per_config=sims_per_config
+    )
+    
+    optimal_solutions = find_optimal_solutions(results, max_empty_percent=5.0)
+    
+    print("\n--- Optimal Solutions (Satisfying < 5% Empty Time in 95th Percentile Case) ---")
+    if not optimal_solutions:
+        print("No solutions found satisfying the criteria.")
+    else:
+        # Print top 5 cheapest solutions
+        for i, result in enumerate(optimal_solutions[:5]):
+            print(f"Rank {i+1}: {result}")
+    print("-----------------------------------------------------------------------------")
+
+
+def run_visualization(**kwargs):
+    """Visualize power and energy profiles for a single configuration."""
 
     params = parse_params(**kwargs)
     runs = kwargs.get("runs", 1)
@@ -15,7 +54,7 @@ def main(**kwargs):
     worst_run_data = None
     max_hours_empty = -1
 
-    print(f"Running {runs} simulations...")
+    print(f"Running {runs} simulations for visualization...")
 
     # Determine number of workers
     num_workers = os.cpu_count() or 1
@@ -53,7 +92,10 @@ def main(**kwargs):
                 if worst_run_data is None:
                     worst_run_data = data
 
-    plot_simulation(worst_run_data, run_empty_hours, runs)
+    if worst_run_data:
+        plot_simulation(worst_run_data, run_empty_hours, runs)
+    else:
+        print("No simulation data to plot.")
 
 
 if __name__ == "__main__":

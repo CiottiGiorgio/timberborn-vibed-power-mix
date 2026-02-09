@@ -62,7 +62,13 @@ def create_cli(main_func):
         default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
         help="Duration of badtide season in days",
     )
-    @click.option("--runs", type=int, default=1, help="Number of simulation runs")
+    @click.option("--runs", type=int, default=1, help="Number of simulation runs (for visualization)")
+    
+    # Optimization flags
+    @click.option("--optimize", is_flag=True, help="Run optimization instead of single simulation")
+    @click.option("--iterations", type=int, default=consts.DEFAULT_OPTIMIZATION_ITERATIONS, help="Number of optimization iterations")
+    @click.option("--sims-per-config", type=int, default=consts.DEFAULT_SIMULATIONS_PER_CONFIG, help="Simulations per config during optimization")
+
     def cli_wrapper(**kwargs):
         main_func(**kwargs)
 

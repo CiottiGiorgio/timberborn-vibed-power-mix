@@ -1,3 +1,5 @@
+import numpy as np
+
 def plot_power(
     ax,
     time_days,
@@ -25,6 +27,28 @@ def plot_power(
         label=consumption_label,
         color="#ff7f0e",
         linewidth=2,
+    )
+
+    # Calculate means
+    mean_production = np.mean(power_production)
+    mean_consumption = np.mean(power_consumption)
+
+    # Add horizontal lines for means
+    ax.axhline(
+        y=mean_production,
+        color="#1f77b4",
+        linestyle="--",
+        linewidth=1.5,
+        alpha=0.8,
+        label=f"Mean Production ({mean_production:.1f} hp)",
+    )
+    ax.axhline(
+        y=mean_consumption,
+        color="#ff7f0e",
+        linestyle="--",
+        linewidth=1.5,
+        alpha=0.8,
+        label=f"Mean Consumption ({mean_consumption:.1f} hp)",
     )
 
     ax.set_ylabel("Power (hp)")

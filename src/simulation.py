@@ -1,6 +1,6 @@
 import numpy as np
 from models import SimulationParams, SimulationResult
-from machines import MachineDatabase
+from machines import iter_consumers, power_wheel, water_wheel, large_windmill, windmill, BatterySpec
 import consts
 
 
@@ -9,7 +9,7 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     total_consumption_rate = 0
 
     # Iterate over all consumers in MachineDatabase
-    for name, spec in MachineDatabase.iter_consumers():
+    for name, spec in iter_consumers():
         count = 0
         # Check if count is provided in params.factories
         if hasattr(params.factories, name):
@@ -23,10 +23,10 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
         total_consumption_rate += count * spec.power
 
     # Production
-    power_wheel_spec = MachineDatabase.power_wheel
-    wheel_spec = MachineDatabase.water_wheel
-    large_windmill_spec = MachineDatabase.large_windmill
-    windmill_spec = MachineDatabase.windmill
+    power_wheel_spec = power_wheel
+    wheel_spec = water_wheel
+    large_windmill_spec = large_windmill
+    windmill_spec = windmill
 
     power_wheel_production = power_wheel_spec.power
     wheel_production = wheel_spec.power
@@ -46,7 +46,7 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     num_batteries = params.energy_mix.batteries
 
     # Battery Constants
-    battery_info = MachineDatabase.battery
+    battery_info = BatterySpec
 
     # Handle battery height (int or list of ints)
     battery_heights = params.energy_mix.battery_height

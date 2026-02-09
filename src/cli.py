@@ -1,6 +1,6 @@
 import click
 import consts
-from machines import MachineDatabase
+from machines import iter_consumers, ALL_MACHINES
 from models import FactoryParams, EnergyMixParams, SimulationParams
 
 
@@ -74,7 +74,7 @@ def create_cli(main_func):
 
     # Add dynamic options based on MachineDatabase
     # Consumers
-    for name, spec in MachineDatabase.iter_consumers():
+    for name, spec in iter_consumers():
         option = click.Option(
             [f"--{name.replace('_', '-')}"],
             type=int,
@@ -85,7 +85,7 @@ def create_cli(main_func):
 
     # Producers (Energy Mix)
     # Power Wheels
-    if hasattr(MachineDatabase, "power_wheel"):
+    if "power_wheel" in ALL_MACHINES:
         option = click.Option(
             ["--power-wheels"],
             type=int,
@@ -95,7 +95,7 @@ def create_cli(main_func):
         cli_wrapper.params.append(option)
 
     # Water Wheels
-    if hasattr(MachineDatabase, "water_wheel"):
+    if "water_wheel" in ALL_MACHINES:
         option = click.Option(
             ["--water-wheels"],
             type=int,
@@ -105,7 +105,7 @@ def create_cli(main_func):
         cli_wrapper.params.append(option)
 
     # Large Windmills
-    if hasattr(MachineDatabase, "large_windmill"):
+    if "large_windmill" in ALL_MACHINES:
         option = click.Option(
             ["--large-windmills"],
             type=int,
@@ -115,7 +115,7 @@ def create_cli(main_func):
         cli_wrapper.params.append(option)
 
     # Windmills
-    if hasattr(MachineDatabase, "windmill"):
+    if "windmill" in ALL_MACHINES:
         option = click.Option(
             ["--windmills"],
             type=int,
@@ -158,7 +158,7 @@ def parse_params(**kwargs) -> SimulationParams:
     # Create FactoryParams dynamically
     # We iterate over kwargs and see if they match any consumer machine name
     factory_counts = {}
-    for name, spec in MachineDatabase.iter_consumers():
+    for name, spec in iter_consumers():
         # CLI args use underscores (click converts dashes to underscores)
         arg_name = name
         if arg_name in kwargs:

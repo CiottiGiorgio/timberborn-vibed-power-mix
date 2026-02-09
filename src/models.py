@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Tuple, Union
 import numpy as np
 import consts
-from machines import MachineDatabase
+from machines import iter_consumers
 
 
 class FactoryParams(BaseModel):
@@ -11,7 +11,7 @@ class FactoryParams(BaseModel):
     @field_validator("counts")
     @classmethod
     def validate_counts(cls, v):
-        valid_machines = {name for name, _ in MachineDatabase.iter_consumers()}
+        valid_machines = {name for name, _ in iter_consumers()}
         for name in v:
             if name not in valid_machines:
                 raise ValueError(f"Unknown factory: {name}. Must be one of {valid_machines}")

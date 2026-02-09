@@ -4,7 +4,8 @@ from plots.power_plot import plot_power
 from plots.energy_plot import plot_energy
 from plots.surplus_plot import plot_surplus
 from plots.battery_plot import plot_battery
-from plots.empty_hours_plot import plot_empty_hours
+from plots.empty_hours_plot import plot_empty_hours_percentage
+import consts
 
 
 def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
@@ -87,8 +88,9 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
         battery_height,
     )
 
-    # Plot 5: Empty Battery Duration Distribution
-    plot_empty_hours(ax5, run_empty_hours, total_runs)
+    # Plot 5: Empty Battery Duration Distribution (Percentage)
+    total_simulation_hours = days * consts.HOURS_PER_DAY
+    plot_empty_hours_percentage(ax5, run_empty_hours, total_runs, total_simulation_hours)
 
     plt.tight_layout(rect=(0, 0.03, 1, 0.97))
     plt.show()

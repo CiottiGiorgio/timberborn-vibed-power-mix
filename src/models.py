@@ -2,10 +2,20 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Tuple, Union
 import numpy as np
 import consts
+from machines import MachineDatabase
 
 
 class FactoryParams(BaseModel):
     counts: Dict[str, int] = Field(default_factory=dict)
+
+    @field_validator("counts")
+    @classmethod
+    def validate_counts(cls, v):
+        valid_machines = {name for name, _ in MachineDatabase.iter_consumers()}
+        for name in v:
+            if name not in valid_machines:
+                raise ValueError(f"Unknown factory: {name}. Must be one of {valid_machines}")
+        return v
 
     def __getattr__(self, item):
         # Allow access like params.factories.lumber_mills

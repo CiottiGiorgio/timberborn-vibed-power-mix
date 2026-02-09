@@ -5,18 +5,6 @@ import consts
 
 
 def simulate_scenario(params: SimulationParams) -> SimulationResult:
-
-    # Helper to safely get power
-    def get_power(name):
-        if hasattr(MachineDatabase, name):
-            return getattr(MachineDatabase, name).power
-        return 0
-
-    def get_cost(name):
-        if hasattr(MachineDatabase, name):
-            return getattr(MachineDatabase, name).cost
-        return 0
-
     # Consumption
     total_consumption_rate = 0
 

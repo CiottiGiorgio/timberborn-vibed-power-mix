@@ -13,8 +13,7 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     power_production = data.power_production
     power_consumption = data.power_consumption
     power_surplus = data.power_surplus
-    effective_surplus = data.effective_surplus
-    effective_deficit = data.effective_deficit
+    effective_balance = data.effective_balance
     battery_charge = data.battery_charge
     energy_production = data.energy_production
     energy_consumption = data.energy_consumption
@@ -76,7 +75,7 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     plot_energy(ax2, time_days, energy_production, energy_consumption, days)
 
     # Plot 3: Surplus Power (Effective)
-    plot_surplus(ax3, time_days, power_surplus, effective_surplus, effective_deficit)
+    plot_surplus(ax3, time_days, power_surplus, effective_balance)
 
     # Plot 4: Battery Charge
     plot_battery(

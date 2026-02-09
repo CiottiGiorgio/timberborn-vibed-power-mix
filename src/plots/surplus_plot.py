@@ -1,4 +1,4 @@
-def plot_surplus(ax, time_days, power_surplus, effective_surplus, effective_deficit):
+def plot_surplus(ax, time_days, power_surplus, effective_balance):
     ax.plot(
         time_days,
         power_surplus,
@@ -10,18 +10,18 @@ def plot_surplus(ax, time_days, power_surplus, effective_surplus, effective_defi
     ax.fill_between(time_days, power_surplus, 0, color="#D3D3D3", alpha=0.15)
     ax.fill_between(
         time_days,
-        effective_surplus,
+        effective_balance,
         0,
-        where=(effective_surplus > 0),
+        where=(effective_balance > 0),
         facecolor="green",
         alpha=0.6,
         label="Unstored Surplus",
     )
     ax.fill_between(
         time_days,
-        effective_deficit,
+        effective_balance,
         0,
-        where=(effective_deficit < 0),
+        where=(effective_balance < 0),
         facecolor="red",
         alpha=0.6,
         label="Uncovered Deficit",

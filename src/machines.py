@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Iterator, Tuple
 
 
 @dataclass(frozen=True)
@@ -44,19 +45,23 @@ class MachineDatabase:
     )
 
     @classmethod
-    def iter_machines(cls):
-        for name, value in cls.__dict__.items():
-            if isinstance(value, MachineSpec):
-                yield name, value
+    def iter_machines(cls) -> Iterator[Tuple[str, MachineSpec]]:
+        return (
+            (name, value)
+            for name, value in cls.__dict__.items()
+            if isinstance(value, MachineSpec)
+        )
 
     @classmethod
-    def iter_consumers(cls):
-        for name, value in cls.iter_machines():
-            if not value.is_producer:
-                yield name, value
+    def iter_consumers(cls) -> Iterator[Tuple[str, MachineSpec]]:
+        return (
+            (name, value)
+            for name, value in cls.iter_machines()
+            if not value.is_producer
+        )
 
     @classmethod
-    def iter_producers(cls):
-        for name, value in cls.iter_machines():
-            if value.is_producer:
-                yield name, value
+    def iter_producers(cls) -> Iterator[Tuple[str, MachineSpec]]:
+        return (
+            (name, value) for name, value in cls.iter_machines() if value.is_producer
+        )

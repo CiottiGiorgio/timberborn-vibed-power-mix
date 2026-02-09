@@ -48,8 +48,7 @@ class SimulationResult(BaseModel):
     power_production: np.ndarray
     power_consumption: np.ndarray
     power_surplus: np.ndarray
-    effective_surplus: np.ndarray
-    effective_deficit: np.ndarray
+    effective_balance: np.ndarray
     battery_charge: np.ndarray
     energy_production: np.ndarray
     energy_consumption: np.ndarray

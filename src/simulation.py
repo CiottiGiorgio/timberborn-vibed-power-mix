@@ -23,13 +23,17 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
         total_consumption_rate += count * spec.power
 
     # Production
-    wheel_production = MachineDatabase.water_wheel.power
-    large_windmill_production = MachineDatabase.large_windmill.power
-    windmill_production = MachineDatabase.windmill.power
+    wheel_spec = MachineDatabase.water_wheel
+    large_windmill_spec = MachineDatabase.large_windmill
+    windmill_spec = MachineDatabase.windmill
 
-    wheel_cost = MachineDatabase.water_wheel.cost
-    large_windmill_cost = MachineDatabase.large_windmill.cost
-    windmill_cost = MachineDatabase.windmill.cost
+    wheel_production = wheel_spec.power
+    large_windmill_production = large_windmill_spec.power
+    windmill_production = windmill_spec.power
+
+    wheel_cost = wheel_spec.cost
+    large_windmill_cost = large_windmill_spec.cost
+    windmill_cost = windmill_spec.cost
 
     # Get counts from params.energy_mix
     num_water_wheels = params.energy_mix.water_wheels
@@ -42,19 +46,20 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
     # Handle battery height (int or list of ints)
     battery_heights = params.energy_mix.battery_height
-    if isinstance(battery_heights, int):
-        # If it's a single int, treat it as a list of identical heights
-        battery_heights = [battery_heights] * num_batteries
 
     # Calculate total capacity and cost by summing over individual batteries
-    total_battery_capacity = 0
-    total_battery_cost = 0
-
-    for h in battery_heights:
-        capacity = battery_info.calculate_capacity(h)
-        cost = battery_info.calculate_cost(h)
-        total_battery_capacity += capacity
-        total_battery_cost += cost
+    if isinstance(battery_heights, int):
+        # Optimization: If all batteries are the same, calculate once and multiply
+        h = battery_heights
+        total_battery_capacity = num_batteries * battery_info.calculate_capacity(h)
+        total_battery_cost = num_batteries * battery_info.calculate_cost(h)
+    else:
+        # List of different heights
+        total_battery_capacity = 0
+        total_battery_cost = 0
+        for h in battery_heights:
+            total_battery_capacity += battery_info.calculate_capacity(h)
+            total_battery_cost += battery_info.calculate_cost(h)
 
     # Total Cost Calculation
     total_cost = (
@@ -142,8 +147,7 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
     # Calculate Battery State of Charge and Effective Surplus/Deficit
     battery_charge = np.zeros(total_hours)
-    effective_surplus = np.zeros(total_hours)  # Surplus after charging battery
-    effective_deficit = np.zeros(total_hours)  # Deficit after discharging battery
+    effective_balance = np.zeros(total_hours)  # Positive for surplus, negative for deficit
 
     current_charge = total_battery_capacity / 2  # Start at 50% capacity
 
@@ -157,8 +161,7 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
             current_charge += energy_to_store
             # Remaining surplus that couldn't be stored
-            effective_surplus[i] = surplus - energy_to_store
-            effective_deficit[i] = 0
+            effective_balance[i] = surplus - energy_to_store
 
         else:
             # Discharging (surplus is negative, so it's a deficit)
@@ -167,9 +170,8 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
             energy_from_battery = min(deficit, energy_available)
 
             current_charge -= energy_from_battery
-            # Remaining deficit that couldn't be covered
-            effective_deficit[i] = -(deficit - energy_from_battery)
-            effective_surplus[i] = 0
+            # Remaining deficit that couldn't be covered (negative value)
+            effective_balance[i] = -(deficit - energy_from_battery)
 
         battery_charge[i] = current_charge
 
@@ -201,8 +203,7 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
         power_production=power_production,
         power_consumption=power_consumption,
         power_surplus=power_surplus,
-        effective_surplus=effective_surplus,
-        effective_deficit=effective_deficit,
+        effective_balance=effective_balance,
         battery_charge=battery_charge,
         energy_production=energy_production,
         energy_consumption=energy_consumption,

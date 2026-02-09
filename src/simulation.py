@@ -232,11 +232,8 @@ def run_simulation_task(params: SimulationParams):
     """
     data = simulate_scenario(params)
 
-    # Check if battery reached 0 after day 1 (24 hours)
-    battery_after_day1 = data.battery_charge[24:]
-
     # Count hours where battery is 0 or less
-    hours_empty = np.sum(battery_after_day1 <= 0)
+    hours_empty = np.sum(data.battery_charge <= 0)
 
     return hours_empty, data
 

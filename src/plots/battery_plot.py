@@ -15,6 +15,13 @@ def plot_battery(
 
     ax.set_ylabel("Stored Energy (hph)")
     ax.set_xlabel("Time (days)")
-    ax.set_title(f"Battery Status ({batteries} Batteries @ {battery_height}m)")
+    
+    if isinstance(battery_height, list):
+        avg_height = sum(battery_height) / len(battery_height) if battery_height else 0
+        height_str = f"Avg {avg_height:.1f}"
+    else:
+        height_str = str(battery_height)
+        
+    ax.set_title(f"Battery Status ({batteries} Batteries @ {height_str}m)")
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)

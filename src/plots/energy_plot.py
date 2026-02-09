@@ -52,5 +52,5 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
 
     ax.set_ylabel("Energy (hph)")
     ax.set_title(f"Energy Profile ({days} Days)")
-    ax.legend(loc="upper right")
+    ax.legend(loc="upper left")
     ax.grid(True, linestyle="--", alpha=0.7)

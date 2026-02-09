@@ -24,6 +24,7 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     total_cost = data.total_cost
 
     days = params.days
+    power_wheels = params.energy_mix.power_wheels
     water_wheels = params.energy_mix.water_wheels
     large_windmills = params.energy_mix.large_windmills
     windmills = params.energy_mix.windmills
@@ -38,6 +39,33 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     # Add title with total cost
     fig.suptitle(
         f"Simulation Results (Total Cost: {total_cost} logs)", fontsize=16, y=0.99
+    )
+    
+    # Handle battery height display
+    if isinstance(battery_height, list):
+        avg_height = sum(battery_height) / len(battery_height) if battery_height else 0
+        height_str = f"Avg: {avg_height:.1f}"
+    else:
+        height_str = str(battery_height)
+    
+    # Add Energy Mix Info Box
+    mix_info = (
+        f"Energy Mix:\n"
+        f"  Power Wheels: {power_wheels}\n"
+        f"  Water Wheels: {water_wheels}\n"
+        f"  Large Windmills: {large_windmills}\n"
+        f"  Windmills: {windmills}\n"
+        f"  Batteries: {batteries} (Height: {height_str})"
+    )
+    
+    # Place text box in top left corner
+    fig.text(
+        0.02, 
+        0.98, 
+        mix_info, 
+        fontsize=10, 
+        verticalalignment='top', 
+        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5)
     )
 
     ax1, ax2, ax3, ax4, ax5 = axes
@@ -92,5 +120,5 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     total_simulation_hours = days * consts.HOURS_PER_DAY
     plot_empty_hours_percentage(ax5, run_empty_hours, total_runs, total_simulation_hours)
 
-    plt.tight_layout(rect=(0, 0.03, 1, 0.97))
+    plt.tight_layout(rect=(0, 0.03, 1, 0.95)) # Adjusted top margin to make room for text box
     plt.show()

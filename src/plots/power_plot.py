@@ -11,7 +11,9 @@ def plot_power(
     large_windmills,
     windmills,
 ):
-    production_label = f"Production ({water_wheels} Wheels, {large_windmills} L.Wind, {windmills} Wind)"
+    # Simplified label as details are now in the text box
+    production_label = "Total Production"
+
     ax.plot(
         time_days,
         power_production,
@@ -20,7 +22,7 @@ def plot_power(
         linewidth=1,
         alpha=0.8,
     )
-    consumption_label = "Total Factory Consumption"
+    consumption_label = "Total Consumption"
     ax.plot(
         time_days,
         power_consumption,
@@ -40,7 +42,7 @@ def plot_power(
         linestyle="--",
         linewidth=1.5,
         alpha=0.8,
-        label=f"Mean Production ({mean_production:.1f} hp)",
+        label="Mean Production",
     )
     ax.axhline(
         y=mean_consumption,
@@ -48,7 +50,7 @@ def plot_power(
         linestyle="--",
         linewidth=1.5,
         alpha=0.8,
-        label=f"Mean Consumption ({mean_consumption:.1f} hp)",
+        label="Mean Consumption",
     )
 
     ax.set_ylabel("Power (hp)")

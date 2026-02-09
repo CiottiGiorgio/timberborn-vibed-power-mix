@@ -30,119 +30,140 @@ class IntOrIntList(click.ParamType):
             )
 
 
-def create_cli(main_func):
-    @click.command()
-    @click.option(
-        "--days",
-        type=int,
-        default=consts.DEFAULT_DAYS,
-        help="Number of days for the simulation",
-    )
-    @click.option(
-        "--working-hours",
-        type=int,
-        default=consts.DEFAULT_WORKING_HOURS,
-        help="Number of working hours per day",
-    )
-    @click.option(
-        "--wet-season-days",
-        type=int,
-        default=consts.DEFAULT_WET_SEASON_DAYS,
-        help="Duration of wet season in days",
-    )
-    @click.option(
-        "--dry-season-days",
-        type=int,
-        default=consts.DEFAULT_DRY_SEASON_DAYS,
-        help="Duration of dry season in days",
-    )
-    @click.option(
+def add_common_params(func):
+    """Decorator to add common simulation parameters to a click command."""
+    
+    # Consumers
+    for name, spec in iter_consumers():
+        func = click.option(
+            f"--{name.replace('_', '-')}",
+            type=int,
+            default=0,
+            help=f"Number of {name.replace('_', ' ')}s",
+        )(func)
+
+    # Standard options
+    func = click.option(
         "--badtide-season-days",
         type=int,
         default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
         help="Duration of badtide season in days",
-    )
-    @click.option("--runs", type=int, default=1, help="Number of simulation runs (for visualization)")
-    
-    # Optimization flags
-    @click.option("--optimize", is_flag=True, help="Run optimization instead of single simulation")
-    @click.option("--iterations", type=int, default=consts.DEFAULT_OPTIMIZATION_ITERATIONS, help="Number of optimization iterations")
-    @click.option("--sims-per-config", type=int, default=consts.DEFAULT_SIMULATIONS_PER_CONFIG, help="Simulations per config during optimization")
+    )(func)
 
-    def cli_wrapper(**kwargs):
-        main_func(**kwargs)
-
-    # Add dynamic options based on MachineDatabase
-    # Consumers
-    for name, spec in iter_consumers():
-        option = click.Option(
-            [f"--{name.replace('_', '-')}"],
-            type=int,
-            default=0,
-            help=f"Number of {name.replace('_', ' ')}s",
-        )
-        cli_wrapper.params.append(option)
-
-    # Producers (Energy Mix)
-    # Power Wheels
-    if "power_wheel" in ALL_MACHINES:
-        option = click.Option(
-            ["--power-wheels"],
-            type=int,
-            default=0,
-            help="Number of power wheels",
-        )
-        cli_wrapper.params.append(option)
-
-    # Water Wheels
-    if "water_wheel" in ALL_MACHINES:
-        option = click.Option(
-            ["--water-wheels"],
-            type=int,
-            default=0,
-            help="Number of water wheels",
-        )
-        cli_wrapper.params.append(option)
-
-    # Large Windmills
-    if "large_windmill" in ALL_MACHINES:
-        option = click.Option(
-            ["--large-windmills"],
-            type=int,
-            default=0,
-            help="Number of large windmills",
-        )
-        cli_wrapper.params.append(option)
-
-    # Windmills
-    if "windmill" in ALL_MACHINES:
-        option = click.Option(
-            ["--windmills"],
-            type=int,
-            default=0,
-            help="Number of windmills",
-        )
-        cli_wrapper.params.append(option)
-
-    # Batteries
-    option = click.Option(
-        ["--batteries"],
+    func = click.option(
+        "--dry-season-days",
         type=int,
-        default=0,
-        help="Number of gravity batteries",
-    )
-    cli_wrapper.params.append(option)
+        default=consts.DEFAULT_DRY_SEASON_DAYS,
+        help="Duration of dry season in days",
+    )(func)
 
+    func = click.option(
+        "--wet-season-days",
+        type=int,
+        default=consts.DEFAULT_WET_SEASON_DAYS,
+        help="Duration of wet season in days",
+    )(func)
+
+    func = click.option(
+        "--working-hours",
+        type=int,
+        default=consts.DEFAULT_WORKING_HOURS,
+        help="Number of working hours per day",
+    )(func)
+
+    func = click.option(
+        "--days",
+        type=int,
+        default=consts.DEFAULT_DAYS,
+        help="Number of days for the simulation",
+    )(func)
+    
+    # Common simulation parameter
+    func = click.option(
+        "--samples-per-sim", 
+        type=int, 
+        default=consts.DEFAULT_SAMPLES_PER_SIM, 
+        help="Number of simulation runs per configuration"
+    )(func)
+
+    return func
+
+def add_energy_mix_params(func):
+    """Decorator to add energy mix parameters (for run command)."""
+    
     # Battery Height
-    option = click.Option(
-        ["--battery-height"],
+    func = click.option(
+        "--battery-height",
         type=IntOrIntList(),
         default=0,
         help="Height of gravity batteries in meters. Can be a single int or a comma-separated list of ints.",
-    )
-    cli_wrapper.params.append(option)
+    )(func)
 
-    return cli_wrapper
+    # Batteries
+    func = click.option(
+        "--batteries",
+        type=int,
+        default=0,
+        help="Number of gravity batteries",
+    )(func)
+
+    # Producers
+    if "windmill" in ALL_MACHINES:
+        func = click.option(
+            "--windmills",
+            type=int,
+            default=0,
+            help="Number of windmills",
+        )(func)
+
+    if "large_windmill" in ALL_MACHINES:
+        func = click.option(
+            "--large-windmills",
+            type=int,
+            default=0,
+            help="Number of large windmills",
+        )(func)
+
+    if "water_wheel" in ALL_MACHINES:
+        func = click.option(
+            "--water-wheels",
+            type=int,
+            default=0,
+            help="Number of water wheels",
+        )(func)
+
+    if "power_wheel" in ALL_MACHINES:
+        func = click.option(
+            "--power-wheels",
+            type=int,
+            default=0,
+            help="Number of power wheels",
+        )(func)
+        
+    return func
+
+
+def create_cli(run_callback, optimize_callback):
+    @click.group()
+    def cli():
+        """Timberborn Power Mix Simulation and Optimization Tool."""
+        pass
+
+    @cli.command(name="run")
+    @add_energy_mix_params
+    @add_common_params
+    def run_cmd(**kwargs):
+        """Run a simulation with the specified parameters."""
+        run_callback(**kwargs)
+
+    @cli.command(name="optimize")
+    @click.option("--iterations", type=int, default=consts.DEFAULT_OPTIMIZATION_ITERATIONS, help="Number of optimization iterations")
+    @add_common_params
+    def optimize_cmd(**kwargs):
+        """Optimize the energy mix for the specified parameters."""
+        optimize_callback(**kwargs)
+
+    return cli
 
 
 def parse_params(**kwargs) -> SimulationParams:

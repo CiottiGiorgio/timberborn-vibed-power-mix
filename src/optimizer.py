@@ -138,7 +138,7 @@ def evaluate_config(
 def optimize(
     base_params: SimulationParams,
     iterations: int = consts.DEFAULT_OPTIMIZATION_ITERATIONS,
-    simulations_per_config: int = consts.DEFAULT_SIMULATIONS_PER_CONFIG,
+    simulations_per_config: int = consts.DEFAULT_SAMPLES_PER_SIM,
     bounds: Dict[str, Tuple[int, int]] = None
 ) -> List[OptimizationResult]:
     """

@@ -6,16 +6,6 @@ from cli import create_cli, parse_params
 from optimizer import optimize, find_optimal_solutions
 import consts
 
-def main(**kwargs):
-    """
-    Visualize power and energy profiles for an industrial complex,
-    or run an optimization to find the best energy mix.
-    """
-
-    if kwargs.get("optimize", False):
-        run_optimization(**kwargs)
-    else:
-        run_visualization(**kwargs)
 
 def run_optimization(**kwargs):
     """Runs the optimization process."""
@@ -23,13 +13,13 @@ def run_optimization(**kwargs):
     base_params = parse_params(**kwargs)
     
     iterations = kwargs.get("iterations", 500)
-    sims_per_config = kwargs.get("sims_per_config", 2000)
+    samples_per_sim = kwargs.get("samples_per_sim", 2000)
     
     # Note: Bounds are not yet configurable via CLI, using defaults.
     results = optimize(
         base_params=base_params,
         iterations=iterations,
-        simulations_per_config=sims_per_config
+        simulations_per_config=samples_per_sim
     )
     
     optimal_solutions = find_optimal_solutions(results, max_empty_percent=5.0)
@@ -48,7 +38,7 @@ def run_visualization(**kwargs):
     """Visualize power and energy profiles for a single configuration."""
 
     params = parse_params(**kwargs)
-    runs = kwargs.get("runs", 1)
+    runs = kwargs.get("samples_per_sim", 1)
 
     run_empty_hours = []
     worst_run_data = None
@@ -99,5 +89,5 @@ def run_visualization(**kwargs):
 
 
 if __name__ == "__main__":
-    cli = create_cli(main)
+    cli = create_cli(run_visualization, run_optimization)
     cli()

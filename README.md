@@ -19,7 +19,7 @@ The tool provides a CLI with two main commands: `run` and `optimize`.
 Simulate a specific configuration of power producers, consumers, and batteries. This will generate a plot showing power generation, consumption, and battery levels over time.
 
 ```bash
-poetry run python src/main.py run \
+poetry run python timberborn_power_mix/main.py run \
     --large-windmill 5 \
     --windmill 2 \
     --battery 3 \
@@ -41,7 +41,7 @@ poetry run python src/main.py run \
 Find the most cost-effective power mix that meets your factory's demands with minimal downtime.
 
 ```bash
-poetry run python src/main.py optimize \
+poetry run python timberborn_power_mix/main.py optimize \
     --lumber-mill 5 \
     --gear-workshop 2 \
     --iterations 500

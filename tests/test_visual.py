@@ -1,11 +1,10 @@
 import os
 import pytest
-import rng
-from models import SimulationParams, EnergyMixParams, FactoryParams
-from simulation import run_simulation_batch
-from plots.canvas import create_simulation_figure
+from timberborn_power_mix import rng, consts
+from timberborn_power_mix.models import SimulationParams, EnergyMixParams, FactoryParams
+from timberborn_power_mix.simulation import run_simulation_batch
+from timberborn_power_mix.plots.canvas import create_simulation_figure
 from matplotlib.testing.compare import compare_images
-import consts
 
 
 @pytest.fixture

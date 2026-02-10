@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Tuple, Union
 import numpy as np
-import consts
-from machines import iter_consumers
+from . import consts
+from .machines import iter_consumers
 
 
 class FactoryParams(BaseModel):

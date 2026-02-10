@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.ticker as ticker
-import consts
+from .. import consts
 
 
 def plot_energy(ax, time_days, energy_production, energy_consumption, days):

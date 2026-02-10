@@ -1,9 +1,9 @@
 import random
 import numpy as np
 from typing import List, Dict, Tuple
-from models import SimulationParams, EnergyMixParams
-from simulation import run_simulation_batch
-import consts
+from .models import SimulationParams, EnergyMixParams
+from .simulation import run_simulation_batch
+from . import consts
 
 
 class OptimizationResult:

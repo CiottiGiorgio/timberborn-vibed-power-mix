@@ -1,8 +1,8 @@
 import sys
 import os
 
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
+# Add timberborn_power_mix to path
+sys.path.append(os.path.join(os.path.dirname(__file__), "../timberborn_power_mix"))
 
 import rng
 from models import SimulationParams, EnergyMixParams, FactoryParams

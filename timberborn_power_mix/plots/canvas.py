@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
-from models import SimulationResult
-from plots.power_plot import plot_power
-from plots.energy_plot import plot_energy
-from plots.surplus_plot import plot_surplus
-from plots.battery_plot import plot_battery
-from plots.empty_hours_plot import plot_empty_hours_percentage
-import consts
+from ..models import SimulationResult
+from .power_plot import plot_power
+from .energy_plot import plot_energy
+from .surplus_plot import plot_surplus
+from .battery_plot import plot_battery
+from .empty_hours_plot import plot_empty_hours_percentage
+from .. import consts
 
 
 def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samples):

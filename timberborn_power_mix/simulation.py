@@ -1,6 +1,6 @@
 import numpy as np
-from models import SimulationParams, SimulationResult
-from machines import (
+from .models import SimulationParams, SimulationResult
+from .machines import (
     iter_consumers,
     power_wheel,
     water_wheel,
@@ -8,8 +8,7 @@ from machines import (
     windmill,
     BatterySpec,
 )
-import consts
-import rng
+from . import consts, rng
 
 
 def simulate_scenario(params: SimulationParams) -> SimulationResult:

@@ -1,10 +1,10 @@
 import os
 import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
-from simulation import run_simulation_batch
-from plots.canvas import create_simulation_figure
-from cli import create_cli, parse_params
-from optimizer import optimize, find_optimal_solutions
+from .simulation import run_simulation_batch
+from .plots.canvas import create_simulation_figure
+from .cli import create_cli, parse_params
+from .optimizer import optimize, find_optimal_solutions
 
 
 def run_optimization(**kwargs):
@@ -93,6 +93,10 @@ def run_visualization(**kwargs):
         print("No simulation data to plot.")
 
 
-if __name__ == "__main__":
+def main():
     cli = create_cli(run_visualization, run_optimization)
     cli()
+
+
+if __name__ == "__main__":
+    main()

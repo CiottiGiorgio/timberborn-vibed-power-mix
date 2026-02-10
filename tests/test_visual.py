@@ -6,6 +6,16 @@ from simulation import run_simulation_task
 from plots.canvas import create_simulation_figure
 from matplotlib.testing.compare import compare_images
 
+# Simulation Defaults for Testing
+TEST_DAYS = 132
+TEST_WORKING_HOURS = 16
+TEST_SAMPLES_PER_SIM = 1000
+
+# Season Defaults for Testing
+TEST_WET_SEASON_DAYS = 3
+TEST_DRY_SEASON_DAYS = 30
+TEST_BADTIDE_SEASON_DAYS = 30
+
 
 @pytest.fixture
 def deterministic_rng():
@@ -30,24 +40,29 @@ def test_visual_output(deterministic_rng, tmp_path):
             "Please generate it by running: python3 scripts/refresh_test_image.py"
         )
 
-    # 1. Setup parameters
+    # 1. Setup parameters (Matching 'simulate-simple' run configuration)
+    # --lumber-mill 1 --wood-workshop 1 --windmill 4 --battery 1 --battery-height 1
     energy_mix = EnergyMixParams(
-        power_wheels=5,
-        water_wheels=2,
-        large_windmills=5,
-        windmills=5,
-        batteries=10,
-        battery_height=2,
+        power_wheels=0,
+        water_wheels=0,
+        large_windmills=0,
+        windmills=4,
+        batteries=1,
+        battery_height=1,
     )
 
-    factories = FactoryParams(counts={"lumber_mill": 2})
+    factories = FactoryParams(counts={
+        "lumber_mill": 1,
+        "wood_workshop": 1
+    })
 
+    # Use local constants
     params = SimulationParams(
-        days=30,
-        wet_season_days=10,
-        dry_season_days=5,
-        badtide_season_days=5,
-        working_hours=16,
+        days=TEST_DAYS,
+        wet_season_days=TEST_WET_SEASON_DAYS,
+        dry_season_days=TEST_DRY_SEASON_DAYS,
+        badtide_season_days=TEST_BADTIDE_SEASON_DAYS,
+        working_hours=TEST_WORKING_HOURS,
         energy_mix=energy_mix,
         factories=factories,
     )
@@ -55,11 +70,19 @@ def test_visual_output(deterministic_rng, tmp_path):
     # 2. Run simulation
     hours_empty, data = run_simulation_task(params)
 
-    # 3. Generate Plot
+    # 3. Verify some deterministic outputs (sanity check)
+    # Cost calculation:
+    # Windmills: 4 * 40 = 160
+    # Batteries: 1 * (84 + 1*6) = 90
+    # Total: 250
+    assert data.total_cost == 250.0
+    assert hours_empty >= 0
+
+    # 4. Generate Plot
     fig = create_simulation_figure(data, [hours_empty], 1)
     fig.savefig(str(generated_image_path))
 
-    # 4. Compare with reference image
+    # 5. Compare with reference image
     # compare_images returns None if images are identical
     # The `tol` parameter allows for minor differences in rendering between environments
     result = compare_images(reference_image_path, str(generated_image_path), tol=10)

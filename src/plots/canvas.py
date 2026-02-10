@@ -119,11 +119,31 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_samples):
     plt.setp(ax3.get_xticklabels(), visible=False)
 
     # Add vertical lines for season boundaries to all time-series plots
+    # And add labels to all of them
     for ax in [ax1, ax2, ax3, ax4]:
-        for boundary_day, _ in season_boundaries:
+        for i, (start_day, label) in enumerate(season_boundaries):
+            # Vertical line
             ax.axvline(
-                x=boundary_day, color="#444444", linestyle="-", alpha=0.4, linewidth=1.5
+                x=start_day, color="#444444", linestyle="-", alpha=0.4, linewidth=1.5
             )
+            
+            # Label
+            end_day = (
+                season_boundaries[i + 1][0] if i + 1 < len(season_boundaries) else days
+            )
+            mid_point = (start_day + end_day) / 2
+            if mid_point < days:
+                ax.text(
+                    mid_point,
+                    1.01,
+                    label,
+                    transform=ax.get_xaxis_transform(),
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                    fontweight="bold",
+                    alpha=0.6,
+                )
 
     # Plot 1: Power
     plot_power(

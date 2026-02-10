@@ -32,7 +32,7 @@ def plot_surplus(ax, time_days, power_surplus, effective_balance):
 
     ax.axhline(0, color="black", linewidth=1, linestyle="-")
     ax.set_ylabel("Effective Surplus (hp)")
-    ax.set_title("Power Surplus Profile (After Battery Buffering)")
+    ax.set_title("Power Surplus Profile (After Battery Buffering)", pad=20)
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
 

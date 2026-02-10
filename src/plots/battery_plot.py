@@ -25,7 +25,7 @@ def plot_battery(
     else:
         height_str = str(battery_height)
 
-    ax.set_title(f"Battery Status ({batteries} Batteries @ {height_str}m)")
+    ax.set_title(f"Battery Status ({batteries} Batteries @ {height_str}m)", pad=20)
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
 

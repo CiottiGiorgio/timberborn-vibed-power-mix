@@ -56,28 +56,9 @@ def plot_power(
     )
 
     ax.set_ylabel("Power (hp)")
-    ax.set_title("Power Profile", pad=35)
+    ax.set_title("Power Profile", pad=20)
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
 
     # Format y-axis with thousands separator
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
-
-    # Add season labels at the top of the first plot
-    for i, (start_day, label) in enumerate(season_boundaries):
-        end_day = (
-            season_boundaries[i + 1][0] if i + 1 < len(season_boundaries) else days
-        )
-        mid_point = (start_day + end_day) / 2
-        if mid_point < days:
-            ax.text(
-                mid_point,
-                1.01,
-                label,
-                transform=ax.get_xaxis_transform(),
-                ha="center",
-                va="bottom",
-                fontsize=10,
-                fontweight="bold",
-                alpha=0.6,
-            )

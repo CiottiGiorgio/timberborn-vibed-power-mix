@@ -6,7 +6,9 @@ from timberborn_power_mix.machines import (
     water_wheel,
     large_windmill,
     windmill,
-    BatterySpec,
+    gravity_battery,
+    calculate_battery_capacity,
+    calculate_battery_cost,
 )
 from timberborn_power_mix import consts, rng
 
@@ -53,17 +55,18 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     num_batteries = params.energy_mix.batteries
 
     # Battery Constants
-    battery_info = BatterySpec
+    battery_info = gravity_battery
 
     # Handle battery height (int or float)
     battery_height = params.energy_mix.battery_height
 
     # Calculate total capacity and cost
     # We assume all batteries have the average height
-    total_battery_capacity = num_batteries * battery_info.calculate_capacity(
-        battery_height
-    )
-    total_battery_cost = num_batteries * battery_info.calculate_cost(battery_height)
+    capacity_per_battery = calculate_battery_capacity(battery_info, battery_height)
+    cost_per_battery = calculate_battery_cost(battery_info, battery_height)
+
+    total_battery_capacity = num_batteries * capacity_per_battery
+    total_battery_cost = num_batteries * cost_per_battery
 
     # Total Cost Calculation
     total_cost = (

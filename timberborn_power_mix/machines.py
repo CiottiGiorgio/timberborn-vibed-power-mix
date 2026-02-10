@@ -28,19 +28,27 @@ large_windmill = MachineSpec(power=300, cost=75, is_producer=True)
 windmill = MachineSpec(power=150, cost=40, is_producer=True)
 
 
-class BatterySpec:
-    base_capacity = 4000
-    capacity_per_height = 2000
-    base_cost = 84
-    cost_per_height = 6
+class BatterySpec(NamedTuple):
+    base_capacity: int
+    capacity_per_height: int
+    base_cost: int
+    cost_per_height: int
 
-    @classmethod
-    def calculate_capacity(cls, height: Union[int, float]) -> float:
-        return cls.base_capacity + (height * cls.capacity_per_height)
 
-    @classmethod
-    def calculate_cost(cls, height: Union[int, float]) -> float:
-        return cls.base_cost + (height * cls.cost_per_height)
+gravity_battery = BatterySpec(
+    base_capacity=4000,
+    capacity_per_height=2000,
+    base_cost=84,
+    cost_per_height=6,
+)
+
+
+def calculate_battery_capacity(spec: BatterySpec, height: Union[int, float]) -> float:
+    return spec.base_capacity + (height * spec.capacity_per_height)
+
+
+def calculate_battery_cost(spec: BatterySpec, height: Union[int, float]) -> float:
+    return spec.base_cost + (height * spec.cost_per_height)
 
 
 # Registry

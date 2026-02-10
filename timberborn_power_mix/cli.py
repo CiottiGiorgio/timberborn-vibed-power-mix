@@ -1,7 +1,7 @@
 import click
-from . import consts
-from .machines import iter_consumers, ALL_MACHINES
-from .models import FactoryParams, EnergyMixParams, SimulationParams
+from timberborn_power_mix import consts
+from timberborn_power_mix.machines import iter_consumers, ALL_MACHINES
+from timberborn_power_mix.models import FactoryParams, EnergyMixParams, SimulationParams
 
 
 class IntOrIntList(click.ParamType):

@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Tuple, Union
 import numpy as np
-from . import consts
-from .machines import iter_consumers
+from timberborn_power_mix import consts
+from timberborn_power_mix.machines import iter_consumers
 
 
 class FactoryParams(BaseModel):

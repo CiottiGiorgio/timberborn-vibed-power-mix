@@ -1,10 +1,10 @@
 import os
 import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
-from .simulation import run_simulation_batch
-from .plots.canvas import create_simulation_figure
-from .cli import create_cli, parse_params
-from .optimizer import optimize, find_optimal_solutions
+from timberborn_power_mix.simulation import run_simulation_batch
+from timberborn_power_mix.plots.canvas import create_simulation_figure
+from timberborn_power_mix.cli import create_cli, parse_params
+from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
 
 
 def run_optimization(**kwargs):

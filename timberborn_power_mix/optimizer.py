@@ -1,9 +1,9 @@
 import random
 import numpy as np
 from typing import List, Dict, Tuple, Optional
-from .models import SimulationParams, EnergyMixParams
-from .simulation import run_simulation_batch
-from . import consts
+from timberborn_power_mix.models import SimulationParams, EnergyMixParams
+from timberborn_power_mix.simulation import run_simulation_batch
+from timberborn_power_mix import consts
 
 
 class OptimizationResult:

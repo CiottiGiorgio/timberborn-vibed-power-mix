@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.ticker as ticker
-from .. import consts
+from timberborn_power_mix import consts
 
 
 def plot_energy(ax, time_days, energy_production, energy_consumption, days):

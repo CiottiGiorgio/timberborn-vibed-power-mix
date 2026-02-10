@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
-from ..models import SimulationResult
-from .power_plot import plot_power
-from .energy_plot import plot_energy
-from .surplus_plot import plot_surplus
-from .battery_plot import plot_battery
-from .empty_hours_plot import plot_empty_hours_percentage
-from .. import consts
+from timberborn_power_mix.models import SimulationResult
+from timberborn_power_mix.plots.power_plot import plot_power
+from timberborn_power_mix.plots.energy_plot import plot_energy
+from timberborn_power_mix.plots.surplus_plot import plot_surplus
+from timberborn_power_mix.plots.battery_plot import plot_battery
+from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percentage
+from timberborn_power_mix import consts
 
 
 def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samples):

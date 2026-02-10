@@ -1,6 +1,6 @@
 import numpy as np
-from .models import SimulationParams, SimulationResult
-from .machines import (
+from timberborn_power_mix.models import SimulationParams, SimulationResult
+from timberborn_power_mix.machines import (
     iter_consumers,
     power_wheel,
     water_wheel,
@@ -8,7 +8,7 @@ from .machines import (
     windmill,
     BatterySpec,
 )
-from . import consts, rng
+from timberborn_power_mix import consts, rng
 
 
 def simulate_scenario(params: SimulationParams) -> SimulationResult:

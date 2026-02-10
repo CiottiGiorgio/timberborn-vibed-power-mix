@@ -184,16 +184,16 @@ def parse_params(**kwargs) -> SimulationParams:
 
     # Create FactoryParams dynamically
     # We iterate over kwargs and see if they match any consumer machine name
-    factory_counts = {}
+    factory_args = {}
     for name, spec in iter_consumers():
         # CLI args use underscores (click converts dashes to underscores)
         arg_name = name
         if arg_name in kwargs:
-            factory_counts[name] = kwargs[arg_name]
+            factory_args[name] = kwargs[arg_name]
         else:
-            factory_counts[name] = 0
+            factory_args[name] = 0
 
-    factories = FactoryParams(counts=factory_counts)
+    factories = FactoryParams(**factory_args)
 
     # Create EnergyMixParams
     # We look for specific keys

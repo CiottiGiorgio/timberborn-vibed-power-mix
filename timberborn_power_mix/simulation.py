@@ -19,16 +19,7 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
     # Iterate over all consumers in MachineDatabase
     for name, spec in iter_consumers():
-        count = 0
-        # Check if count is provided in params.factories
-        if hasattr(params.factories, name):
-            count = getattr(params.factories, name)
-        elif name in params.factories.counts:
-            count = params.factories.counts[name]
-        else:
-            # Fallback to 0 if not specified
-            count = 0
-
+        count = getattr(params.factories, name, 0)
         total_consumption_rate += count * spec.power
 
     # Production

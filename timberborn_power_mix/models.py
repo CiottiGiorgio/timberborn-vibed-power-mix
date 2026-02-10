@@ -1,29 +1,22 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Dict, List, Tuple, Union
+from pydantic import BaseModel, Field
+from typing import List, Tuple, Union
 import numpy as np
 from timberborn_power_mix import consts
-from timberborn_power_mix.machines import iter_consumers
 
 
 class FactoryParams(BaseModel):
-    counts: Dict[str, int] = Field(default_factory=dict)
-
-    @field_validator("counts")
-    @classmethod
-    def validate_counts(cls, v):
-        valid_machines = {name for name, _ in iter_consumers()}
-        for name in v:
-            if name not in valid_machines:
-                raise ValueError(
-                    f"Unknown factory: {name}. Must be one of {valid_machines}"
-                )
-        return v
-
-    def __getattr__(self, item):
-        # Allow access like params.factories.lumber_mills
-        if item in self.counts:
-            return self.counts[item]
-        raise AttributeError(f"'FactoryParams' object has no attribute '{item}'")
+    lumber_mill: int = 0
+    gear_workshop: int = 0
+    steel_factory: int = 0
+    wood_workshop: int = 0
+    paper_mill: int = 0
+    printing_press: int = 0
+    observatory: int = 0
+    bot_part_factory: int = 0
+    bot_assembler: int = 0
+    explosives_factory: int = 0
+    grillmist: int = 0
+    centrifuge: int = 0
 
 
 class EnergyMixParams(BaseModel):

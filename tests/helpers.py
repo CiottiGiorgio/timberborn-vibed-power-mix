@@ -22,7 +22,7 @@ def generate_reference_simulation_data():
         battery_height=1,
     )
 
-    factories = FactoryParams(counts={"lumber_mill": 1, "wood_workshop": 1})
+    factories = FactoryParams(lumber_mill=1, wood_workshop=1)
 
     params = SimulationParams(
         days=consts.DEFAULT_DAYS,

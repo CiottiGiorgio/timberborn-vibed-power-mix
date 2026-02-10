@@ -90,6 +90,22 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_samples):
         bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.5),
     )
 
+    # Add Disclaimer about Worst Case
+    disclaimer_text = (
+        "Note: The time-series plots (1-4) show the 'worst-case' sample\n"
+        "(the one with the most time spent with an empty battery)."
+    )
+    fig.text(
+        0.5,
+        0.95,
+        disclaimer_text,
+        fontsize=10,
+        ha="center",
+        va="top",
+        style="italic",
+        color="#555555",
+    )
+
     ax1, ax2, ax3, ax4, ax5 = axes
 
     # Link x-axes for the first 4 plots

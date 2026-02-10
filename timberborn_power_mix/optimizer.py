@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from .models import SimulationParams, EnergyMixParams
 from .simulation import run_simulation_batch
 from . import consts
@@ -172,7 +172,7 @@ def optimize(
     base_params: SimulationParams,
     iterations: int = consts.DEFAULT_OPTIMIZATION_ITERATIONS,
     simulations_per_config: int = consts.DEFAULT_SAMPLES_PER_SIM,
-    bounds: Dict[str, Tuple[int, int]] = None,
+    bounds: Optional[Dict[str, Tuple[int, int]]] = None,
 ) -> List[OptimizationResult]:
     """
     Performs a Local Search (Random Mutation Hill Climbing) to find optimal configurations.

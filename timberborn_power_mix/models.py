@@ -55,7 +55,7 @@ class SimulationResult(BaseModel):
     energy_production: np.ndarray
     energy_consumption: np.ndarray
     total_battery_capacity: float
-    season_boundaries: List[Tuple[float, str]]
+    season_boundaries: List[Tuple[int, str]]
     params: SimulationParams
     total_cost: float
 

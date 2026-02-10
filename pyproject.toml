@@ -25,6 +25,7 @@ tb-power-mix = "timberborn_power_mix.main:main"
 black = "^26"
 ruff = "^0.15"
 pytest = "*"
+mypy = "*"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

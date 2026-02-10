@@ -81,7 +81,7 @@ def plot_empty_hours_percentage(
                 f"In 95% of all cases, the system spends less\n"
                 f"than {p95:.1f}% of the time with an empty battery."
             )
-            
+
             # Place text below the legend (using relative coordinates)
             # We use transform=ax.transAxes to position relative to the axes
             ax.text(
@@ -92,7 +92,9 @@ def plot_empty_hours_percentage(
                 fontsize=9,
                 verticalalignment="top",
                 horizontalalignment="right",
-                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8, edgecolor="gray"),
+                bbox=dict(
+                    boxstyle="round", facecolor="white", alpha=0.8, edgecolor="gray"
+                ),
             )
 
     ax.set_title("Distribution of Time Spent with Empty Battery")

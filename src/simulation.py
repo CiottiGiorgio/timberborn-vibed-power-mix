@@ -9,6 +9,7 @@ from machines import (
     BatterySpec,
 )
 import consts
+import rng
 
 
 def simulate_scenario(params: SimulationParams) -> SimulationResult:
@@ -60,7 +61,9 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
 
     # Calculate total capacity and cost
     # We assume all batteries have the average height
-    total_battery_capacity = num_batteries * battery_info.calculate_capacity(battery_height)
+    total_battery_capacity = num_batteries * battery_info.calculate_capacity(
+        battery_height
+    )
     total_battery_cost = num_batteries * battery_info.calculate_cost(battery_height)
 
     # Total Cost Calculation
@@ -85,11 +88,14 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     # Strength: 0-100%, Duration: 5-12 hours
     wind_strength = np.zeros(total_hours)
     curr_h = 0
+
+    _rng = rng.get_rng()
+
     while curr_h < total_hours:
-        duration = np.random.randint(
+        duration = _rng.integers(
             consts.WIND_DURATION_MIN_HOURS, consts.WIND_DURATION_MAX_HOURS
         )
-        strength = np.random.random()  # 0.0 to 1.0 (0% to 100%)
+        strength = _rng.random()  # 0.0 to 1.0 (0% to 100%)
         wind_strength[curr_h : curr_h + duration] = strength
         curr_h += duration
     wind_strength = wind_strength[:total_hours]  # Trim to exact simulation length

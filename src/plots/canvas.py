@@ -8,7 +8,7 @@ from plots.empty_hours_plot import plot_empty_hours_percentage
 import consts
 
 
-def plot_simulation(data: SimulationResult, run_empty_hours, total_samples):
+def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samples):
     # Unpack data
     time_days = data.time_days
     power_production = data.power_production
@@ -126,7 +126,7 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_samples):
             ax.axvline(
                 x=start_day, color="#444444", linestyle="-", alpha=0.4, linewidth=1.5
             )
-            
+
             # Label
             end_day = (
                 season_boundaries[i + 1][0] if i + 1 < len(season_boundaries) else days
@@ -183,4 +183,5 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_samples):
     plt.tight_layout(
         rect=(0, 0.03, 1, 0.95)
     )  # Adjusted top margin to make room for text box
-    plt.show()
+
+    return fig

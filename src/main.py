@@ -1,7 +1,8 @@
 import os
+import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 from simulation import run_simulation_batch
-from plots.canvas import plot_simulation
+from plots.canvas import create_simulation_figure
 from cli import create_cli, parse_params
 from optimizer import optimize, find_optimal_solutions
 
@@ -86,7 +87,8 @@ def run_visualization(**kwargs):
                     worst_run_data = data
 
     if worst_run_data:
-        plot_simulation(worst_run_data, run_empty_hours, samples)
+        create_simulation_figure(worst_run_data, run_empty_hours, samples)
+        plt.show()
     else:
         print("No simulation data to plot.")
 

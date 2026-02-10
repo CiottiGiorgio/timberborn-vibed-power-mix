@@ -83,7 +83,7 @@ def add_common_params(func):
         "--samples-per-sim",
         type=int,
         default=consts.DEFAULT_SAMPLES_PER_SIM,
-        help="Number of simulation runs per configuration",
+        help="Number of simulation samples per configuration",
     )(func)
 
     return func

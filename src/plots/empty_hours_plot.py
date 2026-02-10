@@ -3,7 +3,7 @@ import matplotlib.ticker as ticker
 
 
 def plot_empty_hours_percentage(
-    ax, run_empty_hours, total_runs, total_simulation_hours
+    ax, run_empty_hours, total_samples, total_simulation_hours
 ):
     # Calculate percentages
     run_empty_percentages = [
@@ -37,7 +37,7 @@ def plot_empty_hours_percentage(
             # Add some headroom (e.g., 10%)
             ax.set_ylim(0, max_freq_excluding_first * 1.1)
 
-        # Calculate percentiles and mean for ALL runs
+        # Calculate percentiles and mean for ALL samples
         if run_empty_percentages:
             p5 = np.percentile(run_empty_percentages, 5)
             p50 = np.percentile(run_empty_percentages, 50)
@@ -77,7 +77,7 @@ def plot_empty_hours_percentage(
 
     ax.set_title("Distribution of Time Spent with Empty Battery")
     ax.set_xlabel("Percentage of Time with Empty Battery (%)")
-    ax.set_ylabel("Number of Runs")
+    ax.set_ylabel("Number of Samples")
     ax.grid(True, linestyle="--", alpha=0.5)
 
     # Format y-axis with thousands separator

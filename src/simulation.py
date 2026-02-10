@@ -239,11 +239,11 @@ def run_simulation_task(params: SimulationParams):
     return hours_empty, data
 
 
-def run_simulation_batch(params: SimulationParams, runs: int):
+def run_simulation_batch(params: SimulationParams, samples: int):
     """
     Runs a batch of simulations and returns a list of results.
     """
     results = []
-    for _ in range(runs):
+    for _ in range(samples):
         results.append(run_simulation_task(params))
     return results

@@ -8,7 +8,7 @@ from plots.empty_hours_plot import plot_empty_hours_percentage
 import consts
 
 
-def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
+def plot_simulation(data: SimulationResult, run_empty_hours, total_samples):
     # Unpack data
     time_days = data.time_days
     power_production = data.power_production
@@ -76,7 +76,7 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
         f"  Wet Season: {params.wet_season_days} days\n"
         f"  Dry Season: {params.dry_season_days} days\n"
         f"  Badtide Season: {params.badtide_season_days} days\n"
-        f"  Samples: {total_runs}"
+        f"  Samples: {total_samples}"
     )
 
     # Place text box in top right corner
@@ -141,7 +141,7 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
     # Plot 5: Empty Battery Duration Distribution (Percentage)
     total_simulation_hours = days * consts.HOURS_PER_DAY
     plot_empty_hours_percentage(
-        ax5, run_empty_hours, total_runs, total_simulation_hours
+        ax5, run_empty_hours, total_samples, total_simulation_hours
     )
 
     plt.tight_layout(

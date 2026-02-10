@@ -143,19 +143,19 @@ def mutate_params(
 def evaluate_config(
     base_params: SimulationParams,
     mix_params: EnergyMixParams,
-    simulations_per_config: int,
+    samples_per_config: int,
     total_hours: int,
 ) -> OptimizationResult:
 
     current_params = base_params.model_copy(deep=True)
     current_params.energy_mix = mix_params
 
-    batch_results = run_simulation_batch(current_params, runs=simulations_per_config)
+    batch_results = run_simulation_batch(current_params, samples=samples_per_config)
 
     hours_empty_list = [r[0] for r in batch_results]
     p95_empty = np.percentile(hours_empty_list, 95)
 
-    # Calculate average surplus at the end of simulation across runs
+    # Calculate average surplus at the end of simulation across samples
     surpluses = []
     for _, data in batch_results:
         prod = data.energy_production[-1]

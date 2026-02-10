@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Tuple, Union
 import numpy as np
 from timberborn_power_mix import consts
@@ -52,5 +52,4 @@ class SimulationResult(BaseModel):
     params: SimulationParams
     total_cost: float
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)

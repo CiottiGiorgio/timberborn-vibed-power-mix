@@ -35,7 +35,8 @@ def plot_empty_hours_percentage(
         if len(n) > 1:
             max_freq_excluding_first = max(n[1:])
             # Add some headroom (e.g., 10%)
-            ax.set_ylim(0, max_freq_excluding_first * 1.1)
+            if max_freq_excluding_first > 0:
+                ax.set_ylim(0, max_freq_excluding_first * 1.1)
 
         # Calculate percentiles and mean for ALL samples
         if run_empty_percentages:
@@ -101,3 +102,5 @@ def plot_empty_hours_percentage(
 
     # Format y-axis with thousands separator
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
+    # Ensure y-axis ticks are integers
+    ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))

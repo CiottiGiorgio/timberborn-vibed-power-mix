@@ -1,14 +1,14 @@
 import sys
 import os
 
-# Add timberborn_power_mix to path
-sys.path.append(os.path.join(os.path.dirname(__file__), "../timberborn_power_mix"))
+# Add project root to path
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-import rng
-from models import SimulationParams, EnergyMixParams, FactoryParams
-from simulation import run_simulation_batch
-from plots.canvas import create_simulation_figure
-import consts
+from timberborn_power_mix import rng
+from timberborn_power_mix.models import SimulationParams, EnergyMixParams, FactoryParams
+from timberborn_power_mix.simulation import run_simulation_batch
+from timberborn_power_mix.plots.canvas import create_simulation_figure
+from tests import consts
 
 
 def refresh_reference_image():

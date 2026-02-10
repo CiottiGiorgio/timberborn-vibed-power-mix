@@ -1,6 +1,7 @@
 import os
 import pytest
-from timberborn_power_mix import rng, consts
+from timberborn_power_mix import rng
+from tests import consts
 from timberborn_power_mix.models import SimulationParams, EnergyMixParams, FactoryParams
 from timberborn_power_mix.simulation import run_simulation_batch
 from timberborn_power_mix.plots.canvas import create_simulation_figure

@@ -19,6 +19,7 @@ bot_part_factory = MachineSpec(power=150, cost=0)
 bot_assembler = MachineSpec(power=250, cost=0)
 explosives_factory = MachineSpec(power=150, cost=0)
 grillmist = MachineSpec(power=60, cost=0)
+centrifuge = MachineSpec(power=200, cost=0)
 
 # Producers
 power_wheel = MachineSpec(power=50, cost=50, is_producer=True)
@@ -55,6 +56,7 @@ ALL_MACHINES: Dict[str, MachineSpec] = {
     "bot_assembler": bot_assembler,
     "explosives_factory": explosives_factory,
     "grillmist": grillmist,
+    "centrifuge": centrifuge,
     "power_wheel": power_wheel,
     "water_wheel": water_wheel,
     "large_windmill": large_windmill,

@@ -1,10 +1,13 @@
+import matplotlib.ticker as ticker
+
+
 def plot_battery(
     ax, time_days, battery_charge, total_battery_capacity, batteries, battery_height
 ):
     ax.plot(
         time_days,
         battery_charge,
-        label=f"Battery Charge (Max: {total_battery_capacity} hph)",
+        label=f"Battery Charge (Max: {total_battery_capacity:,.0f} hph)",
         color="#9467bd",
         linewidth=2,
     )
@@ -25,3 +28,6 @@ def plot_battery(
     ax.set_title(f"Battery Status ({batteries} Batteries @ {height_str}m)")
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
+
+    # Format y-axis with thousands separator
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))

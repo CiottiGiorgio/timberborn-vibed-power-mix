@@ -1,3 +1,6 @@
+import matplotlib.ticker as ticker
+
+
 def plot_surplus(ax, time_days, power_surplus, effective_balance):
     ax.plot(
         time_days,
@@ -32,3 +35,6 @@ def plot_surplus(ax, time_days, power_surplus, effective_balance):
     ax.set_title("Power Surplus Profile (After Battery Buffering)")
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
+
+    # Format y-axis with thousands separator
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.ticker as ticker
 import consts
 
 
@@ -58,3 +59,6 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
     ax.set_title(f"Energy Profile ({days} Days)")
     ax.legend(loc="upper left")
     ax.grid(True, linestyle="--", alpha=0.7)
+
+    # Format y-axis with thousands separator
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))

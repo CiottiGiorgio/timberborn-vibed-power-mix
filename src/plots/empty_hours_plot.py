@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.ticker as ticker
 
 
 def plot_empty_hours_percentage(
@@ -78,3 +79,6 @@ def plot_empty_hours_percentage(
     ax.set_xlabel("Percentage of Time with Empty Battery (%)")
     ax.set_ylabel("Number of Runs")
     ax.grid(True, linestyle="--", alpha=0.5)
+
+    # Format y-axis with thousands separator
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))

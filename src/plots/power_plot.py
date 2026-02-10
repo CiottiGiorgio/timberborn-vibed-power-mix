@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.ticker as ticker
 
 
 def plot_power(
@@ -58,6 +59,9 @@ def plot_power(
     ax.set_title(f"Power Profile ({days} Days)", pad=35)
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
+
+    # Format y-axis with thousands separator
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
 
     # Add season labels at the top of the first plot
     for i, (start_day, label) in enumerate(season_boundaries):

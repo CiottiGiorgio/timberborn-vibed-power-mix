@@ -2,6 +2,8 @@
 
 A simulation and optimization tool for power management in Timberborn. This tool helps you determine the optimal mix of power sources and batteries to sustain your factories through wet, dry, and badtide seasons.
 
+![Reference Visual Output](tests/reference_visual_output.png)
+
 ## Installation
 
 Ensure you have Python 3.13+ installed. This project uses [Poetry](https://python-poetry.org/) for dependency management.

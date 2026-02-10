@@ -32,18 +32,7 @@ class EnergyMixParams(BaseModel):
     large_windmills: int = 0
     windmills: int = 0
     batteries: int = 0
-    battery_height: Union[int, List[int]] = 0
-
-    @field_validator("battery_height")
-    @classmethod
-    def validate_battery_height(cls, v, info):
-        if isinstance(v, list):
-            batteries = info.data.get("batteries")
-            if batteries is not None and len(v) != batteries:
-                raise ValueError(
-                    f"Length of battery_height list ({len(v)}) must match number of batteries ({batteries})"
-                )
-        return v
+    battery_height: Union[int, float] = 0
 
 
 class SimulationParams(BaseModel):

@@ -55,22 +55,13 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     # Battery Constants
     battery_info = BatterySpec
 
-    # Handle battery height (int or list of ints)
-    battery_heights = params.energy_mix.battery_height
+    # Handle battery height (int or float)
+    battery_height = params.energy_mix.battery_height
 
-    # Calculate total capacity and cost by summing over individual batteries
-    if isinstance(battery_heights, int):
-        # Optimization: If all batteries are the same, calculate once and multiply
-        h = battery_heights
-        total_battery_capacity = num_batteries * battery_info.calculate_capacity(h)
-        total_battery_cost = num_batteries * battery_info.calculate_cost(h)
-    else:
-        # List of different heights
-        total_battery_capacity = 0
-        total_battery_cost = 0
-        for h in battery_heights:
-            total_battery_capacity += battery_info.calculate_capacity(h)
-            total_battery_cost += battery_info.calculate_cost(h)
+    # Calculate total capacity and cost
+    # We assume all batteries have the average height
+    total_battery_capacity = num_batteries * battery_info.calculate_capacity(battery_height)
+    total_battery_cost = num_batteries * battery_info.calculate_cost(battery_height)
 
     # Total Cost Calculation
     total_cost = (

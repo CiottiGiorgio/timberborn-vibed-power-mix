@@ -203,6 +203,11 @@ def parse_params(**kwargs) -> SimulationParams:
     windmills = kwargs.get("windmill", 0)
     batteries = kwargs.get("battery", 0)
     battery_height = kwargs.get("battery_height", 0)
+    if isinstance(battery_height, list):
+        if not battery_height:
+            battery_height = 0
+        else:
+            battery_height = sum(battery_height) / len(battery_height)
 
     energy_mix = EnergyMixParams(
         power_wheels=power_wheels,

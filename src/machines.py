@@ -1,4 +1,4 @@
-from typing import NamedTuple, Dict, Iterator, Tuple
+from typing import NamedTuple, Dict, Iterator, Tuple, Union
 
 
 class MachineSpec(NamedTuple):
@@ -34,11 +34,11 @@ class BatterySpec:
     cost_per_height = 6
 
     @classmethod
-    def calculate_capacity(cls, height: int) -> int:
+    def calculate_capacity(cls, height: Union[int, float]) -> float:
         return cls.base_capacity + (height * cls.capacity_per_height)
 
     @classmethod
-    def calculate_cost(cls, height: int) -> int:
+    def calculate_cost(cls, height: Union[int, float]) -> float:
         return cls.base_cost + (height * cls.cost_per_height)
 
 

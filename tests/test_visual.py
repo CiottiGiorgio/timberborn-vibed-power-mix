@@ -1,17 +1,14 @@
 import os
 import pytest
-from timberborn_power_mix import rng
-from tests import consts
-from timberborn_power_mix.models import SimulationParams, EnergyMixParams, FactoryParams
-from timberborn_power_mix.simulation import run_simulation_batch
-from timberborn_power_mix.plots.canvas import create_simulation_figure
 from matplotlib.testing.compare import compare_images
+from tests.helpers import generate_reference_figure, generate_reference_simulation_data
 
 
 @pytest.fixture
 def deterministic_rng():
     """Fixture to seed the RNG before a test."""
-    rng.seed_rng(42)
+    # The helper function seeds the RNG, so we just need to call it.
+    pass
 
 
 def test_visual_output(deterministic_rng, tmp_path):
@@ -31,49 +28,14 @@ def test_visual_output(deterministic_rng, tmp_path):
             "Please generate it by running: python3 scripts/refresh_test_image.py"
         )
 
-    # 1. Setup parameters (Matching 'simulate-simple' run configuration)
-    # --lumber-mill 1 --wood-workshop 1 --windmill 4 --battery 1 --battery-height 1
-    energy_mix = EnergyMixParams(
-        power_wheels=0,
-        water_wheels=0,
-        large_windmills=0,
-        windmills=4,
-        batteries=1,
-        battery_height=1,
-    )
+    # 1. Generate Plot from helper
+    fig = generate_reference_figure()
+    fig.savefig(str(generated_image_path))
 
-    factories = FactoryParams(counts={"lumber_mill": 1, "wood_workshop": 1})
+    # 2. Verify some deterministic outputs (sanity check)
+    worst_run_data, run_empty_hours, _ = generate_reference_simulation_data()
+    max_hours_empty = max(run_empty_hours) if run_empty_hours else -1
 
-    # Use constants from the application
-    params = SimulationParams(
-        days=consts.DEFAULT_DAYS,
-        wet_season_days=consts.DEFAULT_WET_SEASON_DAYS,
-        dry_season_days=consts.DEFAULT_DRY_SEASON_DAYS,
-        badtide_season_days=consts.DEFAULT_BADTIDE_SEASON_DAYS,
-        working_hours=consts.DEFAULT_WORKING_HOURS,
-        energy_mix=energy_mix,
-        factories=factories,
-    )
-
-    # 2. Run simulation batch
-    samples = consts.DEFAULT_SAMPLES_PER_SIM
-    results = run_simulation_batch(params, samples)
-
-    run_empty_hours = []
-    worst_run_data = None
-    max_hours_empty = -1
-
-    for hours_empty, data in results:
-        run_empty_hours.append(hours_empty)
-        if hours_empty > max_hours_empty:
-            max_hours_empty = hours_empty
-            worst_run_data = data
-
-    # If all runs are perfect, just take the last one to generate a plot
-    if worst_run_data is None and results:
-        worst_run_data = results[-1][1]
-
-    # 3. Verify some deterministic outputs (sanity check)
     # Cost calculation:
     # Windmills: 4 * 40 = 160
     # Batteries: 1 * (84 + 1*6) = 90
@@ -81,11 +43,7 @@ def test_visual_output(deterministic_rng, tmp_path):
     assert worst_run_data.total_cost == 250.0
     assert max_hours_empty >= 0
 
-    # 4. Generate Plot
-    fig = create_simulation_figure(worst_run_data, run_empty_hours, samples)
-    fig.savefig(str(generated_image_path))
-
-    # 5. Compare with reference image
+    # 3. Compare with reference image
     # compare_images returns None if images are identical
     # The `tol` parameter allows for minor differences in rendering between environments
     result = compare_images(reference_image_path, str(generated_image_path), tol=10)

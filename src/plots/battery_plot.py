@@ -7,7 +7,7 @@ def plot_battery(
     ax.plot(
         time_days,
         battery_charge,
-        label=f"Battery Charge (Max: {total_battery_capacity:,.0f} hph)",
+        label="Battery Charge",
         color="#9467bd",
         linewidth=2,
     )

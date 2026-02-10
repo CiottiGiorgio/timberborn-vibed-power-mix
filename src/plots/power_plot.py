@@ -56,7 +56,7 @@ def plot_power(
     )
 
     ax.set_ylabel("Power (hp)")
-    ax.set_title(f"Power Profile ({days} Days)", pad=35)
+    ax.set_title("Power Profile", pad=35)
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
 

@@ -68,6 +68,28 @@ def plot_simulation(data: SimulationResult, run_empty_hours, total_runs):
         bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
     )
 
+    # Add Simulation Info Box
+    sim_info = (
+        f"Simulation Info:\n"
+        f"  Days: {days}\n"
+        f"  Working Hours: {params.working_hours}\n"
+        f"  Wet Season: {params.wet_season_days} days\n"
+        f"  Dry Season: {params.dry_season_days} days\n"
+        f"  Badtide Season: {params.badtide_season_days} days\n"
+        f"  Samples: {total_runs}"
+    )
+
+    # Place text box in top right corner
+    fig.text(
+        0.98,
+        0.98,
+        sim_info,
+        fontsize=10,
+        verticalalignment="top",
+        horizontalalignment="right",
+        bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.5),
+    )
+
     ax1, ax2, ax3, ax4, ax5 = axes
 
     # Link x-axes for the first 4 plots

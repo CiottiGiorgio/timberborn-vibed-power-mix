@@ -75,7 +75,7 @@ def plot_empty_hours_percentage(
             )
             ax.legend(loc="upper right")
 
-    ax.set_title(f"Distribution of Time Spent with Empty Battery ({total_runs} Runs)")
+    ax.set_title("Distribution of Time Spent with Empty Battery")
     ax.set_xlabel("Percentage of Time with Empty Battery (%)")
     ax.set_ylabel("Number of Runs")
     ax.grid(True, linestyle="--", alpha=0.5)

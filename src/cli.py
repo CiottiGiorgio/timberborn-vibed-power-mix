@@ -102,7 +102,7 @@ def add_energy_mix_params(func):
 
     # Batteries
     func = click.option(
-        "--batteries",
+        "--battery",
         type=int,
         default=0,
         help="Number of gravity batteries",
@@ -111,7 +111,7 @@ def add_energy_mix_params(func):
     # Producers
     if "windmill" in ALL_MACHINES:
         func = click.option(
-            "--windmills",
+            "--windmill",
             type=int,
             default=0,
             help="Number of windmills",
@@ -119,7 +119,7 @@ def add_energy_mix_params(func):
 
     if "large_windmill" in ALL_MACHINES:
         func = click.option(
-            "--large-windmills",
+            "--large-windmill",
             type=int,
             default=0,
             help="Number of large windmills",
@@ -127,7 +127,7 @@ def add_energy_mix_params(func):
 
     if "water_wheel" in ALL_MACHINES:
         func = click.option(
-            "--water-wheels",
+            "--water-wheel",
             type=int,
             default=0,
             help="Number of water wheels",
@@ -135,7 +135,7 @@ def add_energy_mix_params(func):
 
     if "power_wheel" in ALL_MACHINES:
         func = click.option(
-            "--power-wheels",
+            "--power-wheel",
             type=int,
             default=0,
             help="Number of power wheels",
@@ -197,11 +197,11 @@ def parse_params(**kwargs) -> SimulationParams:
 
     # Create EnergyMixParams
     # We look for specific keys
-    power_wheels = kwargs.get("power_wheels", 0)
-    water_wheels = kwargs.get("water_wheels", 0)
-    large_windmills = kwargs.get("large_windmills", 0)
-    windmills = kwargs.get("windmills", 0)
-    batteries = kwargs.get("batteries", 0)
+    power_wheels = kwargs.get("power_wheel", 0)
+    water_wheels = kwargs.get("water_wheel", 0)
+    large_windmills = kwargs.get("large_windmill", 0)
+    windmills = kwargs.get("windmill", 0)
+    batteries = kwargs.get("battery", 0)
     battery_height = kwargs.get("battery_height", 0)
 
     energy_mix = EnergyMixParams(

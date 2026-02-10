@@ -6,23 +6,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 import rng
 from models import SimulationParams, EnergyMixParams, FactoryParams
-from simulation import run_simulation_task
+from simulation import run_simulation_batch
 from plots.canvas import create_simulation_figure
-
-# Simulation Defaults for Testing
-TEST_DAYS = 132
-TEST_WORKING_HOURS = 16
-TEST_SAMPLES_PER_SIM = 1000
-
-# Season Defaults for Testing
-TEST_WET_SEASON_DAYS = 3
-TEST_DRY_SEASON_DAYS = 30
-TEST_BADTIDE_SEASON_DAYS = 30
+import consts
 
 
 def refresh_reference_image():
     print("Refreshing reference image for visual tests...")
-    
+
     # 1. Seed the RNG for determinism
     rng.seed_rng(42)
 
@@ -34,37 +25,53 @@ def refresh_reference_image():
         large_windmills=0,
         windmills=4,
         batteries=1,
-        battery_height=1
+        battery_height=1,
     )
-    
-    factories = FactoryParams(counts={
-        "lumber_mill": 1,
-        "wood_workshop": 1
-    })
-    
+
+    factories = FactoryParams(counts={"lumber_mill": 1, "wood_workshop": 1})
+
     # Use local constants
     params = SimulationParams(
-        days=TEST_DAYS,
-        wet_season_days=TEST_WET_SEASON_DAYS,
-        dry_season_days=TEST_DRY_SEASON_DAYS,
-        badtide_season_days=TEST_BADTIDE_SEASON_DAYS,
-        working_hours=TEST_WORKING_HOURS,
+        days=consts.DEFAULT_DAYS,
+        wet_season_days=consts.DEFAULT_WET_SEASON_DAYS,
+        dry_season_days=consts.DEFAULT_DRY_SEASON_DAYS,
+        badtide_season_days=consts.DEFAULT_BADTIDE_SEASON_DAYS,
+        working_hours=consts.DEFAULT_WORKING_HOURS,
         energy_mix=energy_mix,
-        factories=factories
+        factories=factories,
     )
 
     # 3. Run simulation
-    hours_empty, data = run_simulation_task(params)
+    samples = consts.DEFAULT_SAMPLES_PER_SIM
+    print(f"Running {samples} simulations to find worst-case scenario for plot...")
+    results = run_simulation_batch(params, samples)
+
+    run_empty_hours = []
+    worst_run_data = None
+    max_hours_empty = -1
+
+    for hours_empty, data in results:
+        run_empty_hours.append(hours_empty)
+        if hours_empty > max_hours_empty:
+            max_hours_empty = hours_empty
+            worst_run_data = data
+
+    # If all runs are perfect, just take the last one to generate a plot
+    if worst_run_data is None and results:
+        worst_run_data = results[-1][1]
 
     # 4. Generate Plot
     # Save to tests/reference_visual_output.png
-    output_path = os.path.join(os.path.dirname(__file__), "../tests/reference_visual_output.png")
+    output_path = os.path.join(
+        os.path.dirname(__file__), "../tests/reference_visual_output.png"
+    )
     output_path = os.path.abspath(output_path)
-    
-    fig = create_simulation_figure(data, [hours_empty], 1)
+
+    fig = create_simulation_figure(worst_run_data, run_empty_hours, samples)
     fig.savefig(output_path)
-    
+
     print(f"Reference image saved to: {output_path}")
+
 
 if __name__ == "__main__":
     refresh_reference_image()

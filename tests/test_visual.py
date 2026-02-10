@@ -2,19 +2,10 @@ import os
 import pytest
 import rng
 from models import SimulationParams, EnergyMixParams, FactoryParams
-from simulation import run_simulation_task
+from simulation import run_simulation_batch
 from plots.canvas import create_simulation_figure
 from matplotlib.testing.compare import compare_images
-
-# Simulation Defaults for Testing
-TEST_DAYS = 132
-TEST_WORKING_HOURS = 16
-TEST_SAMPLES_PER_SIM = 1000
-
-# Season Defaults for Testing
-TEST_WET_SEASON_DAYS = 3
-TEST_DRY_SEASON_DAYS = 30
-TEST_BADTIDE_SEASON_DAYS = 30
+import consts
 
 
 @pytest.fixture
@@ -51,35 +42,47 @@ def test_visual_output(deterministic_rng, tmp_path):
         battery_height=1,
     )
 
-    factories = FactoryParams(counts={
-        "lumber_mill": 1,
-        "wood_workshop": 1
-    })
+    factories = FactoryParams(counts={"lumber_mill": 1, "wood_workshop": 1})
 
-    # Use local constants
+    # Use constants from the application
     params = SimulationParams(
-        days=TEST_DAYS,
-        wet_season_days=TEST_WET_SEASON_DAYS,
-        dry_season_days=TEST_DRY_SEASON_DAYS,
-        badtide_season_days=TEST_BADTIDE_SEASON_DAYS,
-        working_hours=TEST_WORKING_HOURS,
+        days=consts.DEFAULT_DAYS,
+        wet_season_days=consts.DEFAULT_WET_SEASON_DAYS,
+        dry_season_days=consts.DEFAULT_DRY_SEASON_DAYS,
+        badtide_season_days=consts.DEFAULT_BADTIDE_SEASON_DAYS,
+        working_hours=consts.DEFAULT_WORKING_HOURS,
         energy_mix=energy_mix,
         factories=factories,
     )
 
-    # 2. Run simulation
-    hours_empty, data = run_simulation_task(params)
+    # 2. Run simulation batch
+    samples = consts.DEFAULT_SAMPLES_PER_SIM
+    results = run_simulation_batch(params, samples)
+
+    run_empty_hours = []
+    worst_run_data = None
+    max_hours_empty = -1
+
+    for hours_empty, data in results:
+        run_empty_hours.append(hours_empty)
+        if hours_empty > max_hours_empty:
+            max_hours_empty = hours_empty
+            worst_run_data = data
+
+    # If all runs are perfect, just take the last one to generate a plot
+    if worst_run_data is None and results:
+        worst_run_data = results[-1][1]
 
     # 3. Verify some deterministic outputs (sanity check)
     # Cost calculation:
     # Windmills: 4 * 40 = 160
     # Batteries: 1 * (84 + 1*6) = 90
     # Total: 250
-    assert data.total_cost == 250.0
-    assert hours_empty >= 0
+    assert worst_run_data.total_cost == 250.0
+    assert max_hours_empty >= 0
 
     # 4. Generate Plot
-    fig = create_simulation_figure(data, [hours_empty], 1)
+    fig = create_simulation_figure(worst_run_data, run_empty_hours, samples)
     fig.savefig(str(generated_image_path))
 
     # 5. Compare with reference image

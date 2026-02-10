@@ -1,3 +1,4 @@
+import numpy as np
 import consts
 
 
@@ -17,38 +18,40 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
         linewidth=2,
     )
 
-    # Calculate average power (slope)
-    # Total energy / total hours
-    total_hours = days * consts.HOURS_PER_DAY
+    # Calculate average power (slope) using linear regression (Least Squares)
+    # Fit y = mx + c
+    # m (slope) will be in Energy/Day.
+    # To get Power (Energy/Hour), we divide m by 24.
 
-    # Ensure we use the last value of the cumulative array
-    total_produced = energy_production[-1]
-    total_consumed = energy_consumption[-1]
+    slope_prod, intercept_prod = np.polyfit(time_days, energy_production, 1)
+    avg_prod_power = slope_prod / consts.HOURS_PER_DAY
 
-    avg_prod_power = total_produced / total_hours
-    avg_cons_power = total_consumed / total_hours
+    slope_cons, intercept_cons = np.polyfit(time_days, energy_consumption, 1)
+    avg_cons_power = slope_cons / consts.HOURS_PER_DAY
 
-    # Create lines: y = avg_power * time_hours = avg_power * (time_days * 24)
-    # We can just use linear interpolation between (0,0) and (days, total)
+    # Create lines for plotting covering the full range
+    x_vals = np.array([0, days])
+    y_vals_prod = slope_prod * x_vals + intercept_prod
+    y_vals_cons = slope_cons * x_vals + intercept_cons
 
     ax.plot(
-        [0, days],
-        [0, total_produced],
+        x_vals,
+        y_vals_prod,
         color="#1f77b4",
         linestyle="--",
         linewidth=1.5,
         alpha=0.7,
-        label=f"Avg Prod Slope ({avg_prod_power:.1f} hp)",
+        label=f"OLS Fit Prod ({avg_prod_power:.1f} hp)",
     )
 
     ax.plot(
-        [0, days],
-        [0, total_consumed],
+        x_vals,
+        y_vals_cons,
         color="#ff7f0e",
         linestyle="--",
         linewidth=1.5,
         alpha=0.7,
-        label=f"Avg Cons Slope ({avg_cons_power:.1f} hp)",
+        label=f"OLS Fit Cons ({avg_cons_power:.1f} hp)",
     )
 
     ax.set_ylabel("Energy (hph)")

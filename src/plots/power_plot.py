@@ -43,7 +43,7 @@ def plot_power(
         linestyle="--",
         linewidth=1.5,
         alpha=0.8,
-        label="Mean Production",
+        label=f"Avg Prod ({mean_production:.1f} hp)",
     )
     ax.axhline(
         y=mean_consumption,
@@ -51,7 +51,7 @@ def plot_power(
         linestyle="--",
         linewidth=1.5,
         alpha=0.8,
-        label="Mean Consumption",
+        label=f"Avg Cons ({mean_consumption:.1f} hp)",
     )
 
     ax.set_ylabel("Power (hp)")

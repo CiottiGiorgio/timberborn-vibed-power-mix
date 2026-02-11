@@ -52,7 +52,8 @@ def run_visualization(**kwargs):
     print(f"Running {samples} simulations for visualization...")
 
     # Determine number of workers
-    num_workers = os.cpu_count() or 1
+    # Use process_cpu_count to respect CPU affinity/quotas
+    num_workers = os.process_cpu_count() or 1
 
     # Calculate chunk size to split work evenly
     chunk_size = samples // num_workers

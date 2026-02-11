@@ -1,10 +1,11 @@
 import os
 import matplotlib.pyplot as plt
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from timberborn_power_mix.simulation import run_simulation_batch
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.cli import create_cli, parse_params
 from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
+from timberborn_power_mix.rng import RNGManager
 
 
 def run_optimization(**kwargs):
@@ -64,14 +65,21 @@ def run_visualization(**kwargs):
         if count > 0:
             batches.append(count)
 
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+    # Start the RNG Manager and Process Pool
+    with (
+        RNGManager() as manager,
+        ProcessPoolExecutor(max_workers=num_workers) as executor,
+    ):
+        # Create the service proxy
+        rng_service = manager.RNGService()
+
         # Submit batch tasks
         futures = [
-            executor.submit(run_simulation_batch, params, batch_size)
+            executor.submit(run_simulation_batch, params, batch_size, rng_service)
             for batch_size in batches
         ]
 
-        for future in futures:
+        for future in as_completed(futures):
             batch_results = future.result()
 
             for hours_empty, data in batch_results:

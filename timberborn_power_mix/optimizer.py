@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Optional
 from timberborn_power_mix.models import SimulationParams, EnergyMixParams
 from timberborn_power_mix.simulation import run_simulation_batch
 from timberborn_power_mix import consts
+from timberborn_power_mix.rng import RNGService
 
 
 class OptimizationResult:
@@ -145,12 +146,15 @@ def evaluate_config(
     mix_params: EnergyMixParams,
     samples_per_config: int,
     total_hours: int,
+    rng_service: RNGService,
 ) -> OptimizationResult:
 
     current_params = base_params.model_copy(deep=True)
     current_params.energy_mix = mix_params
 
-    batch_results = run_simulation_batch(current_params, samples=samples_per_config)
+    batch_results = run_simulation_batch(
+        current_params, samples=samples_per_config, rng_service=rng_service
+    )
 
     hours_empty_list = [r[0] for r in batch_results]
     p95_empty = np.percentile(hours_empty_list, 95)
@@ -189,11 +193,12 @@ def optimize(
         }
 
     total_hours = base_params.days * consts.HOURS_PER_DAY
+    rng_service = RNGService()
 
     # Start with a random configuration
     current_params = get_random_params(bounds)
     current_result = evaluate_config(
-        base_params, current_params, simulations_per_config, total_hours
+        base_params, current_params, simulations_per_config, total_hours, rng_service
     )
 
     history = [current_result]
@@ -206,7 +211,11 @@ def optimize(
         # Mutate based on current state
         candidate_params = mutate_params(current_result, bounds)
         candidate_result = evaluate_config(
-            base_params, candidate_params, simulations_per_config, total_hours
+            base_params,
+            candidate_params,
+            simulations_per_config,
+            total_hours,
+            rng_service,
         )
 
         # Compare

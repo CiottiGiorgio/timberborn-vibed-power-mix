@@ -4,14 +4,7 @@ from matplotlib.testing.compare import compare_images
 from tests.helpers import generate_reference_figure, generate_reference_simulation_data
 
 
-@pytest.fixture
-def deterministic_rng():
-    """Fixture to seed the RNG before a test."""
-    # The helper function seeds the RNG, so we just need to call it.
-    pass
-
-
-def test_visual_output(deterministic_rng, tmp_path):
+def test_visual_output(tmp_path):
     """
     Runs a simulation with a fixed seed and compares the generated plot
     against a reference image.

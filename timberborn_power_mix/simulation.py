@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.random import Generator
 from timberborn_power_mix.models import SimulationParams, SimulationResult
 from timberborn_power_mix.machines import (
     iter_consumers,
@@ -10,10 +11,10 @@ from timberborn_power_mix.machines import (
     calculate_battery_capacity,
     calculate_battery_cost,
 )
-from timberborn_power_mix import consts, rng
+from timberborn_power_mix import consts
 
 
-def simulate_scenario(params: SimulationParams) -> SimulationResult:
+def simulate_scenario(params: SimulationParams, _rng: Generator) -> SimulationResult:
     # Consumption
     total_consumption_rate = 0
 
@@ -81,8 +82,6 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     # Strength: 0-100%, Duration: 5-12 hours
     wind_strength = np.zeros(total_hours)
     curr_h = 0
-
-    _rng = rng.get_rng()
 
     while curr_h < total_hours:
         duration = _rng.integers(
@@ -225,12 +224,12 @@ def simulate_scenario(params: SimulationParams) -> SimulationResult:
     )
 
 
-def run_simulation_task(params: SimulationParams):
+def run_simulation_task(params: SimulationParams, _rng: Generator):
     """
     Runs a single simulation and returns the results.
     Returns a tuple: (hours_empty, simulation_data)
     """
-    data = simulate_scenario(params)
+    data = simulate_scenario(params, _rng)
 
     # Count hours where battery is 0 or less
     hours_empty = np.sum(data.battery_charge <= 0)
@@ -238,11 +237,14 @@ def run_simulation_task(params: SimulationParams):
     return hours_empty, data
 
 
-def run_simulation_batch(params: SimulationParams, samples: int):
+def run_simulation_batch(params: SimulationParams, samples: int, rng_service):
     """
     Runs a batch of simulations and returns a list of results.
     """
+    # Get a new generator for this batch
+    _rng = rng_service.get_generator()
+
     results = []
     for _ in range(samples):
-        results.append(run_simulation_task(params))
+        results.append(run_simulation_task(params, _rng))
     return results

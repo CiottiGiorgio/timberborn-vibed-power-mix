@@ -1,24 +1,36 @@
-import os
+from multiprocessing.managers import BaseManager
 from numpy.random import Generator, PCG64
 
-_RNG = None
-_RNG_PID = None
+
+class RNGService:
+    """
+    A service that provides independent, seeded random number generators.
+    This service is intended to be run by a manager process, and accessed
+    via a proxy.
+    """
+
+    def __init__(self, seed=None):
+        # The root source of entropy/streams
+        self._main_rng = PCG64(seed)
+
+    def get_generator(self) -> Generator:
+        """
+        Spawns a new, independent Generator instance from the main seed.
+        This method is thread-safe.
+        """
+        # spawn(1) returns a list of one new PCG64 instance
+        new_stream = self._main_rng.spawn(1)[0]
+
+        # Note: When returning via multiprocessing Manager, the object is pickled.
+        # This means the caller gets a COPY of the generator state.
+        return Generator(new_stream)
 
 
-def get_rng():
-    global _RNG, _RNG_PID
-    current_pid = os.getpid()
+class RNGManager(BaseManager):
+    """A manager to host and expose the RNGService."""
 
-    # If RNG is not initialized, or if we are in a different process than where it was initialized
-    # (which happens after a fork), we need to re-initialize it.
-    if _RNG is None or _RNG_PID != current_pid:
-        _RNG = Generator(PCG64())
-        _RNG_PID = current_pid
-
-    return _RNG
+    pass
 
 
-def seed_rng(seed):
-    global _RNG, _RNG_PID
-    _RNG = Generator(PCG64(seed))
-    _RNG_PID = os.getpid()
+# Register the service with the manager.
+RNGManager.register("RNGService", RNGService)

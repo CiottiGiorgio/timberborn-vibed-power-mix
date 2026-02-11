@@ -1,4 +1,4 @@
-from timberborn_power_mix import rng
+from timberborn_power_mix.rng import RNGService
 from timberborn_power_mix.models import SimulationParams, EnergyMixParams, FactoryParams
 from timberborn_power_mix.simulation import run_simulation_batch
 from timberborn_power_mix.plots.canvas import create_simulation_figure
@@ -9,8 +9,8 @@ def generate_reference_simulation_data():
     """
     Runs a deterministic simulation and returns the data for the worst-case scenario.
     """
-    # 1. Seed the RNG for determinism
-    rng.seed_rng(42)
+    # 1. Setup RNG service and seed it
+    rng_service = RNGService(seed=42)
 
     # 2. Setup parameters
     energy_mix = EnergyMixParams(
@@ -36,7 +36,7 @@ def generate_reference_simulation_data():
 
     # 3. Run simulation
     samples = consts.DEFAULT_SAMPLES_PER_SIM
-    results = run_simulation_batch(params, samples)
+    results = run_simulation_batch(params, samples, rng_service)
 
     run_empty_hours = []
     worst_run_data = None

@@ -1,10 +1,14 @@
-import random
-import numpy as np
+import multiprocessing
+import os
 from typing import List, Dict, Tuple, Optional
-from timberborn_power_mix.models import SimulationParams, EnergyMixParams
-from timberborn_power_mix.simulation import run_simulation_batch
+
+import numpy as np
+from numpy.random import Generator
+
 from timberborn_power_mix import consts
-from timberborn_power_mix.rng import RNGService
+from timberborn_power_mix.models import SimulationParams, EnergyMixParams
+from timberborn_power_mix.rng import RNGService, RNGManager
+from timberborn_power_mix.simulation import run_simulation_batch
 
 
 class OptimizationResult:
@@ -65,19 +69,25 @@ class OptimizationResult:
         )
 
 
-def get_random_params(bounds: Dict[str, Tuple[int, int]]) -> EnergyMixParams:
+def get_random_params(
+    bounds: Dict[str, Tuple[int, int]], _rng: Generator
+) -> EnergyMixParams:
+    def get_val(name):
+        low, high = bounds.get(name, (0, 0))
+        return _rng.integers(low, high + 1)
+
     return EnergyMixParams(
-        power_wheels=random.randint(*bounds.get("power_wheels", (0, 0))),
-        water_wheels=random.randint(*bounds.get("water_wheels", (0, 0))),
-        large_windmills=random.randint(*bounds.get("large_windmills", (0, 0))),
-        windmills=random.randint(*bounds.get("windmills", (0, 0))),
-        batteries=random.randint(*bounds.get("batteries", (0, 0))),
-        battery_height=random.randint(*bounds.get("battery_height", (1, 1))),
+        power_wheels=get_val("power_wheels"),
+        water_wheels=get_val("water_wheels"),
+        large_windmills=get_val("large_windmills"),
+        windmills=get_val("windmills"),
+        batteries=get_val("batteries"),
+        battery_height=get_val("battery_height"),
     )
 
 
 def mutate_params(
-    result: OptimizationResult, bounds: Dict[str, Tuple[int, int]]
+    result: OptimizationResult, bounds: Dict[str, Tuple[int, int]], _rng: Generator
 ) -> EnergyMixParams:
     """
     Creates a neighbor by changing one parameter, with bias based on the current state.
@@ -121,10 +131,10 @@ def mutate_params(
         ]
 
     # Pick a field
-    field = random.choice(fields)
+    field = _rng.choice(fields)
 
     # Determine direction
-    if random.random() < prob_bias:
+    if _rng.random() < prob_bias:
         change = bias
     else:
         change = -bias  # Go against bias occasionally to escape local optima
@@ -148,7 +158,6 @@ def evaluate_config(
     total_hours: int,
     rng_service: RNGService,
 ) -> OptimizationResult:
-
     current_params = base_params.model_copy(deep=True)
     current_params.energy_mix = mix_params
 
@@ -172,6 +181,44 @@ def evaluate_config(
     return OptimizationResult(mix_params, cost, p95_empty, total_hours, avg_surplus)
 
 
+def optimization_worker(
+    worker_id: int,
+    start_params: EnergyMixParams,
+    base_params: SimulationParams,
+    iterations: int,
+    simulations_per_config: int,
+    total_hours: int,
+    bounds: Dict[str, Tuple[int, int]],
+    rng_service_proxy,
+) -> OptimizationResult:
+    """A single worker process for optimization."""
+
+    _rng = rng_service_proxy.get_generator()
+
+    current_result = evaluate_config(
+        base_params,
+        start_params,
+        simulations_per_config,
+        total_hours,
+        rng_service_proxy,
+    )
+
+    for i in range(iterations):
+        candidate_params = mutate_params(current_result, bounds, _rng)
+        candidate_result = evaluate_config(
+            base_params,
+            candidate_params,
+            simulations_per_config,
+            total_hours,
+            rng_service_proxy,
+        )
+
+        if candidate_result.calculate_score() < current_result.calculate_score():
+            current_result = candidate_result
+
+    return current_result
+
+
 def optimize(
     base_params: SimulationParams,
     iterations: int = consts.DEFAULT_OPTIMIZATION_ITERATIONS,
@@ -179,7 +226,7 @@ def optimize(
     bounds: Optional[Dict[str, Tuple[int, int]]] = None,
 ) -> List[OptimizationResult]:
     """
-    Performs a Local Search (Random Mutation Hill Climbing) to find optimal configurations.
+    Performs a parallel search to find optimal configurations.
     """
 
     if bounds is None:
@@ -193,53 +240,74 @@ def optimize(
         }
 
     total_hours = base_params.days * consts.HOURS_PER_DAY
-    rng_service = RNGService()
 
-    # Start with a random configuration
-    current_params = get_random_params(bounds)
-    current_result = evaluate_config(
-        base_params, current_params, simulations_per_config, total_hours, rng_service
-    )
+    with RNGManager() as manager:
+        rng_service_proxy = manager.RNGService()
+        main_rng = rng_service_proxy.get_generator()
 
-    history = [current_result]
-    best_valid_result = current_result if current_result.is_valid else None
+        num_workers = os.cpu_count()
+        pool = multiprocessing.Pool(processes=num_workers)
 
-    print(f"Starting Local Search with {iterations} iterations...")
-    print(f"Initial: {current_result}")
+        worker_iterations = 10
+        num_rounds = iterations // worker_iterations
 
-    for i in range(iterations):
-        # Mutate based on current state
-        candidate_params = mutate_params(current_result, bounds)
-        candidate_result = evaluate_config(
-            base_params,
-            candidate_params,
-            simulations_per_config,
-            total_hours,
-            rng_service,
+        history = []
+        best_result = None
+        best_valid_result = None
+
+        print(
+            f"Starting parallel search with {num_workers} workers, {num_rounds} rounds..."
         )
 
-        # Compare
-        current_score = current_result.calculate_score()
-        candidate_score = candidate_result.calculate_score()
+        start_params_list = [
+            get_random_params(bounds, main_rng) for _ in range(num_workers)
+        ]
 
-        # We accept if score improves
-        if candidate_score < current_score:
-            current_result = candidate_result
-            history.append(current_result)
+        for round_num in range(num_rounds):
+            worker_args = [
+                (
+                    i,
+                    start_params_list[i],
+                    base_params,
+                    worker_iterations,
+                    simulations_per_config,
+                    total_hours,
+                    bounds,
+                    rng_service_proxy,
+                )
+                for i in range(num_workers)
+            ]
 
-            if current_result.is_valid:
+            round_results = pool.starmap(optimization_worker, worker_args)
+
+            round_best_result = min(round_results, key=lambda r: r.calculate_score())
+
+            if (
+                best_result is None
+                or round_best_result.calculate_score() < best_result.calculate_score()
+            ):
+                best_result = round_best_result
+
+            history.append(best_result)
+
+            if best_result.is_valid:
                 if (
                     best_valid_result is None
-                    or current_result.cost < best_valid_result.cost
+                    or best_result.cost < best_valid_result.cost
                 ):
-                    best_valid_result = current_result
+                    best_valid_result = best_result
 
-        # Optional: Simulated Annealing could be added here to accept worse solutions with some probability
+            start_params_list = [best_result.params for _ in range(num_workers)]
 
-        if (i + 1) % 10 == 0:
             print(
-                f"Iteration {i + 1}/{iterations}. Current Score: {current_score:.0f}. Best Valid Cost: {best_valid_result.cost if best_valid_result else 'None'}"
+                f"Round {round_num + 1}/{num_rounds}. "
+                f"Best this round score: {round_best_result.calculate_score():.0f}. "
+                f"Overall best score: {best_result.calculate_score():.0f}. "
+                f"Best valid cost: {best_valid_result.cost if best_valid_result else 'None'}"
             )
+
+        pool.close()
+        pool.join()
 
     return history
 

@@ -24,12 +24,12 @@ def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samp
     total_cost = data.total_cost
 
     days = params.days
-    power_wheels = params.energy_mix.power_wheels
-    water_wheels = params.energy_mix.water_wheels
-    large_windmills = params.energy_mix.large_windmills
-    windmills = params.energy_mix.windmills
-    batteries = params.energy_mix.batteries
-    battery_height = params.energy_mix.battery_height
+    power_wheels = getattr(params.energy_mix, "power_wheel")
+    water_wheels = getattr(params.energy_mix, "water_wheel")
+    large_windmills = getattr(params.energy_mix, "large_windmill")
+    windmills = getattr(params.energy_mix, "windmill")
+    batteries = getattr(params.energy_mix, "battery")
+    battery_height = getattr(params.energy_mix, "battery_height")
 
     # Visualization
     # Always create 5 plots

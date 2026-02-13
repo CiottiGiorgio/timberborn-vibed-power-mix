@@ -1,7 +1,9 @@
+from itertools import chain
+
 import click
 import inflect
 from timberborn_power_mix import consts
-from timberborn_power_mix.machines import iter_consumers, ALL_MACHINES
+from timberborn_power_mix.machines import FACTORY_DATABASE, PRODUCER_DATABASE, FactoryName, ProducerName, BatteryName
 from timberborn_power_mix.models import FactoryParams, EnergyMixParams, SimulationParams
 
 p = inflect.engine()
@@ -80,7 +82,7 @@ def add_common_params(func):
     )(func)
 
     # Consumers
-    for name, spec in iter_consumers():
+    for name in FactoryName:
         display_name = name.replace("_", " ")
         func = click.option(
             f"--{name.replace('_', '-')}",
@@ -95,51 +97,14 @@ def add_common_params(func):
 def add_energy_mix_params(func):
     """Decorator to add energy mix parameters (for run command)."""
 
-    func = click.option(
-        "--battery",
-        type=int,
-        default=0,
-        help="Number of gravity batteries",
-    )(func)
-
-    func = click.option(
-        "--battery-height",
-        type=IntOrIntList(),
-        default=0,
-        help="Height of gravity batteries. Can be a single int or a comma-separated list of ints.",
-    )(func)
-
     # Producers
-    if "water_wheel" in ALL_MACHINES:
+    for name in chain(ProducerName, BatteryName):
+        display_name = name.replace("_", " ")
         func = click.option(
-            "--water-wheel",
+            f"--{name.replace('_', '-')}",
             type=int,
             default=0,
-            help="Number of water wheels",
-        )(func)
-
-    if "windmill" in ALL_MACHINES:
-        func = click.option(
-            "--windmill",
-            type=int,
-            default=0,
-            help="Number of windmills",
-        )(func)
-
-    if "large_windmill" in ALL_MACHINES:
-        func = click.option(
-            "--large-windmill",
-            type=int,
-            default=0,
-            help="Number of large windmills",
-        )(func)
-
-    if "power_wheel" in ALL_MACHINES:
-        func = click.option(
-            "--power-wheel",
-            type=int,
-            default=0,
-            help="Number of power wheels",
+            help=f"Number of {p.plural(display_name)}",
         )(func)
 
     return func
@@ -174,8 +139,14 @@ def create_cli(run_callback, optimize_callback):
 
 
 def parse_params(**kwargs) -> SimulationParams:
+    # Create a FactoryParams by removing all fields from kwargs that are not contained in FactoryParams.
+    # Since FactoryParams requires all fields, if kwargs is missing one of those fields, this fails.
     factories = FactoryParams(
-        **{key: value for key, value in kwargs.items() if key in iter_consumers()}
+        **{
+            key: value
+            for key, value in kwargs.items()
+            if key in FactoryParams.model_fields
+        }
     )
 
     battery_height = kwargs["battery_height"]
@@ -185,15 +156,16 @@ def parse_params(**kwargs) -> SimulationParams:
         else:
             battery_height = sum(battery_height) / len(battery_height)
     energy_mix = EnergyMixParams(
-        power_wheels=kwargs["power_wheel"],
-        water_wheels=kwargs["water_wheel"],
-        large_windmills=kwargs["large_windmill"],
-        windmills=kwargs["windmill"],
-        batteries=kwargs["battery"],
         battery_height=battery_height,
+        **{
+            key: value
+            for key, value in kwargs.items()
+            if key in EnergyMixParams.model_fields and key != "battery_height"
+        },
     )
 
     return SimulationParams(
+        samples=kwargs["samples"],
         days=kwargs["days"],
         working_hours=kwargs["working_hours"],
         wet_season_days=kwargs["wet_season_days"],

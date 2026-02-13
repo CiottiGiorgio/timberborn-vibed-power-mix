@@ -77,11 +77,11 @@ def get_random_params(
         return _rng.integers(low, high + 1)
 
     return EnergyMixParams(
-        power_wheels=get_val("power_wheels"),
-        water_wheels=get_val("water_wheels"),
-        large_windmills=get_val("large_windmills"),
-        windmills=get_val("windmills"),
-        batteries=get_val("batteries"),
+        power_wheel=get_val("power_wheel"),
+        water_wheel=get_val("water_wheel"),
+        large_windmill=get_val("large_windmills"),
+        windmill=get_val("windmills"),
+        battery=get_val("batteries"),
         battery_height=get_val("battery_height"),
     )
 
@@ -103,14 +103,14 @@ def mutate_params(
         # Deficit: Bias towards increasing producers
         bias = 1  # Increase
         prob_bias = 0.9
-        fields = ["power_wheels", "water_wheels", "large_windmills", "windmills"]
+        fields = ["power_wheel", "water_wheel", "large_windmills", "windmills"]
     elif result.p95_empty_percent > 5.0:
         # Unreliable: Bias towards increasing producers or storage
         bias = 1  # Increase
         prob_bias = 0.8
         fields = [
-            "power_wheels",
-            "water_wheels",
+            "power_wheel",
+            "water_wheel",
             "large_windmills",
             "windmills",
             "batteries",
@@ -122,8 +122,8 @@ def mutate_params(
         bias = -1  # Decrease
         prob_bias = 0.8
         fields = [
-            "power_wheels",
-            "water_wheels",
+            "power_wheel",
+            "water_wheel",
             "large_windmills",
             "windmills",
             "batteries",
@@ -231,8 +231,8 @@ def optimize(
 
     if bounds is None:
         bounds = {
-            "power_wheels": (0, 20),
-            "water_wheels": (0, 20),
+            "power_wheel": (0, 20),
+            "water_wheel": (0, 20),
             "large_windmills": (0, 30),
             "windmills": (0, 30),
             "batteries": (0, 20),
@@ -331,11 +331,11 @@ def find_optimal_solutions(
         # Create a tuple of values to use as key
         p = sol.params
         key = (
-            p.power_wheels,
-            p.water_wheels,
-            p.large_windmills,
-            p.windmills,
-            p.batteries,
+            p.power_wheel,
+            p.water_wheel,
+            p.large_windmill,
+            p.windmill,
+            p.battery,
             p.battery_height,
         )
         if key not in seen_params:

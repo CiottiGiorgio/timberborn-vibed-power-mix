@@ -14,11 +14,11 @@ def generate_reference_simulation_data():
 
     # 2. Setup parameters
     energy_mix = EnergyMixParams(
-        power_wheels=0,
-        water_wheels=0,
-        large_windmills=0,
-        windmills=4,
-        batteries=1,
+        power_wheel=0,
+        water_wheel=0,
+        large_windmill=0,
+        windmill=4,
+        battery=1,
         battery_height=1,
     )
 

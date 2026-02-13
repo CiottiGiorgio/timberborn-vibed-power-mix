@@ -1,41 +1,28 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Tuple, Union
+from pydantic import BaseModel, ConfigDict, create_model
+from typing import List, Tuple
 import numpy as np
-from timberborn_power_mix import consts
+from timberborn_power_mix.machines import FACTORY_DATABASE, PRODUCER_DATABASE, BatteryName
 
+FactoryParams = create_model(
+    "FactoryParams", **{key: int for key in FACTORY_DATABASE.keys()}
+)
 
-class FactoryParams(BaseModel):
-    lumber_mill: int = 0
-    gear_workshop: int = 0
-    steel_factory: int = 0
-    wood_workshop: int = 0
-    paper_mill: int = 0
-    printing_press: int = 0
-    observatory: int = 0
-    bot_part_factory: int = 0
-    bot_assembler: int = 0
-    explosives_factory: int = 0
-    grillmist: int = 0
-    centrifuge: int = 0
-
-
-class EnergyMixParams(BaseModel):
-    power_wheels: int = 0
-    water_wheels: int = 0
-    large_windmills: int = 0
-    windmills: int = 0
-    batteries: int = 0
-    battery_height: Union[int, float] = 0
+EnergyMixParams = create_model(
+    "EnergyMixParams",
+    **{BatteryName.BATTERY: int, BatteryName.BATTER_HEIGHT: float},
+    **{key: int for key in PRODUCER_DATABASE.keys()},
+)
 
 
 class SimulationParams(BaseModel):
-    days: int = Field(default=consts.DEFAULT_DAYS)
-    working_hours: int = Field(default=consts.DEFAULT_WORKING_HOURS)
-    wet_season_days: int = Field(default=consts.DEFAULT_WET_SEASON_DAYS)
-    dry_season_days: int = Field(default=consts.DEFAULT_DRY_SEASON_DAYS)
-    badtide_season_days: int = Field(default=consts.DEFAULT_BADTIDE_SEASON_DAYS)
-    factories: FactoryParams = Field(default_factory=FactoryParams)
-    energy_mix: EnergyMixParams = Field(default_factory=EnergyMixParams)
+    samples: int
+    days: int
+    working_hours: int
+    wet_season_days: int
+    dry_season_days: int
+    badtide_season_days: int
+    factories: FactoryParams
+    energy_mix: EnergyMixParams
 
 
 class SimulationResult(BaseModel):

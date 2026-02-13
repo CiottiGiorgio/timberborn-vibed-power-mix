@@ -43,21 +43,20 @@ def run_visualization(**kwargs):
     """Visualize power and energy profiles for a single configuration."""
 
     params = parse_params(**kwargs)
-    samples = kwargs.get("samples_per_sim", 1)
 
     run_empty_hours = []
     worst_run_data = None
     max_hours_empty = -1
 
-    print(f"Running {samples} simulations for visualization...")
+    print(f"Running {params.samples} simulations for visualization...")
 
     # Determine number of workers
     # Use process_cpu_count to respect CPU affinity/quotas
     num_workers = os.process_cpu_count() or 1
 
     # Calculate chunk size to split work evenly
-    chunk_size = samples // num_workers
-    remainder = samples % num_workers
+    chunk_size = params.samples // num_workers
+    remainder = params.samples % num_workers
 
     batches = []
     for i in range(num_workers):
@@ -96,7 +95,7 @@ def run_visualization(**kwargs):
                     worst_run_data = data
 
     if worst_run_data:
-        create_simulation_figure(worst_run_data, run_empty_hours, samples)
+        create_simulation_figure(worst_run_data, run_empty_hours, params.samples)
         plt.show()
     else:
         print("No simulation data to plot.")

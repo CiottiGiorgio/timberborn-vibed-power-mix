@@ -1,31 +1,62 @@
-from typing import NamedTuple, Dict, Iterator, Tuple, Union
+from enum import Enum
+from typing import NamedTuple, Dict
 
 
 class MachineSpec(NamedTuple):
     power: int
     cost: int
-    is_producer: bool = False
+
+
+class FactoryName(str, Enum):
+    LUMBER_MILL = "lumber_mill"
+    GEAR_WORKSHOP = "gear_workshop"
+    STEEL_FACTORY = "steel_factory"
+    WOOD_WORKSHOP = "wood_workshop"
+    PAPER_MILL = "paper_mill"
+    PRINTING_PRESS = "printing_press"
+    OBSERVATORY = "observatory"
+    BOT_PART_FACTORY = "bot_part_factory"
+    BOT_ASSEMBLER = "bot_assembler"
+    EXPLOSIVES_FACTORY = "explosives_factory"
+    GRILLMIST = "grillmist"
+    CENTRIFUGE = "centrifuge"
+
+
+class ProducerName(str, Enum):
+    WATER_WHEEL = "water_wheel"
+    WINDMILL = "windmill"
+    LARGE_WINDMILL = "large_windmill"
+    POWER_WHEEL = "power_wheel"
+
+
+class BatteryName(str, Enum):
+    BATTERY = "battery"
+    BATTER_HEIGHT = "battery_height"
 
 
 # Consumers
-lumber_mill = MachineSpec(power=50, cost=0)
-gear_workshop = MachineSpec(power=120, cost=0)
-steel_factory = MachineSpec(power=200, cost=0)
-wood_workshop = MachineSpec(power=250, cost=0)
-paper_mill = MachineSpec(power=80, cost=0)
-printing_press = MachineSpec(power=150, cost=0)
-observatory = MachineSpec(power=200, cost=0)
-bot_part_factory = MachineSpec(power=150, cost=0)
-bot_assembler = MachineSpec(power=250, cost=0)
-explosives_factory = MachineSpec(power=150, cost=0)
-grillmist = MachineSpec(power=60, cost=0)
-centrifuge = MachineSpec(power=200, cost=0)
+FACTORY_DATABASE: Dict[FactoryName, MachineSpec] = {
+    FactoryName.LUMBER_MILL: MachineSpec(power=50, cost=0),
+    FactoryName.GEAR_WORKSHOP: MachineSpec(power=120, cost=0),
+    FactoryName.STEEL_FACTORY: MachineSpec(power=200, cost=0),
+    FactoryName.WOOD_WORKSHOP: MachineSpec(power=250, cost=0),
+    FactoryName.PAPER_MILL: MachineSpec(power=80, cost=0),
+    FactoryName.PRINTING_PRESS: MachineSpec(power=150, cost=0),
+    FactoryName.OBSERVATORY: MachineSpec(power=200, cost=0),
+    FactoryName.BOT_PART_FACTORY: MachineSpec(power=150, cost=0),
+    FactoryName.BOT_ASSEMBLER: MachineSpec(power=250, cost=0),
+    FactoryName.EXPLOSIVES_FACTORY: MachineSpec(power=150, cost=0),
+    FactoryName.GRILLMIST: MachineSpec(power=60, cost=0),
+    FactoryName.CENTRIFUGE: MachineSpec(power=200, cost=0),
+}
 
 # Producers
-power_wheel = MachineSpec(power=50, cost=50, is_producer=True)
-water_wheel = MachineSpec(power=150, cost=50, is_producer=True)
-large_windmill = MachineSpec(power=300, cost=75, is_producer=True)
-windmill = MachineSpec(power=150, cost=40, is_producer=True)
+PRODUCER_DATABASE: Dict[ProducerName, MachineSpec] = {
+    ProducerName.WATER_WHEEL: MachineSpec(power=150, cost=50),
+    ProducerName.WINDMILL: MachineSpec(power=150, cost=40),
+    ProducerName.LARGE_WINDMILL: MachineSpec(power=300, cost=75),
+    ProducerName.POWER_WHEEL: MachineSpec(power=50, cost=50),
+}
 
 
 class BatterySpec(NamedTuple):
@@ -35,7 +66,7 @@ class BatterySpec(NamedTuple):
     cost_per_height: int
 
 
-gravity_battery = BatterySpec(
+GRAVITY_BATTERY = BatterySpec(
     base_capacity=4000,
     capacity_per_height=2000,
     base_cost=84,
@@ -43,42 +74,11 @@ gravity_battery = BatterySpec(
 )
 
 
-def calculate_battery_capacity(spec: BatterySpec, height: Union[int, float]) -> float:
-    return spec.base_capacity + (height * spec.capacity_per_height)
+def battery_capacity(height: float) -> float:
+    return GRAVITY_BATTERY.base_capacity + (
+        height * GRAVITY_BATTERY.capacity_per_height
+    )
 
 
-def calculate_battery_cost(spec: BatterySpec, height: Union[int, float]) -> float:
-    return spec.base_cost + (height * spec.cost_per_height)
-
-
-# Registry
-ALL_MACHINES: Dict[str, MachineSpec] = {
-    "lumber_mill": lumber_mill,
-    "gear_workshop": gear_workshop,
-    "steel_factory": steel_factory,
-    "wood_workshop": wood_workshop,
-    "paper_mill": paper_mill,
-    "printing_press": printing_press,
-    "observatory": observatory,
-    "bot_part_factory": bot_part_factory,
-    "bot_assembler": bot_assembler,
-    "explosives_factory": explosives_factory,
-    "grillmist": grillmist,
-    "centrifuge": centrifuge,
-    "power_wheel": power_wheel,
-    "water_wheel": water_wheel,
-    "large_windmill": large_windmill,
-    "windmill": windmill,
-}
-
-
-def iter_consumers() -> Iterator[Tuple[str, MachineSpec]]:
-    for name, spec in ALL_MACHINES.items():
-        if not spec.is_producer:
-            yield name, spec
-
-
-def iter_producers() -> Iterator[Tuple[str, MachineSpec]]:
-    for name, spec in ALL_MACHINES.items():
-        if spec.is_producer:
-            yield name, spec
+def battery_cost(height: float) -> float:
+    return GRAVITY_BATTERY.base_cost + (height * GRAVITY_BATTERY.cost_per_height)

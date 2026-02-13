@@ -2,14 +2,10 @@ import numpy as np
 from numpy.random import Generator
 from timberborn_power_mix.models import SimulationParams, SimulationResult
 from timberborn_power_mix.machines import (
-    iter_consumers,
-    power_wheel,
-    water_wheel,
-    large_windmill,
-    windmill,
-    gravity_battery,
-    calculate_battery_capacity,
-    calculate_battery_cost,
+    PRODUCER_DATABASE,
+    battery_capacity,
+    battery_cost,
+    FACTORY_DATABASE, ProducerName, BatteryName,
 )
 from timberborn_power_mix import consts
 
@@ -19,43 +15,40 @@ def simulate_scenario(params: SimulationParams, _rng: Generator) -> SimulationRe
     total_consumption_rate = 0
 
     # Iterate over all consumers in MachineDatabase
-    for name, spec in iter_consumers():
-        count = getattr(params.factories, name, 0)
+    for name, spec in FACTORY_DATABASE.items():
+        count = getattr(params.factories, name)
         total_consumption_rate += count * spec.power
 
     # Production
-    power_wheel_spec = power_wheel
-    wheel_spec = water_wheel
-    large_windmill_spec = large_windmill
-    windmill_spec = windmill
+    wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]
+    windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILL]
+    large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILL]
+    power_wheel_spec = PRODUCER_DATABASE[ProducerName.POWER_WHEEL]
 
-    power_wheel_production = power_wheel_spec.power
     wheel_production = wheel_spec.power
-    large_windmill_production = large_windmill_spec.power
     windmill_production = windmill_spec.power
+    large_windmill_production = large_windmill_spec.power
+    power_wheel_production = power_wheel_spec.power
 
-    power_wheel_cost = power_wheel_spec.cost
     wheel_cost = wheel_spec.cost
-    large_windmill_cost = large_windmill_spec.cost
     windmill_cost = windmill_spec.cost
+    large_windmill_cost = large_windmill_spec.cost
+    power_wheel_cost = power_wheel_spec.cost
 
     # Get counts from params.energy_mix
-    num_power_wheels = params.energy_mix.power_wheels
-    num_water_wheels = params.energy_mix.water_wheels
-    num_large_windmills = params.energy_mix.large_windmills
-    num_windmills = params.energy_mix.windmills
-    num_batteries = params.energy_mix.batteries
-
-    # Battery Constants
-    battery_info = gravity_battery
+    num_batteries = getattr(params.energy_mix, BatteryName.BATTERY)
+    num_water_wheels = getattr(params.energy_mix, ProducerName.WATER_WHEEL)
+    num_windmills = getattr(params.energy_mix, ProducerName.WINDMILL)
+    num_large_windmills = getattr(params.energy_mix, ProducerName.LARGE_WINDMILL)
+    num_power_wheels = getattr(params.energy_mix, ProducerName.POWER_WHEEL)
 
     # Handle battery height (int or float)
-    battery_height = params.energy_mix.battery_height
+    battery_height = getattr(params.energy_mix, BatteryName.BATTER_HEIGHT)
 
     # Calculate total capacity and cost
     # We assume all batteries have the average height
-    capacity_per_battery = calculate_battery_capacity(battery_info, battery_height)
-    cost_per_battery = calculate_battery_cost(battery_info, battery_height)
+    capacity_per_battery = battery_capacity(battery_height)
+    cost_per_battery = battery_cost(battery_height)
 
     total_battery_capacity = num_batteries * capacity_per_battery
     total_battery_cost = num_batteries * cost_per_battery

@@ -46,21 +46,21 @@ def add_common_params(func):
         )(func)
 
     func = click.option(
-        "--badtide-season-days",
+        "--badtide-days",
         type=int,
         default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
         show_default=True,
         help="Duration of badtide season in days",
     )(func)
     func = click.option(
-        "--dry-season-days",
+        "--dry-days",
         type=int,
         default=consts.DEFAULT_DRY_SEASON_DAYS,
         show_default=True,
         help="Duration of dry season in days",
     )(func)
     func = click.option(
-        "--wet-season-days",
+        "--wet-days",
         type=int,
         default=consts.DEFAULT_WET_SEASON_DAYS,
         show_default=True,
@@ -182,9 +182,9 @@ def parse_params(**kwargs) -> SimulationParams:
         samples=kwargs["samples"],
         days=kwargs["days"],
         working_hours=kwargs["working_hours"],
-        wet_season_days=kwargs["wet_season_days"],
-        dry_season_days=kwargs["dry_season_days"],
-        badtide_season_days=kwargs["badtide_season_days"],
+        wet_season_days=kwargs["wet_days"],
+        dry_season_days=kwargs["dry_days"],
+        badtide_season_days=kwargs["badtide_days"],
         factories=factories,
         energy_mix=energy_mix,
     )

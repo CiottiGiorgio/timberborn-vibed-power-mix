@@ -1,7 +1,10 @@
 import click
+import inflect
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import iter_consumers, ALL_MACHINES
 from timberborn_power_mix.models import FactoryParams, EnergyMixParams, SimulationParams
+
+p = inflect.engine()
 
 
 class IntOrIntList(click.ParamType):
@@ -35,11 +38,12 @@ def add_common_params(func):
 
     # Consumers
     for name, spec in iter_consumers():
+        display_name = name.replace("_", " ")
         func = click.option(
             f"--{name.replace('_', '-')}",
             type=int,
             default=0,
-            help=f"Number of {name.replace('_', ' ')}s",
+            help=f"Number of {p.plural(display_name)}",
         )(func)
 
     # Standard options
@@ -105,7 +109,7 @@ def add_energy_mix_params(func):
         "--battery",
         type=int,
         default=0,
-        help="Number of gravity batteries",
+        help=f"Number of gravity batteries",
     )(func)
 
     # Producers
@@ -114,7 +118,7 @@ def add_energy_mix_params(func):
             "--windmill",
             type=int,
             default=0,
-            help="Number of windmills",
+            help=f"Number of windmills",
         )(func)
 
     if "large_windmill" in ALL_MACHINES:
@@ -122,7 +126,7 @@ def add_energy_mix_params(func):
             "--large-windmill",
             type=int,
             default=0,
-            help="Number of large windmills",
+            help=f"Number of large windmills",
         )(func)
 
     if "water_wheel" in ALL_MACHINES:
@@ -130,7 +134,7 @@ def add_energy_mix_params(func):
             "--water-wheel",
             type=int,
             default=0,
-            help="Number of water wheels",
+            help=f"Number of water wheels",
         )(func)
 
     if "power_wheel" in ALL_MACHINES:
@@ -138,7 +142,7 @@ def add_energy_mix_params(func):
             "--power-wheel",
             type=int,
             default=0,
-            help="Number of power wheels",
+            help=f"Number of power wheels",
         )(func)
 
     return func

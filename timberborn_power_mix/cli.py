@@ -2,7 +2,11 @@ import click
 import inflect
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
-from timberborn_power_mix.models import FactoryParams, EnergyMixParams, SimulationParams
+from timberborn_power_mix.models import (
+    FactoryParams,
+    EnergyMixParams,
+    SimulationOptions,
+)
 
 p = inflect.engine()
 
@@ -152,7 +156,7 @@ def create_cli(run_callback, optimize_callback):
     return cli
 
 
-def parse_params(**kwargs) -> SimulationParams:
+def parse_params(**kwargs) -> SimulationOptions:
     # Create a FactoryParams by removing all fields from kwargs that are not contained in FactoryParams.
     # Since FactoryParams requires all fields, if kwargs is missing one of those fields, this fails.
     factories = FactoryParams(
@@ -178,7 +182,7 @@ def parse_params(**kwargs) -> SimulationParams:
         },
     )
 
-    return SimulationParams(
+    return SimulationOptions(
         samples=kwargs["samples"],
         days=kwargs["days"],
         working_hours=kwargs["working_hours"],

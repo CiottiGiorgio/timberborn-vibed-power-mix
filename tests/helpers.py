@@ -1,5 +1,9 @@
 from timberborn_power_mix.rng import RNGService
-from timberborn_power_mix.models import SimulationParams, EnergyMixParams, FactoryParams
+from timberborn_power_mix.models import (
+    SimulationOptions,
+    EnergyMixParams,
+    FactoryParams,
+)
 from timberborn_power_mix.simulation import run_simulation_batch
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from tests import consts
@@ -24,7 +28,7 @@ def generate_reference_simulation_data():
 
     factories = FactoryParams(lumber_mill=1, wood_workshop=1)
 
-    params = SimulationParams(
+    params = SimulationOptions(
         days=consts.DEFAULT_DAYS,
         wet_season_days=consts.DEFAULT_WET_SEASON_DAYS,
         dry_season_days=consts.DEFAULT_DRY_SEASON_DAYS,

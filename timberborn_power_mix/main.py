@@ -1,12 +1,10 @@
-import os
 import logging
 import matplotlib.pyplot as plt
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from timberborn_power_mix.simulation import run_simulation_batch
+from timberborn_power_mix.simulation import simulate_scenario
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.cli import create_cli, parse_params
 from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
-from timberborn_power_mix.rng import RNGManager
+from timberborn_power_mix.rng import RNGService
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +17,6 @@ def run_optimization(**kwargs):
     iterations = kwargs.get("iterations", 500)
     samples_per_sim = kwargs.get("samples_per_sim", 2000)
 
-    # Note: Bounds are not yet configurable via CLI, using defaults.
     results = optimize(
         base_params=base_params,
         iterations=iterations,
@@ -47,61 +44,13 @@ def run_visualization(**kwargs):
 
     params = parse_params(**kwargs)
 
-    run_empty_hours = []
-    worst_run_data = None
-    max_hours_empty = -1
-
     logger.info(f"Running {params.samples} simulations for visualization...")
 
-    # Determine number of workers
-    # Use process_cpu_count to respect CPU affinity/quotas
-    num_workers = os.process_cpu_count() or 1
+    rng_service = RNGService()
+    hours_empty_list, worst_run_data, _ = simulate_scenario(params, rng_service)
 
-    # Calculate chunk size to split work evenly
-    chunk_size = params.samples // num_workers
-    remainder = params.samples % num_workers
-
-    batches = []
-    for i in range(num_workers):
-        # Distribute remainder among the first few workers
-        count = chunk_size + (1 if i < remainder else 0)
-        if count > 0:
-            batches.append(count)
-
-    # Start the RNG Manager and Process Pool
-    with (
-        RNGManager() as manager,
-        ProcessPoolExecutor(max_workers=num_workers) as executor,
-    ):
-        # Create the service proxy
-        rng_service = manager.RNGService()
-
-        # Submit batch tasks
-        futures = [
-            executor.submit(run_simulation_batch, params, batch_size, rng_service)
-            for batch_size in batches
-        ]
-
-        for future in as_completed(futures):
-            batch_results = future.result()
-
-            for hours_empty, data in batch_results:
-                # Collect data for ALL runs
-                run_empty_hours.append(hours_empty)
-
-                if hours_empty > max_hours_empty:
-                    max_hours_empty = hours_empty
-                    worst_run_data = data
-
-                # If worst_run_data is still None, keep the last one just in case
-                if worst_run_data is None:
-                    worst_run_data = data
-
-    if worst_run_data:
-        create_simulation_figure(worst_run_data, run_empty_hours, params.samples)
-        plt.show()
-    else:
-        logger.warning("No simulation data to plot.")
+    create_simulation_figure(worst_run_data, hours_empty_list, params.samples)
+    plt.show()
 
 
 def main():

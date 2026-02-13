@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from timberborn_power_mix.models import SimulationResult
 from timberborn_power_mix.plots.power_plot import plot_power
@@ -10,20 +11,39 @@ from timberborn_power_mix import consts
 
 def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samples):
     # Unpack data
-    time_days = data.time_days
+    params = data.params
+    days = params.days
+    total_hours = days * consts.HOURS_PER_DAY
+
+    time_hours = np.arange(total_hours)
+    time_days = time_hours / consts.HOURS_PER_DAY
+
     power_production = data.power_production
     power_consumption = data.power_consumption
-    power_surplus = data.power_surplus
-    effective_balance = data.effective_balance
     battery_charge = data.battery_charge
-    energy_production = data.energy_production
-    energy_consumption = data.energy_consumption
+
+    # Recompute derived values
+    power_surplus = power_production - power_consumption
+
+    # Effective balance is the surplus that couldn't be absorbed by the battery
+    # or the deficit that couldn't be covered by the battery.
+    # It's the change in battery charge minus the surplus.
+    # delta_charge = charge[t] - charge[t-1]
+    # effective_balance = surplus - delta_charge
+    battery_charge_shifted = np.zeros_like(battery_charge)
+    battery_charge_shifted[0] = data.total_battery_capacity / 2.0  # Initial charge
+    battery_charge_shifted[1:] = battery_charge[:-1]
+    delta_charge = battery_charge - battery_charge_shifted
+    effective_balance = power_surplus - delta_charge
+
+    # Recompute cumulative energy
+    energy_production = np.cumsum(power_production)
+    energy_consumption = np.cumsum(power_consumption)
+
     total_battery_capacity = data.total_battery_capacity
     season_boundaries = data.season_boundaries
-    params = data.params
     total_cost = data.total_cost
 
-    days = params.days
     power_wheels = getattr(params.energy_mix, "power_wheel")
     water_wheels = getattr(params.energy_mix, "water_wheel")
     large_windmills = getattr(params.energy_mix, "large_windmill")
@@ -121,16 +141,20 @@ def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samp
     # Add vertical lines for season boundaries to all time-series plots
     # And add labels to all of them
     for ax in [ax1, ax2, ax3, ax4]:
-        for i, (start_day, label) in enumerate(season_boundaries):
+        for i, (start_hour, label) in enumerate(season_boundaries):
+            start_day = start_hour / consts.HOURS_PER_DAY
             # Vertical line
             ax.axvline(
                 x=start_day, color="#444444", linestyle="-", alpha=0.4, linewidth=1.5
             )
 
             # Label
-            end_day = (
-                season_boundaries[i + 1][0] if i + 1 < len(season_boundaries) else days
+            end_hour = (
+                season_boundaries[i + 1][0]
+                if i + 1 < len(season_boundaries)
+                else days * consts.HOURS_PER_DAY
             )
+            end_day = end_hour / consts.HOURS_PER_DAY
             mid_point = (start_day + end_day) / 2
             if mid_point < days:
                 ax.text(

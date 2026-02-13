@@ -31,7 +31,7 @@ class ProducerName(str, Enum):
 
 class BatteryName(str, Enum):
     BATTERY = "battery"
-    BATTER_HEIGHT = "battery_height"
+    BATTERY_HEIGHT = "battery_height"
 
 
 # Consumers

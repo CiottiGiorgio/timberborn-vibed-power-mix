@@ -5,7 +5,9 @@ from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
     battery_capacity,
     battery_cost,
-    FACTORY_DATABASE, ProducerName, BatteryName,
+    FACTORY_DATABASE,
+    ProducerName,
+    BatteryName,
 )
 from timberborn_power_mix import consts
 
@@ -43,7 +45,7 @@ def simulate_scenario(params: SimulationParams, _rng: Generator) -> SimulationRe
     num_power_wheels = getattr(params.energy_mix, ProducerName.POWER_WHEEL)
 
     # Handle battery height (int or float)
-    battery_height = getattr(params.energy_mix, BatteryName.BATTER_HEIGHT)
+    battery_height = getattr(params.energy_mix, BatteryName.BATTERY_HEIGHT)
 
     # Calculate total capacity and cost
     # We assume all batteries have the average height

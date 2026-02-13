@@ -1,9 +1,7 @@
-from itertools import chain
-
 import click
 import inflect
 from timberborn_power_mix import consts
-from timberborn_power_mix.machines import FACTORY_DATABASE, PRODUCER_DATABASE, FactoryName, ProducerName, BatteryName
+from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
 from timberborn_power_mix.models import FactoryParams, EnergyMixParams, SimulationParams
 
 p = inflect.engine()
@@ -38,51 +36,7 @@ class IntOrIntList(click.ParamType):
 def add_common_params(func):
     """Decorator to add common simulation parameters to a click command."""
 
-    # Common simulation parameter
-    func = click.option(
-        "--samples",
-        type=int,
-        default=consts.DEFAULT_SAMPLES,
-        help="Number of samples per simulation",
-    )(func)
-
-    func = click.option(
-        "--days",
-        type=int,
-        default=consts.DEFAULT_DAYS,
-        help="Number of days for the simulation",
-    )(func)
-
-    func = click.option(
-        "--working-hours",
-        type=int,
-        default=consts.DEFAULT_WORKING_HOURS,
-        help="Number of working hours per day",
-    )(func)
-
-    func = click.option(
-        "--wet-season-days",
-        type=int,
-        default=consts.DEFAULT_WET_SEASON_DAYS,
-        help="Duration of wet season in days",
-    )(func)
-
-    func = click.option(
-        "--dry-season-days",
-        type=int,
-        default=consts.DEFAULT_DRY_SEASON_DAYS,
-        help="Duration of dry season in days",
-    )(func)
-
-    func = click.option(
-        "--badtide-season-days",
-        type=int,
-        default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
-        help="Duration of badtide season in days",
-    )(func)
-
-    # Consumers
-    for name in FactoryName:
+    for name in reversed(FactoryName):
         display_name = name.replace("_", " ")
         func = click.option(
             f"--{name.replace('_', '-')}",
@@ -90,6 +44,51 @@ def add_common_params(func):
             default=0,
             help=f"Number of {p.plural(display_name)}",
         )(func)
+
+    func = click.option(
+        "--badtide-season-days",
+        type=int,
+        default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
+        show_default=True,
+        help="Duration of badtide season in days",
+    )(func)
+    func = click.option(
+        "--dry-season-days",
+        type=int,
+        default=consts.DEFAULT_DRY_SEASON_DAYS,
+        show_default=True,
+        help="Duration of dry season in days",
+    )(func)
+    func = click.option(
+        "--wet-season-days",
+        type=int,
+        default=consts.DEFAULT_WET_SEASON_DAYS,
+        show_default=True,
+        help="Duration of wet season in days",
+    )(func)
+
+    # 1. Core simulation parameters (Top of the group)
+    func = click.option(
+        "--working-hours",
+        type=int,
+        default=consts.DEFAULT_WORKING_HOURS,
+        show_default=True,
+        help="Number of working hours per day",
+    )(func)
+    func = click.option(
+        "--days",
+        type=int,
+        default=consts.DEFAULT_DAYS,
+        show_default=True,
+        help="Number of days for the simulation",
+    )(func)
+    func = click.option(
+        "--samples",
+        type=int,
+        default=consts.DEFAULT_SAMPLES,
+        show_default=True,
+        help="Number of samples per simulation",
+    )(func)
 
     return func
 
@@ -98,7 +97,7 @@ def add_energy_mix_params(func):
     """Decorator to add energy mix parameters (for run command)."""
 
     # Producers
-    for name in chain(ProducerName, BatteryName):
+    for name in reversed(ProducerName):
         display_name = name.replace("_", " ")
         func = click.option(
             f"--{name.replace('_', '-')}",
@@ -106,6 +105,21 @@ def add_energy_mix_params(func):
             default=0,
             help=f"Number of {p.plural(display_name)}",
         )(func)
+
+    func = click.option(
+        f"--{BatteryName.BATTERY_HEIGHT.replace('_', '-')}",
+        type=IntOrIntList(),
+        default="0",
+        help="Height of the gravity batteries (accepts single int or list)",
+    )(func)
+
+    # 2. Battery Count
+    func = click.option(
+        f"--{BatteryName.BATTERY.replace('_', '-')}",
+        type=int,
+        default=0,
+        help="Number of batteries",
+    )(func)
 
     return func
 

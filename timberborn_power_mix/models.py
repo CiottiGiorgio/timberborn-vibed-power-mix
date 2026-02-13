@@ -1,7 +1,11 @@
 from pydantic import BaseModel, ConfigDict, create_model
 from typing import List, Tuple
 import numpy as np
-from timberborn_power_mix.machines import FACTORY_DATABASE, PRODUCER_DATABASE, BatteryName
+from timberborn_power_mix.machines import (
+    FACTORY_DATABASE,
+    PRODUCER_DATABASE,
+    BatteryName,
+)
 
 FactoryParams = create_model(
     "FactoryParams", **{key: int for key in FACTORY_DATABASE.keys()}
@@ -9,7 +13,7 @@ FactoryParams = create_model(
 
 EnergyMixParams = create_model(
     "EnergyMixParams",
-    **{BatteryName.BATTERY: int, BatteryName.BATTER_HEIGHT: float},
+    **{BatteryName.BATTERY: int, BatteryName.BATTERY_HEIGHT: float},
     **{key: int for key in PRODUCER_DATABASE.keys()},
 )
 

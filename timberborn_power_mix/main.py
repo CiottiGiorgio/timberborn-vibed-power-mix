@@ -49,7 +49,7 @@ def run_visualization(**kwargs):
     rng_service = RNGService()
     hours_empty_list, worst_run_data, _ = simulate_scenario(params, rng_service)
 
-    create_simulation_figure(worst_run_data, hours_empty_list, params.samples)
+    create_simulation_figure(worst_run_data, params, hours_empty_list)
     plt.show()
 
 

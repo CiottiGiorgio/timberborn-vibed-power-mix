@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from timberborn_power_mix.models import SimulationResult
+from timberborn_power_mix.models import SimulationResult, SimulationOptions
 from timberborn_power_mix.plots.power_plot import plot_power
 from timberborn_power_mix.plots.energy_plot import plot_energy
 from timberborn_power_mix.plots.surplus_plot import plot_surplus
@@ -9,9 +9,10 @@ from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percent
 from timberborn_power_mix import consts
 
 
-def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samples):
+def create_simulation_figure(
+    data: SimulationResult, params: SimulationOptions, run_empty_hours
+):
     # Unpack data
-    params = data.params
     days = params.days
     total_hours = days * consts.HOURS_PER_DAY
 
@@ -27,9 +28,6 @@ def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samp
 
     # Effective balance is the surplus that couldn't be absorbed by the battery
     # or the deficit that couldn't be covered by the battery.
-    # It's the change in battery charge minus the surplus.
-    # delta_charge = charge[t] - charge[t-1]
-    # effective_balance = surplus - delta_charge
     battery_charge_shifted = np.zeros_like(battery_charge)
     battery_charge_shifted[0] = data.total_battery_capacity / 2.0  # Initial charge
     battery_charge_shifted[1:] = battery_charge[:-1]
@@ -96,7 +94,7 @@ def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samp
         f"  Wet Season: {params.wet_season_days} days\n"
         f"  Dry Season: {params.dry_season_days} days\n"
         f"  Badtide Season: {params.badtide_season_days} days\n"
-        f"  Samples: {total_samples}"
+        f"  Samples: {params.samples}"
     )
 
     # Place text box in top right corner
@@ -139,7 +137,6 @@ def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samp
     plt.setp(ax3.get_xticklabels(), visible=False)
 
     # Add vertical lines for season boundaries to all time-series plots
-    # And add labels to all of them
     for ax in [ax1, ax2, ax3, ax4]:
         for i, (start_hour, label) in enumerate(season_boundaries):
             start_day = start_hour / consts.HOURS_PER_DAY
@@ -201,11 +198,9 @@ def create_simulation_figure(data: SimulationResult, run_empty_hours, total_samp
     # Plot 5: Empty Battery Duration Distribution (Percentage)
     total_simulation_hours = days * consts.HOURS_PER_DAY
     plot_empty_hours_percentage(
-        ax5, run_empty_hours, total_samples, total_simulation_hours
+        ax5, run_empty_hours, params.samples, total_simulation_hours
     )
 
-    plt.tight_layout(
-        rect=(0, 0.03, 1, 0.95)
-    )  # Adjusted top margin to make room for text box
+    plt.tight_layout(rect=(0, 0.03, 1, 0.95))
 
     return fig

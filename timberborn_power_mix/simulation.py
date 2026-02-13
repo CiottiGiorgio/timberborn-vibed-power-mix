@@ -259,7 +259,6 @@ def simulate_scenario(params: SimulationOptions, rng_service=None):
         battery_charge=batch_res.worst_sample.battery_charge,
         total_battery_capacity=total_battery_capacity,
         season_boundaries=season_boundaries,
-        params=params,
         total_cost=total_cost,
     )
 

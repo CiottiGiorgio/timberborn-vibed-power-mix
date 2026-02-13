@@ -28,14 +28,14 @@ poetry run tb-power-mix run \
     --battery-height 10 \
     --lumber-mill 2 \
     --gear-workshop 1 \
-    --samples-per-sim 100
+    --samples 100
 ```
 
 **Key Parameters:**
 - `--[machine-name] [count]`: Specify the number of producers (e.g., `--large-windmill`, `--water-wheel`) or consumers (e.g., `--lumber-mill`, `--steel-factory`).
 - `--battery [count]`: Number of gravity batteries.
 - `--battery-height [meters]`: Height of the gravity batteries. Can be a single integer or a comma-separated list (e.g., `10,15,10`).
-- `--samples-per-sim [count]`: Number of Monte Carlo simulations to run (default: 1000).
+- `--samples [count]`: Number of Monte Carlo simulations to run (default: 1000).
 - `--days [count]`: Duration of the simulation in days.
 
 ### Optimize

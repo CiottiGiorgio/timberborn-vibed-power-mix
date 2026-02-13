@@ -222,7 +222,7 @@ def optimization_worker(
 def optimize(
     base_params: SimulationParams,
     iterations: int = consts.DEFAULT_OPTIMIZATION_ITERATIONS,
-    simulations_per_config: int = consts.DEFAULT_SAMPLES_PER_SIM,
+    simulations_per_config: int = consts.DEFAULT_SAMPLES,
     bounds: Optional[Dict[str, Tuple[int, int]]] = None,
 ) -> List[OptimizationResult]:
     """

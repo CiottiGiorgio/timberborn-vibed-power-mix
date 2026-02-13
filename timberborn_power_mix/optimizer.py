@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import logging
 from typing import List, Dict, Tuple, Optional
 
 import numpy as np
@@ -9,6 +10,8 @@ from timberborn_power_mix import consts
 from timberborn_power_mix.models import SimulationParams, EnergyMixParams
 from timberborn_power_mix.rng import RNGService, RNGManager
 from timberborn_power_mix.simulation import run_simulation_batch
+
+logger = logging.getLogger(__name__)
 
 
 class OptimizationResult:
@@ -255,7 +258,7 @@ def optimize(
         best_result = None
         best_valid_result = None
 
-        print(
+        logger.info(
             f"Starting parallel search with {num_workers} workers, {num_rounds} rounds..."
         )
 
@@ -299,7 +302,7 @@ def optimize(
 
             start_params_list = [best_result.params for _ in range(num_workers)]
 
-            print(
+            logger.info(
                 f"Round {round_num + 1}/{num_rounds}. "
                 f"Best this round score: {round_best_result.calculate_score():.0f}. "
                 f"Overall best score: {best_result.calculate_score():.0f}. "

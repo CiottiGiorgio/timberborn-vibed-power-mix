@@ -1,14 +1,18 @@
 import sys
 import os
+import logging
 
 # Add project root to path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from tests.helpers import generate_reference_figure
 
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
+
 
 def refresh_reference_image():
-    print("Refreshing reference image for visual tests...")
+    logger.info("Refreshing reference image for visual tests...")
 
     # 1. Generate Plot
     fig = generate_reference_figure()
@@ -21,7 +25,7 @@ def refresh_reference_image():
 
     fig.savefig(output_path)
 
-    print(f"Reference image saved to: {output_path}")
+    logger.info(f"Reference image saved to: {output_path}")
 
 
 if __name__ == "__main__":

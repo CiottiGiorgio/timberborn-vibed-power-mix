@@ -1,5 +1,4 @@
 import numpy as np
-import functools
 from numba import njit, prange
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
@@ -116,9 +115,6 @@ def jit_parallel_simulation(
     hours_empty_results = np.zeros(config.samples)
     total_final_surplus = 0.0
 
-    worst_data = -1
-    worst_seed = sample_seeds[0]
-
     for s in prange(config.samples):
         res = jit_stochastic_simulation(
             total_hours,
@@ -129,18 +125,10 @@ def jit_parallel_simulation(
             total_battery_capacity,
             sample_seeds[s],
         )
-
-        h_empty = float(np.sum(res.battery_charge <= 0))
-        hours_empty_results[s] = h_empty
-
-        # Standard reduction for surplus using functools.reduce
+        hours_empty_results[s] = np.sum(res.battery_charge <= 0)
         total_final_surplus += np.sum(res.power_production) - total_consumption_energy
 
-        # Reduction for the worst sample using functools.reduce and max.
-        # This compares tuples (hours_empty, seed) element-wise.
-        worst_data = max(worst_data, h_empty)
-        if worst_data == h_empty:
-            worst_seed = sample_seeds[s]
+    worst_idx = np.argmax(hours_empty_results)
 
     # Replay the worst run to get the full sample data without storing all samples in memory
     worst_sample = jit_stochastic_simulation(
@@ -150,7 +138,7 @@ def jit_parallel_simulation(
         large_windmills,
         windmills,
         total_battery_capacity,
-        worst_seed,
+        sample_seeds[worst_idx],
     )
 
     aggregated_samples = AggregatedSamples(

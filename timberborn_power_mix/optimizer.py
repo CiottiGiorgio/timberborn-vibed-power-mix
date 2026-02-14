@@ -138,12 +138,14 @@ def evaluate_config(
     current_config.energy_mix = mix_config
     current_config.samples = samples_per_config
 
-    hours_empty_list, worst_data, avg_surplus = run_simulation(current_config)
+    res = run_simulation(current_config)
 
-    p95_empty = np.percentile(hours_empty_list, 95)
+    p95_empty = np.percentile(res.hours_empty_results, 95)
     cost = calculate_total_cost(mix_config)
 
-    return OptimizationResult(mix_config, cost, p95_empty, total_hours, avg_surplus)
+    return OptimizationResult(
+        mix_config, cost, p95_empty, total_hours, res.average_final_surplus
+    )
 
 
 def optimize(

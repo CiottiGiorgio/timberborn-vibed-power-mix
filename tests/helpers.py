@@ -47,9 +47,9 @@ def generate_reference_simulation_data():
     # 2. Run simulation
     # We seed numpy for determinism in the simulation
     np.random.seed(42)
-    hours_empty_list, worst_run_data, _ = run_simulation(config)
+    res = run_simulation(config)
 
-    return worst_run_data, hours_empty_list, config
+    return res.worst_sample, res.hours_empty_results, config
 
 
 def generate_reference_figure():

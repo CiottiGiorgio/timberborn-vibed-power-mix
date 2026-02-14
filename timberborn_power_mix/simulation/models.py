@@ -145,3 +145,11 @@ class ParallelSimulationResult(NamedTuple):
 
     worst_sample: SimulationSample
     aggregated_samples: AggregatedSamples
+
+
+class SimulationResult(NamedTuple):
+    """Final output of the simulation process, containing aggregated metrics and the worst-case scenario."""
+
+    hours_empty_results: np.ndarray
+    worst_sample: SimulationSample
+    average_final_surplus: float

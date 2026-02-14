@@ -15,11 +15,12 @@ from timberborn_power_mix.simulation.models import (
     ParallelSimulationResult,
     AggregatedSamples,
     ProducerGroup,
+    SimulationResult,
 )
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
-def run_simulation(config: SimulationConfig):
+def run_simulation(config: SimulationConfig) -> SimulationResult:
     """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
     # Consumption
     total_consumption_rate = 0
@@ -53,10 +54,12 @@ def run_simulation(config: SimulationConfig):
         ProducerGroup(num_water_wheels, wheel_spec.power),
     )
 
-    return (
-        parallel_res.aggregated_samples.hours_empty_results,
-        parallel_res.worst_sample,
-        np.mean(parallel_res.aggregated_samples.final_surpluses),
+    return SimulationResult(
+        hours_empty_results=parallel_res.aggregated_samples.hours_empty_results,
+        worst_sample=parallel_res.worst_sample,
+        average_final_surplus=float(
+            np.mean(parallel_res.aggregated_samples.final_surpluses)
+        ),
     )
 
 

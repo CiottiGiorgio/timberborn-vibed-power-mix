@@ -46,9 +46,9 @@ def simulate_visualization(**kwargs):
 
     logger.info(f"Running {config.samples} simulations for visualization...")
 
-    hours_empty_list, worst_run_data, _ = run_simulation(config)
+    res = run_simulation(config)
 
-    create_simulation_figure(worst_run_data, config, hours_empty_list)
+    create_simulation_figure(res.worst_sample, config, res.hours_empty_results)
     plt.show()
 
 

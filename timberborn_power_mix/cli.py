@@ -6,6 +6,7 @@ from timberborn_power_mix.simulation.models import (
     FactoryConfig,
     EnergyMixConfig,
     SimulationConfig,
+    CommonConfig,
 )
 from timberborn_power_mix.models import ConfigName
 
@@ -157,9 +158,8 @@ def create_cli(simulate_callback, optimize_callback):
     return cli
 
 
-def parse_config(**kwargs) -> SimulationConfig:
-    # Create a FactoryConfig by removing all fields from kwargs that are not contained in FactoryConfig.
-    # Since FactoryConfig requires all fields, if kwargs is missing one of those fields, this fails.
+def parse_common_config(**kwargs) -> CommonConfig:
+    """Parses common configuration parameters from kwargs."""
     factories = FactoryConfig(
         **{
             key: value
@@ -168,6 +168,18 @@ def parse_config(**kwargs) -> SimulationConfig:
         }
     )
 
+    return CommonConfig(
+        factories=factories,
+        **{
+            key: value
+            for key, value in kwargs.items()
+            if key in CommonConfig.model_fields and key != ConfigName.FACTORIES
+        },
+    )
+
+
+def parse_simulation_config(**kwargs) -> SimulationConfig:
+    """Parses full simulation configuration from kwargs."""
     battery_height = kwargs[BatteryName.BATTERY_HEIGHT]
     if isinstance(battery_height, list):
         if not battery_height:
@@ -183,12 +195,9 @@ def parse_config(**kwargs) -> SimulationConfig:
         },
     )
 
+    common_config = parse_common_config(**kwargs)
+
     return SimulationConfig(
-        **{
-            key: kwargs[key]
-            for key in SimulationConfig.model_fields
-            if key not in [ConfigName.FACTORIES, ConfigName.ENERGY_MIX]
-        },
-        factories=factories,
+        **common_config.model_dump(),
         energy_mix=energy_mix,
     )

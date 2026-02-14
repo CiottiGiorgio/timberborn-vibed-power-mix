@@ -31,6 +31,18 @@ class BatchConfig(NamedTuple):
     badtide_days: int
 
 
+CommonConfig = create_model(
+    "CommonConfig",
+    **{ConfigName.SAMPLES: int},
+    **{ConfigName.DAYS: int},
+    **{ConfigName.WORKING_HOURS: int},
+    **{ConfigName.WET_DAYS: int},
+    **{ConfigName.DRY_DAYS: int},
+    **{ConfigName.BADTIDE_DAYS: int},
+    **{ConfigName.FACTORIES: FactoryConfig},
+)
+
+
 class SimulationConfigBase(BaseModel):
     @property
     def to_batch_config(self) -> BatchConfig:
@@ -46,16 +58,14 @@ class SimulationConfigBase(BaseModel):
 
 SimulationConfig = create_model(
     "SimulationConfig",
-    **{ConfigName.SAMPLES: int},
-    **{ConfigName.DAYS: int},
-    **{ConfigName.WORKING_HOURS: int},
-    **{ConfigName.WET_DAYS: int},
-    **{ConfigName.DRY_DAYS: int},
-    **{ConfigName.BADTIDE_DAYS: int},
-    **{ConfigName.FACTORIES: FactoryConfig},
     **{ConfigName.ENERGY_MIX: EnergyMixConfig},
     __base__=SimulationConfigBase,
 )
+
+# Flatten CommonConfig into SimulationConfig
+for name, field in CommonConfig.model_fields.items():
+    SimulationConfig.model_fields[name] = field
+SimulationConfig.model_rebuild(force=True)
 
 
 class SimulationResult(NamedTuple):

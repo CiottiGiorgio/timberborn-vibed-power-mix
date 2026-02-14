@@ -53,14 +53,9 @@ def run_simulation(config: SimulationConfig):
         ProducerGroup(num_water_wheels, wheel_spec.power),
     )
 
-    worst_run_data = SimulationSample(
-        power_production=batch_res.worst_sample.power_production,
-        battery_charge=batch_res.worst_sample.battery_charge,
-    )
-
     return (
         batch_res.aggregated_samples.hours_empty_results,
-        worst_run_data,
+        batch_res.worst_sample,
         np.mean(batch_res.aggregated_samples.final_surpluses),
     )
 

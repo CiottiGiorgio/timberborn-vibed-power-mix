@@ -11,3 +11,4 @@ class ConfigName(StrEnum):
     ITERATIONS = "iterations"
     FACTORIES = "factories"
     ENERGY_MIX = "energy_mix"
+    SEED = "seed"

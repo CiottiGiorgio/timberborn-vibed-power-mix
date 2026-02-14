@@ -76,6 +76,12 @@ def add_common_params(func):
 
     # 1. Core simulation parameters (Top of the group)
     func = click.option(
+        f"--{ConfigName.SEED}",
+        type=int,
+        default=None,
+        help="Seed for the random number generator",
+    )(func)
+    func = click.option(
         f"--{ConfigName.WORKING_HOURS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_WORKING_HOURS,

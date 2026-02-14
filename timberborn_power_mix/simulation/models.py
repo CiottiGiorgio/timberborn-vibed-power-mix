@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 import numpy as np
 from pydantic import create_model, BaseModel
 
@@ -35,6 +35,7 @@ class SimulationConfig(BaseModel):
     wet_days: int
     dry_days: int
     badtide_days: int
+    seed: Optional[int] = None
     factories: FactoryConfig
     energy_mix: EnergyMixConfig
 
@@ -46,6 +47,7 @@ class OptimizationConfig(BaseModel):
     wet_days: int
     dry_days: int
     badtide_days: int
+    seed: Optional[int] = None
     factories: FactoryConfig
 """
 
@@ -69,6 +71,7 @@ class ParallelSimulationConfig(NamedTuple):
     wet_days: int
     dry_days: int
     badtide_days: int
+    seed: Optional[int] = None
 
 
 CommonConfig = create_model(
@@ -79,6 +82,7 @@ CommonConfig = create_model(
     **{ConfigName.WET_DAYS: int},
     **{ConfigName.DRY_DAYS: int},
     **{ConfigName.BADTIDE_DAYS: int},
+    **{ConfigName.SEED: (Optional[int], None)},
     **{ConfigName.FACTORIES: FactoryConfig},
 )
 
@@ -93,6 +97,7 @@ class SimulationConfigBase(BaseModel):
             wet_days=getattr(self, ConfigName.WET_DAYS),
             dry_days=getattr(self, ConfigName.DRY_DAYS),
             badtide_days=getattr(self, ConfigName.BADTIDE_DAYS),
+            seed=getattr(self, ConfigName.SEED),
         )
 
 

@@ -44,14 +44,21 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
         config.energy_mix
     )
 
+    # Handle seeding outside Numba. np.random.seed(None) is valid and re-initializes from entropy.
+    np.random.seed(config.seed)
+
+    # Generate seeds for each sample to ensure reproducibility in parallel
+    sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
+
     parallel_res = jit_parallel_simulation(
         config.to_parallel_config,
-        total_battery_capacity,
+        sample_seeds,
         total_consumption_rate,
         ProducerGroup(num_large_windmills, large_windmill_spec.power),
         ProducerGroup(num_windmills, windmill_spec.power),
         ProducerGroup(num_power_wheels, power_wheel_spec.power),
         ProducerGroup(num_water_wheels, wheel_spec.power),
+        total_battery_capacity,
     )
 
     return SimulationResult(
@@ -64,12 +71,13 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
 @njit(parallel=True, cache=True)
 def jit_parallel_simulation(
     config: ParallelSimulationConfig,
-    total_battery_capacity: float,
+    sample_seeds: np.ndarray,
     total_consumption_rate: int,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
     power_wheels: ProducerGroup,
     water_wheels: ProducerGroup,
+    total_battery_capacity: float,
 ) -> ParallelSimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
@@ -118,6 +126,7 @@ def jit_parallel_simulation(
             large_windmills,
             windmills,
             total_battery_capacity,
+            sample_seeds[s],
         )
         all_power_prod[s] = res.power_production
         all_batt_charge[s] = res.battery_charge
@@ -152,8 +161,11 @@ def jit_stochastic_simulation(
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
     total_battery_capacity: float,
+    seed: int,
 ) -> SimulationSample:
     """Performs a single Monte Carlo simulation run, handling stochastic input generation and internal state transitions."""
+    np.random.seed(seed)
+
     # Generate wind data inside the core for better cache locality
     max_segments = (total_hours // consts.WIND_DURATION_MIN_HOURS) + 1
     wind_durations = np.random.randint(

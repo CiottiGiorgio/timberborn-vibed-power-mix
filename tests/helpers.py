@@ -1,4 +1,3 @@
-import numpy as np
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
@@ -42,11 +41,10 @@ def generate_reference_simulation_data():
         working_hours=consts.DEFAULT_WORKING_HOURS,
         energy_mix=energy_mix,
         factories=factories,
+        seed=42,
     )
 
     # 2. Run simulation
-    # We seed numpy for determinism in the simulation
-    np.random.seed(42)
     res = run_simulation(config)
 
     return res.worst_sample, res.hours_empty_results, config

@@ -5,7 +5,7 @@ import numpy as np
 from numpy.random import Generator
 
 from timberborn_power_mix import consts
-from timberborn_power_mix.models import SimulationOptions, EnergyMixParams
+from timberborn_power_mix.simulation.models import SimulationOptions, EnergyMixParams
 from timberborn_power_mix.rng import RNGService
 from timberborn_power_mix.simulation.core import simulate_scenario
 from timberborn_power_mix.simulation.helpers import calculate_total_cost

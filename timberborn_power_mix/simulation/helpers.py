@@ -10,7 +10,7 @@ from timberborn_power_mix.machines import (
     battery_capacity,
     FACTORY_DATABASE,
 )
-from timberborn_power_mix.models import EnergyMixParams, SimulationOptions
+from timberborn_power_mix.simulation.models import EnergyMixParams, SimulationOptions
 
 
 def calculate_total_cost(energy_mix: EnergyMixParams) -> float:

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from timberborn_power_mix.models import SimulationResult, SimulationOptions
+from timberborn_power_mix.simulation.models import SimulationResult, SimulationOptions
 from timberborn_power_mix.plots.power_plot import plot_power
 from timberborn_power_mix.plots.energy_plot import plot_energy
 from timberborn_power_mix.plots.surplus_plot import plot_surplus

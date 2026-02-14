@@ -1,5 +1,40 @@
 from typing import NamedTuple
 import numpy as np
+from pydantic import create_model, BaseModel, ConfigDict
+
+from timberborn_power_mix.machines import (
+    FACTORY_DATABASE,
+    BatteryName,
+    PRODUCER_DATABASE,
+)
+
+FactoryParams = create_model(
+    "FactoryParams", **{key: int for key in FACTORY_DATABASE.keys()}
+)
+
+EnergyMixParams = create_model(
+    "EnergyMixParams",
+    **{BatteryName.BATTERY: int, BatteryName.BATTERY_HEIGHT: float},
+    **{key: int for key in PRODUCER_DATABASE.keys()},
+)
+
+
+class SimulationOptions(BaseModel):
+    samples: int
+    days: int
+    working_hours: int
+    wet_season_days: int
+    dry_season_days: int
+    badtide_season_days: int
+    factories: FactoryParams
+    energy_mix: EnergyMixParams
+
+
+class SimulationResult(BaseModel):
+    power_production: np.ndarray
+    battery_charge: np.ndarray
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class ProducerGroup(NamedTuple):

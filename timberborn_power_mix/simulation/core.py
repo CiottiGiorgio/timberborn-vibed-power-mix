@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit, prange
-from timberborn_power_mix.models import (
+from timberborn_power_mix.simulation.models import (
     SimulationOptions,
     SimulationResult,
 )

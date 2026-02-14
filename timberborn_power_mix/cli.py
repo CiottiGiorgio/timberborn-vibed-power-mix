@@ -2,7 +2,7 @@ import click
 import inflect
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
-from timberborn_power_mix.models import (
+from timberborn_power_mix.simulation.models import (
     FactoryParams,
     EnergyMixParams,
     SimulationOptions,

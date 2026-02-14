@@ -12,7 +12,7 @@ from timberborn_power_mix.machines import (
 from timberborn_power_mix import consts
 from timberborn_power_mix.simulation.models import (
     SimulationSample,
-    BatchedSimulationResult,
+    SimulationResult,
     AggregatedSamples,
     ProducerGroup,
 )
@@ -69,7 +69,7 @@ def jit_parallel_simulation(
     windmills: ProducerGroup,
     power_wheels: ProducerGroup,
     water_wheels: ProducerGroup,
-) -> BatchedSimulationResult:
+) -> SimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
     time_hours = np.arange(total_hours)
@@ -138,7 +138,7 @@ def jit_parallel_simulation(
         power_consumption=power_consumption,
     )
 
-    return BatchedSimulationResult(
+    return SimulationResult(
         worst_sample=worst_sample, aggregated_samples=aggregated_samples
     )
 

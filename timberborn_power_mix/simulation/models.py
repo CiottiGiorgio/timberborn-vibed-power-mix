@@ -140,7 +140,7 @@ class AggregatedSamples(NamedTuple):
     power_consumption: np.ndarray
 
 
-class BatchedSimulationResult(NamedTuple):
+class SimulationResult(NamedTuple):
     """Combines the results of a batched simulation, including the worst-performing sample and aggregated statistics."""
 
     worst_sample: SimulationSample

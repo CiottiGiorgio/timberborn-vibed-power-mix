@@ -1,7 +1,9 @@
 import os
 import pytest
+import numpy as np
 from matplotlib.testing.compare import compare_images
 from tests.helpers import generate_reference_figure, generate_reference_simulation_data
+from timberborn_power_mix.simulation.helpers import calculate_total_cost
 
 
 def test_visual_output(tmp_path):
@@ -26,14 +28,14 @@ def test_visual_output(tmp_path):
     fig.savefig(str(generated_image_path))
 
     # 2. Verify some deterministic outputs (sanity check)
-    worst_run_data, run_empty_hours, _ = generate_reference_simulation_data()
-    max_hours_empty = max(run_empty_hours) if run_empty_hours else -1
+    worst_run_data, run_empty_hours, config = generate_reference_simulation_data()
+    max_hours_empty = max(run_empty_hours) if len(run_empty_hours) > 0 else -1
 
     # Cost calculation:
     # Windmills: 4 * 40 = 160
     # Batteries: 1 * (84 + 1*6) = 90
     # Total: 250
-    assert worst_run_data.total_cost == 250.0
+    assert calculate_total_cost(config.energy_mix) == 250.0
     assert max_hours_empty >= 0
 
     # 3. Compare with reference image

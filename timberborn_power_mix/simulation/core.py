@@ -20,7 +20,7 @@ from timberborn_power_mix.simulation.models import (
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
-def simulate_scenario(config: SimulationConfig):
+def run_simulation(config: SimulationConfig):
     """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
     # Consumption
     total_consumption_rate = 0
@@ -44,7 +44,7 @@ def simulate_scenario(config: SimulationConfig):
         config.energy_mix
     )
 
-    batch_res = _simulate_batch(
+    batch_res = jit_parallel_simulation(
         config.to_batch_config,
         total_battery_capacity,
         total_consumption_rate,
@@ -67,7 +67,7 @@ def simulate_scenario(config: SimulationConfig):
 
 
 @njit(parallel=True, cache=True)
-def _simulate_batch(
+def jit_parallel_simulation(
     config: BatchConfig,
     total_battery_capacity: float,
     total_consumption_rate: int,
@@ -116,7 +116,7 @@ def _simulate_batch(
     final_surpluses = np.zeros(config.samples)
 
     for s in prange(config.samples):
-        res = _simulate_core(
+        res = jit_stochastic_simulation(
             total_hours,
             base_power_production,
             power_consumption,
@@ -150,7 +150,7 @@ def _simulate_batch(
 
 
 @njit
-def _simulate_core(
+def jit_stochastic_simulation(
     total_hours: int,
     base_power_production: np.ndarray,
     power_consumption: np.ndarray,

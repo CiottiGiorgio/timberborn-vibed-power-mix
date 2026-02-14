@@ -4,7 +4,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     FactoryConfig,
 )
-from timberborn_power_mix.simulation.core import simulate_scenario
+from timberborn_power_mix.simulation.core import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
@@ -47,7 +47,7 @@ def generate_reference_simulation_data():
     # 2. Run simulation
     # We seed numpy for determinism in the simulation
     np.random.seed(42)
-    hours_empty_list, worst_run_data, _ = simulate_scenario(config)
+    hours_empty_list, worst_run_data, _ = run_simulation(config)
 
     return worst_run_data, hours_empty_list, config
 

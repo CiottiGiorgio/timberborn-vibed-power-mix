@@ -1,6 +1,6 @@
 import logging
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation.core import simulate_scenario
+from timberborn_power_mix.simulation.core import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.cli import (
     create_cli,
@@ -46,7 +46,7 @@ def simulate_visualization(**kwargs):
 
     logger.info(f"Running {config.samples} simulations for visualization...")
 
-    hours_empty_list, worst_run_data, _ = simulate_scenario(config)
+    hours_empty_list, worst_run_data, _ = run_simulation(config)
 
     create_simulation_figure(worst_run_data, config, hours_empty_list)
     plt.show()

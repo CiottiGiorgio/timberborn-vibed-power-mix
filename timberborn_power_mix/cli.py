@@ -7,6 +7,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
     CommonConfig,
+    OptimizationConfig,
 )
 from timberborn_power_mix.models import ConfigName
 
@@ -200,4 +201,18 @@ def parse_simulation_config(**kwargs) -> SimulationConfig:
     return SimulationConfig(
         **common_config.model_dump(),
         energy_mix=energy_mix,
+    )
+
+
+def parse_optimization_config(**kwargs) -> OptimizationConfig:
+    """Parses full optimization configuration from kwargs."""
+    common_config = parse_common_config(**kwargs)
+
+    return OptimizationConfig(
+        **common_config.model_dump(),
+        **{
+            key: value
+            for key, value in kwargs.items()
+            if key in OptimizationConfig.model_fields and key not in CommonConfig.model_fields
+        },
     )

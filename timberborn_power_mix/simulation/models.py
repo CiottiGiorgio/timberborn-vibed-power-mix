@@ -67,6 +67,16 @@ for name, field in CommonConfig.model_fields.items():
     SimulationConfig.model_fields[name] = field
 SimulationConfig.model_rebuild(force=True)
 
+OptimizationConfig = create_model(
+    "OptimizationConfig",
+    **{ConfigName.ITERATIONS: int},
+)
+
+# Flatten CommonConfig into OptimizationConfig
+for name, field in CommonConfig.model_fields.items():
+    OptimizationConfig.model_fields[name] = field
+OptimizationConfig.model_rebuild(force=True)
+
 
 class SimulationResult(NamedTuple):
     """Represents the time-series data for production and storage state from a simulation run."""

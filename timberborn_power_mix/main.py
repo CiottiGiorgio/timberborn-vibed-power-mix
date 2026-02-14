@@ -2,7 +2,11 @@ import logging
 import matplotlib.pyplot as plt
 from timberborn_power_mix.simulation.core import simulate_scenario
 from timberborn_power_mix.plots.canvas import create_simulation_figure
-from timberborn_power_mix.cli import create_cli, parse_simulation_config
+from timberborn_power_mix.cli import (
+    create_cli,
+    parse_simulation_config,
+    parse_optimization_config,
+)
 from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
 
 logger = logging.getLogger(__name__)
@@ -11,15 +15,12 @@ logger = logging.getLogger(__name__)
 def simulate_optimization(**kwargs):
     """Runs the optimization process."""
     logger.info("Starting optimization...")
-    base_config = parse_simulation_config(**kwargs)
-
-    iterations = kwargs.get("iterations", 500)
-    samples_per_sim = kwargs.get("samples_per_sim", 2000)
+    config = parse_optimization_config(**kwargs)
 
     results = optimize(
-        base_config=base_config,
-        iterations=iterations,
-        simulations_per_config=samples_per_sim,
+        base_config=config,
+        iterations=config.iterations,
+        simulations_per_config=config.samples,
     )
 
     optimal_solutions = find_optimal_solutions(results, max_empty_percent=5.0)

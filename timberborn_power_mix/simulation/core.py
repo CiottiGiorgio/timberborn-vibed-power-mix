@@ -1,8 +1,10 @@
 import numpy as np
 from numba import njit, prange
 from timberborn_power_mix.simulation.models import (
-    SimulationOptions,
+    SimulationConfig,
     SimulationResult,
+    BatchConfig,
+    get_batch_config,
 )
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
@@ -19,12 +21,12 @@ from timberborn_power_mix.simulation.models import (
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
-def simulate_scenario(params: SimulationOptions):
+def simulate_scenario(config: SimulationConfig):
     """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
     # Consumption
     total_consumption_rate = 0
     for name, spec in FACTORY_DATABASE.items():
-        count = getattr(params.factories, name)
+        count = getattr(config.factories, name)
         total_consumption_rate += count * spec.power
 
     # Production specs
@@ -34,22 +36,17 @@ def simulate_scenario(params: SimulationOptions):
     power_wheel_spec = PRODUCER_DATABASE[ProducerName.POWER_WHEEL]
 
     # Counts
-    num_water_wheels = getattr(params.energy_mix, ProducerName.WATER_WHEEL)
-    num_windmills = getattr(params.energy_mix, ProducerName.WINDMILL)
-    num_large_windmills = getattr(params.energy_mix, ProducerName.LARGE_WINDMILL)
-    num_power_wheels = getattr(params.energy_mix, ProducerName.POWER_WHEEL)
+    num_water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
+    num_windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
+    num_large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
+    num_power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
 
     total_battery_capacity = sim_helpers.calculate_total_battery_capacity(
-        params.energy_mix
+        config.energy_mix
     )
 
     batch_res = _simulate_batch(
-        params.samples,
-        params.days,
-        params.working_hours,
-        params.wet_season_days,
-        params.dry_season_days,
-        params.badtide_season_days,
+        get_batch_config(config),
         total_consumption_rate,
         ProducerGroup(num_water_wheels, wheel_spec.power),
         ProducerGroup(num_large_windmills, large_windmill_spec.power),
@@ -72,12 +69,7 @@ def simulate_scenario(params: SimulationOptions):
 
 @njit(parallel=True, cache=True)
 def _simulate_batch(
-    samples: int,
-    days: int,
-    working_hours: int,
-    wet_season_days: int,
-    dry_season_days: int,
-    badtide_season_days: int,
+    config: BatchConfig,
     total_consumption_rate: int,
     water_wheels: ProducerGroup,
     large_windmills: ProducerGroup,
@@ -86,16 +78,16 @@ def _simulate_batch(
     total_battery_capacity: float,
 ) -> BatchedSimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
-    total_hours = days * consts.HOURS_PER_DAY
+    total_hours = config.days * consts.HOURS_PER_DAY
     time_hours = np.arange(total_hours)
 
     # Pre-calculate static profiles
     hour_of_day = time_hours % consts.HOURS_PER_DAY
-    is_working_hour = hour_of_day < working_hours
+    is_working_hour = hour_of_day < config.working_hours
 
-    hours_per_wet = wet_season_days * consts.HOURS_PER_DAY
-    hours_per_dry = dry_season_days * consts.HOURS_PER_DAY
-    hours_per_badtide = badtide_season_days * consts.HOURS_PER_DAY
+    hours_per_wet = config.wet_days * consts.HOURS_PER_DAY
+    hours_per_dry = config.dry_days * consts.HOURS_PER_DAY
+    hours_per_badtide = config.badtide_days * consts.HOURS_PER_DAY
     cycle_length_hours = 2 * hours_per_wet + hours_per_dry + hours_per_badtide
 
     hour_of_cycle = time_hours % cycle_length_hours
@@ -118,13 +110,13 @@ def _simulate_batch(
     )
 
     # Pre-allocate to store all results for filtering
-    all_power_prod = np.zeros((samples, total_hours))
-    all_batt_charge = np.zeros((samples, total_hours))
+    all_power_prod = np.zeros((config.samples, total_hours))
+    all_batt_charge = np.zeros((config.samples, total_hours))
 
-    hours_empty_results = np.zeros(samples)
-    final_surpluses = np.zeros(samples)
+    hours_empty_results = np.zeros(config.samples)
+    final_surpluses = np.zeros(config.samples)
 
-    for s in prange(samples):
+    for s in prange(config.samples):
         res = _simulate_core(
             total_hours,
             base_power_production,

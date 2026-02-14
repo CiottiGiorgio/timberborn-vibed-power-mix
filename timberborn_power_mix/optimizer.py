@@ -5,7 +5,7 @@ import numpy as np
 from numpy.random import Generator
 
 from timberborn_power_mix import consts
-from timberborn_power_mix.simulation.models import SimulationOptions, EnergyMixParams
+from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
 from timberborn_power_mix.rng import RNGService
 from timberborn_power_mix.simulation.core import simulate_scenario
 from timberborn_power_mix.simulation.helpers import calculate_total_cost
@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 class OptimizationResult:
     def __init__(
         self,
-        params: EnergyMixParams,
+        config: EnergyMixConfig,
         cost: float,
         p95_hours_empty: float,
         total_hours: int,
         energy_surplus: float,
     ):
-        self.params = params
+        self.config = config
         self.cost = cost
         self.p95_hours_empty = p95_hours_empty
         self.total_hours = total_hours
@@ -53,18 +53,18 @@ class OptimizationResult:
             f"[{valid_str}] Cost: {self.cost:.1f}, "
             f"P95 Empty: {self.p95_empty_percent:.1f}%, "
             f"Surplus: {self.energy_surplus:.1f}, "
-            f"Params: {self.params}"
+            f"Config: {self.config}"
         )
 
 
-def get_random_params(
+def get_random_config(
     bounds: Dict[str, Tuple[int, int]], _rng: Generator
-) -> EnergyMixParams:
+) -> EnergyMixConfig:
     def get_val(name):
         low, high = bounds.get(name, (0, 0))
         return _rng.integers(low, high + 1)
 
-    return EnergyMixParams(
+    return EnergyMixConfig(
         power_wheel=get_val("power_wheel"),
         water_wheel=get_val("water_wheel"),
         large_windmill=get_val("large_windmills"),
@@ -74,11 +74,11 @@ def get_random_params(
     )
 
 
-def mutate_params(
+def mutate_config(
     result: OptimizationResult, bounds: Dict[str, Tuple[int, int]], _rng: Generator
-) -> EnergyMixParams:
-    params = result.params
-    new_params = params.model_copy(deep=True)
+) -> EnergyMixConfig:
+    config = result.config
+    new_config = config.model_copy(deep=True)
 
     if result.energy_surplus < 0:
         bias = 1
@@ -110,35 +110,35 @@ def mutate_params(
     field = _rng.choice(fields)
     change = bias if _rng.random() < prob_bias else -bias
 
-    current_val = getattr(new_params, field)
+    current_val = getattr(new_config, field)
     min_val, max_val = bounds.get(field, (0, 100))
     new_val = max(min_val, min(current_val + change, max_val))
-    setattr(new_params, field, new_val)
+    setattr(new_config, field, new_val)
 
-    return new_params
+    return new_config
 
 
 def evaluate_config(
-    base_params: SimulationOptions,
-    mix_params: EnergyMixParams,
+    base_config: SimulationConfig,
+    mix_config: EnergyMixConfig,
     samples_per_config: int,
     total_hours: int,
     rng_service: RNGService,
 ) -> OptimizationResult:
-    current_params = base_params.model_copy(deep=True)
-    current_params.energy_mix = mix_params
-    current_params.samples = samples_per_config
+    current_config = base_config.model_copy(deep=True)
+    current_config.energy_mix = mix_config
+    current_config.samples = samples_per_config
 
-    hours_empty_list, worst_data, avg_surplus = simulate_scenario(current_params)
+    hours_empty_list, worst_data, avg_surplus = simulate_scenario(current_config)
 
     p95_empty = np.percentile(hours_empty_list, 95)
-    cost = calculate_total_cost(mix_params)
+    cost = calculate_total_cost(mix_config)
 
-    return OptimizationResult(mix_params, cost, p95_empty, total_hours, avg_surplus)
+    return OptimizationResult(mix_config, cost, p95_empty, total_hours, avg_surplus)
 
 
 def optimize(
-    base_params: SimulationOptions,
+    base_config: SimulationConfig,
     iterations: int = consts.DEFAULT_OPTIMIZATION_ITERATIONS,
     simulations_per_config: int = consts.DEFAULT_SAMPLES,
     bounds: Optional[Dict[str, Tuple[int, int]]] = None,
@@ -153,7 +153,7 @@ def optimize(
             "battery_height": (1, 20),
         }
 
-    total_hours = base_params.days * consts.HOURS_PER_DAY
+    total_hours = base_config.days * consts.HOURS_PER_DAY
     rng_service = RNGService()
     main_rng = rng_service.get_generator()
 
@@ -166,8 +166,8 @@ def optimize(
     num_walkers = 8
     current_results = [
         evaluate_config(
-            base_params,
-            get_random_params(bounds, main_rng),
+            base_config,
+            get_random_config(bounds, main_rng),
             simulations_per_config,
             total_hours,
             rng_service,
@@ -177,10 +177,10 @@ def optimize(
 
     for i in range(iterations):
         for w in range(num_walkers):
-            candidate_params = mutate_params(current_results[w], bounds, main_rng)
+            candidate_config = mutate_config(current_results[w], bounds, main_rng)
             candidate_result = evaluate_config(
-                base_params,
-                candidate_params,
+                base_config,
+                candidate_config,
                 simulations_per_config,
                 total_hours,
                 rng_service,
@@ -224,9 +224,9 @@ def find_optimal_solutions(
     valid_solutions.sort(key=lambda x: x.cost)
 
     unique_solutions = []
-    seen_params = set()
+    seen_config = set()
     for sol in valid_solutions:
-        p = sol.params
+        p = sol.config
         key = (
             p.power_wheel,
             p.water_wheel,
@@ -235,8 +235,8 @@ def find_optimal_solutions(
             p.battery,
             p.battery_height,
         )
-        if key not in seen_params:
-            seen_params.add(key)
+        if key not in seen_config:
+            seen_config.add(key)
             unique_solutions.append(sol)
 
     return unique_solutions

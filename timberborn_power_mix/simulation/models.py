@@ -7,27 +7,53 @@ from timberborn_power_mix.machines import (
     BatteryName,
     PRODUCER_DATABASE,
 )
+from timberborn_power_mix.consts import ConfigKey
 
-FactoryParams = create_model(
-    "FactoryParams", **{key: int for key in FACTORY_DATABASE.keys()}
+FactoryConfig = create_model(
+    "FactoryConfig", **{key: int for key in FACTORY_DATABASE.keys()}
 )
 
-EnergyMixParams = create_model(
-    "EnergyMixParams",
+EnergyMixConfig = create_model(
+    "EnergyMixConfig",
     **{BatteryName.BATTERY: int, BatteryName.BATTERY_HEIGHT: float},
     **{key: int for key in PRODUCER_DATABASE.keys()},
 )
 
 
-class SimulationOptions(BaseModel):
+class BatchConfig(NamedTuple):
+    """Subset of SimulationConfig used for batch simulation configuration."""
+
     samples: int
     days: int
     working_hours: int
-    wet_season_days: int
-    dry_season_days: int
-    badtide_season_days: int
-    factories: FactoryParams
-    energy_mix: EnergyMixParams
+    wet_days: int
+    dry_days: int
+    badtide_days: int
+
+
+SimulationConfig = create_model(
+    "SimulationConfig",
+    **{ConfigKey.SAMPLES: (int, ...)},
+    **{ConfigKey.DAYS: (int, ...)},
+    **{ConfigKey.WORKING_HOURS: (int, ...)},
+    **{ConfigKey.WET_DAYS: (int, ...)},
+    **{ConfigKey.DRY_DAYS: (int, ...)},
+    **{ConfigKey.BADTIDE_DAYS: (int, ...)},
+    **{ConfigKey.FACTORIES: (FactoryConfig, ...)},
+    **{ConfigKey.ENERGY_MIX: (EnergyMixConfig, ...)},
+    __base__=BaseModel,
+)
+
+
+def get_batch_config(config: SimulationConfig) -> BatchConfig:
+    return BatchConfig(
+        samples=getattr(config, ConfigKey.SAMPLES),
+        days=getattr(config, ConfigKey.DAYS),
+        working_hours=getattr(config, ConfigKey.WORKING_HOURS),
+        wet_days=getattr(config, ConfigKey.WET_DAYS),
+        dry_days=getattr(config, ConfigKey.DRY_DAYS),
+        badtide_days=getattr(config, ConfigKey.BADTIDE_DAYS),
+    )
 
 
 class SimulationResult(BaseModel):

@@ -2,7 +2,7 @@ import logging
 import matplotlib.pyplot as plt
 from timberborn_power_mix.simulation.core import simulate_scenario
 from timberborn_power_mix.plots.canvas import create_simulation_figure
-from timberborn_power_mix.cli import create_cli, parse_params
+from timberborn_power_mix.cli import create_cli, parse_config
 from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
 
 logger = logging.getLogger(__name__)
@@ -11,13 +11,13 @@ logger = logging.getLogger(__name__)
 def run_optimization(**kwargs):
     """Runs the optimization process."""
     logger.info("Starting optimization...")
-    base_params = parse_params(**kwargs)
+    base_config = parse_config(**kwargs)
 
     iterations = kwargs.get("iterations", 500)
     samples_per_sim = kwargs.get("samples_per_sim", 2000)
 
     results = optimize(
-        base_params=base_params,
+        base_config=base_config,
         iterations=iterations,
         simulations_per_config=samples_per_sim,
     )
@@ -41,13 +41,13 @@ def run_optimization(**kwargs):
 def run_visualization(**kwargs):
     """Visualize power and energy profiles for a single configuration."""
 
-    params = parse_params(**kwargs)
+    config = parse_config(**kwargs)
 
-    logger.info(f"Running {params.samples} simulations for visualization...")
+    logger.info(f"Running {config.samples} simulations for visualization...")
 
-    hours_empty_list, worst_run_data, _ = simulate_scenario(params)
+    hours_empty_list, worst_run_data, _ = simulate_scenario(config)
 
-    create_simulation_figure(worst_run_data, params, hours_empty_list)
+    create_simulation_figure(worst_run_data, config, hours_empty_list)
     plt.show()
 
 

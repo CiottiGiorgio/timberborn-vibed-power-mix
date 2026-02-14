@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation.models import SimulationResult, SimulationOptions
+from timberborn_power_mix.simulation.models import SimulationResult, SimulationConfig
 from timberborn_power_mix.plots.power_plot import plot_power
 from timberborn_power_mix.plots.energy_plot import plot_energy
 from timberborn_power_mix.plots.surplus_plot import plot_surplus
@@ -16,23 +16,23 @@ from timberborn_power_mix.simulation.helpers import (
 
 
 def create_simulation_figure(
-    data: SimulationResult, params: SimulationOptions, run_empty_hours
+    data: SimulationResult, config: SimulationConfig, run_empty_hours
 ):
     # Unpack data
-    days = params.days
+    days = config.days
     total_hours = days * consts.HOURS_PER_DAY
 
     time_hours = np.arange(total_hours)
     time_days = time_hours / consts.HOURS_PER_DAY
 
     power_production = data.power_production
-    power_consumption = calculate_power_consumption_profile(params)
+    power_consumption = calculate_power_consumption_profile(config)
     battery_charge = data.battery_charge
 
     # Recompute derived values
     power_surplus = power_production - power_consumption
 
-    total_battery_capacity = calculate_total_battery_capacity(params.energy_mix)
+    total_battery_capacity = calculate_total_battery_capacity(config.energy_mix)
 
     # Effective balance is the surplus that couldn't be absorbed by the battery
     # or the deficit that couldn't be covered by the battery.
@@ -46,15 +46,15 @@ def create_simulation_figure(
     energy_production = np.cumsum(power_production)
     energy_consumption = np.cumsum(power_consumption)
 
-    season_boundaries = calculate_season_boundaries(params)
-    total_cost = calculate_total_cost(params.energy_mix)
+    season_boundaries = calculate_season_boundaries(config)
+    total_cost = calculate_total_cost(config.energy_mix)
 
-    power_wheels = getattr(params.energy_mix, "power_wheel")
-    water_wheels = getattr(params.energy_mix, "water_wheel")
-    large_windmills = getattr(params.energy_mix, "large_windmill")
-    windmills = getattr(params.energy_mix, "windmill")
-    batteries = getattr(params.energy_mix, "battery")
-    battery_height = getattr(params.energy_mix, "battery_height")
+    power_wheels = getattr(config.energy_mix, "power_wheel")
+    water_wheels = getattr(config.energy_mix, "water_wheel")
+    large_windmills = getattr(config.energy_mix, "large_windmill")
+    windmills = getattr(config.energy_mix, "windmill")
+    batteries = getattr(config.energy_mix, "battery")
+    battery_height = getattr(config.energy_mix, "battery_height")
 
     # Visualization
     # Always create 5 plots
@@ -97,11 +97,11 @@ def create_simulation_figure(
     sim_info = (
         f"Simulation Info:\n"
         f"  Days: {days}\n"
-        f"  Working Hours: {params.working_hours}\n"
-        f"  Wet Season: {params.wet_season_days} days\n"
-        f"  Dry Season: {params.dry_season_days} days\n"
-        f"  Badtide Season: {params.badtide_season_days} days\n"
-        f"  Samples: {params.samples}"
+        f"  Working Hours: {config.working_hours}\n"
+        f"  Wet Season: {config.wet_days} days\n"
+        f"  Dry Season: {config.dry_days} days\n"
+        f"  Badtide Season: {config.badtide_days} days\n"
+        f"  Samples: {config.samples}"
     )
 
     # Place text box in top right corner
@@ -205,7 +205,7 @@ def create_simulation_figure(
     # Plot 5: Empty Battery Duration Distribution (Percentage)
     total_simulation_hours = days * consts.HOURS_PER_DAY
     plot_empty_hours_percentage(
-        ax5, run_empty_hours, params.samples, total_simulation_hours
+        ax5, run_empty_hours, config.samples, total_simulation_hours
     )
 
     plt.tight_layout(rect=(0, 0.03, 1, 0.95))

@@ -3,10 +3,11 @@ import inflect
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
 from timberborn_power_mix.simulation.models import (
-    FactoryParams,
-    EnergyMixParams,
-    SimulationOptions,
+    FactoryConfig,
+    EnergyMixConfig,
+    SimulationConfig,
 )
+from timberborn_power_mix.consts import ConfigKey
 
 p = inflect.engine()
 
@@ -50,21 +51,21 @@ def add_common_params(func):
         )(func)
 
     func = click.option(
-        "--badtide-days",
+        f"--{ConfigKey.BADTIDE_DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
         show_default=True,
         help="Duration of badtide season in days",
     )(func)
     func = click.option(
-        "--dry-days",
+        f"--{ConfigKey.DRY_DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_DRY_SEASON_DAYS,
         show_default=True,
         help="Duration of dry season in days",
     )(func)
     func = click.option(
-        "--wet-days",
+        f"--{ConfigKey.WET_DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_WET_SEASON_DAYS,
         show_default=True,
@@ -73,21 +74,21 @@ def add_common_params(func):
 
     # 1. Core simulation parameters (Top of the group)
     func = click.option(
-        "--working-hours",
+        f"--{ConfigKey.WORKING_HOURS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_WORKING_HOURS,
         show_default=True,
         help="Number of working hours per day",
     )(func)
     func = click.option(
-        "--days",
+        f"--{ConfigKey.DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_DAYS,
         show_default=True,
         help="Number of days for the simulation",
     )(func)
     func = click.option(
-        "--samples",
+        f"--{ConfigKey.SAMPLES.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_SAMPLES,
         show_default=True,
@@ -144,7 +145,7 @@ def create_cli(run_callback, optimize_callback):
     @cli.command(name="optimize")
     @add_common_params
     @click.option(
-        "--iterations",
+        f"--{ConfigKey.ITERATIONS}",
         type=int,
         default=consts.DEFAULT_OPTIMIZATION_ITERATIONS,
         help="Number of optimization iterations",
@@ -156,39 +157,34 @@ def create_cli(run_callback, optimize_callback):
     return cli
 
 
-def parse_params(**kwargs) -> SimulationOptions:
-    # Create a FactoryParams by removing all fields from kwargs that are not contained in FactoryParams.
-    # Since FactoryParams requires all fields, if kwargs is missing one of those fields, this fails.
-    factories = FactoryParams(
+def parse_config(**kwargs) -> SimulationConfig:
+    # Create a FactoryConfig by removing all fields from kwargs that are not contained in FactoryConfig.
+    # Since FactoryConfig requires all fields, if kwargs is missing one of those fields, this fails.
+    factories = FactoryConfig(
         **{
             key: value
             for key, value in kwargs.items()
-            if key in FactoryParams.model_fields
+            if key in FactoryConfig.model_fields
         }
     )
 
-    battery_height = kwargs["battery_height"]
+    battery_height = kwargs[BatteryName.BATTERY_HEIGHT]
     if isinstance(battery_height, list):
         if not battery_height:
             battery_height = 0.0
         else:
             battery_height = sum(battery_height) / len(battery_height)
-    energy_mix = EnergyMixParams(
+    energy_mix = EnergyMixConfig(
         battery_height=battery_height,
         **{
             key: value
             for key, value in kwargs.items()
-            if key in EnergyMixParams.model_fields and key != "battery_height"
+            if key in EnergyMixConfig.model_fields and key != BatteryName.BATTERY_HEIGHT
         },
     )
 
-    return SimulationOptions(
-        samples=kwargs["samples"],
-        days=kwargs["days"],
-        working_hours=kwargs["working_hours"],
-        wet_season_days=kwargs["wet_days"],
-        dry_season_days=kwargs["dry_days"],
-        badtide_season_days=kwargs["badtide_days"],
+    return SimulationConfig(
+        **{key: kwargs[key] for key in SimulationConfig.model_fields if key not in [ConfigKey.FACTORIES, ConfigKey.ENERGY_MIX]},
         factories=factories,
         energy_mix=energy_mix,
     )

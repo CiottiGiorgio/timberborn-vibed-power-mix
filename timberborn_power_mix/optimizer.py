@@ -9,6 +9,8 @@ from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixCo
 from timberborn_power_mix.rng import RNGService
 from timberborn_power_mix.simulation.core import simulate_scenario
 from timberborn_power_mix.simulation.helpers import calculate_total_cost
+from timberborn_power_mix.machines import ProducerName, BatteryName
+from timberborn_power_mix.models import ConfigName
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +67,14 @@ def get_random_config(
         return _rng.integers(low, high + 1)
 
     return EnergyMixConfig(
-        power_wheel=get_val("power_wheel"),
-        water_wheel=get_val("water_wheel"),
-        large_windmill=get_val("large_windmills"),
-        windmill=get_val("windmills"),
-        battery=get_val("batteries"),
-        battery_height=get_val("battery_height"),
+        **{
+            ProducerName.POWER_WHEEL: get_val(ProducerName.POWER_WHEEL),
+            ProducerName.WATER_WHEEL: get_val(ProducerName.WATER_WHEEL),
+            ProducerName.LARGE_WINDMILL: get_val(ProducerName.LARGE_WINDMILL),
+            ProducerName.WINDMILL: get_val(ProducerName.WINDMILL),
+            BatteryName.BATTERY: get_val(BatteryName.BATTERY),
+            BatteryName.BATTERY_HEIGHT: get_val(BatteryName.BATTERY_HEIGHT),
+        }
     )
 
 
@@ -83,28 +87,33 @@ def mutate_config(
     if result.energy_surplus < 0:
         bias = 1
         prob_bias = 0.9
-        fields = ["power_wheel", "water_wheel", "large_windmills", "windmills"]
+        fields = [
+            ProducerName.POWER_WHEEL,
+            ProducerName.WATER_WHEEL,
+            ProducerName.LARGE_WINDMILL,
+            ProducerName.WINDMILL,
+        ]
     elif result.p95_empty_percent > 5.0:
         bias = 1
         prob_bias = 0.8
         fields = [
-            "power_wheel",
-            "water_wheel",
-            "large_windmills",
-            "windmills",
-            "batteries",
-            "battery_height",
+            ProducerName.POWER_WHEEL,
+            ProducerName.WATER_WHEEL,
+            ProducerName.LARGE_WINDMILL,
+            ProducerName.WINDMILL,
+            BatteryName.BATTERY,
+            BatteryName.BATTERY_HEIGHT,
         ]
     else:
         bias = -1
         prob_bias = 0.8
         fields = [
-            "power_wheel",
-            "water_wheel",
-            "large_windmills",
-            "windmills",
-            "batteries",
-            "battery_height",
+            ProducerName.POWER_WHEEL,
+            ProducerName.WATER_WHEEL,
+            ProducerName.LARGE_WINDMILL,
+            ProducerName.WINDMILL,
+            BatteryName.BATTERY,
+            BatteryName.BATTERY_HEIGHT,
         ]
 
     field = _rng.choice(fields)
@@ -145,15 +154,15 @@ def optimize(
 ) -> List[OptimizationResult]:
     if bounds is None:
         bounds = {
-            "power_wheel": (0, 20),
-            "water_wheel": (0, 20),
-            "large_windmills": (0, 30),
-            "windmills": (0, 30),
-            "batteries": (0, 20),
-            "battery_height": (1, 20),
+            ProducerName.POWER_WHEEL: (0, 20),
+            ProducerName.WATER_WHEEL: (0, 20),
+            ProducerName.LARGE_WINDMILL: (0, 30),
+            ProducerName.WINDMILL: (0, 30),
+            BatteryName.BATTERY: (0, 20),
+            BatteryName.BATTERY_HEIGHT: (1, 20),
         }
 
-    total_hours = base_config.days * consts.HOURS_PER_DAY
+    total_hours = getattr(base_config, ConfigName.DAYS) * consts.HOURS_PER_DAY
     rng_service = RNGService()
     main_rng = rng_service.get_generator()
 
@@ -228,12 +237,12 @@ def find_optimal_solutions(
     for sol in valid_solutions:
         p = sol.config
         key = (
-            p.power_wheel,
-            p.water_wheel,
-            p.large_windmill,
-            p.windmill,
-            p.battery,
-            p.battery_height,
+            getattr(p, ProducerName.POWER_WHEEL),
+            getattr(p, ProducerName.WATER_WHEEL),
+            getattr(p, ProducerName.LARGE_WINDMILL),
+            getattr(p, ProducerName.WINDMILL),
+            getattr(p, BatteryName.BATTERY),
+            getattr(p, BatteryName.BATTERY_HEIGHT),
         )
         if key not in seen_config:
             seen_config.add(key)

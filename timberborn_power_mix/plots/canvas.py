@@ -13,13 +13,15 @@ from timberborn_power_mix.simulation.helpers import (
     calculate_season_boundaries,
     calculate_power_consumption_profile,
 )
+from timberborn_power_mix.machines import ProducerName, BatteryName
+from timberborn_power_mix.models import ConfigName
 
 
 def create_simulation_figure(
     data: SimulationResult, config: SimulationConfig, run_empty_hours
 ):
     # Unpack data
-    days = config.days
+    days = getattr(config, ConfigName.DAYS)
     total_hours = days * consts.HOURS_PER_DAY
 
     time_hours = np.arange(total_hours)
@@ -49,12 +51,12 @@ def create_simulation_figure(
     season_boundaries = calculate_season_boundaries(config)
     total_cost = calculate_total_cost(config.energy_mix)
 
-    power_wheels = getattr(config.energy_mix, "power_wheel")
-    water_wheels = getattr(config.energy_mix, "water_wheel")
-    large_windmills = getattr(config.energy_mix, "large_windmill")
-    windmills = getattr(config.energy_mix, "windmill")
-    batteries = getattr(config.energy_mix, "battery")
-    battery_height = getattr(config.energy_mix, "battery_height")
+    power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
+    water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
+    large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
+    windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
+    batteries = getattr(config.energy_mix, BatteryName.BATTERY)
+    battery_height = getattr(config.energy_mix, BatteryName.BATTERY_HEIGHT)
 
     # Visualization
     # Always create 5 plots
@@ -97,11 +99,11 @@ def create_simulation_figure(
     sim_info = (
         f"Simulation Info:\n"
         f"  Days: {days}\n"
-        f"  Working Hours: {config.working_hours}\n"
-        f"  Wet Season: {config.wet_days} days\n"
-        f"  Dry Season: {config.dry_days} days\n"
-        f"  Badtide Season: {config.badtide_days} days\n"
-        f"  Samples: {config.samples}"
+        f"  Working Hours: {getattr(config, ConfigName.WORKING_HOURS)}\n"
+        f"  Wet Season: {getattr(config, ConfigName.WET_DAYS)} days\n"
+        f"  Dry Season: {getattr(config, ConfigName.DRY_DAYS)} days\n"
+        f"  Badtide Season: {getattr(config, ConfigName.BADTIDE_DAYS)} days\n"
+        f"  Samples: {getattr(config, ConfigName.SAMPLES)}"
     )
 
     # Place text box in top right corner
@@ -205,7 +207,10 @@ def create_simulation_figure(
     # Plot 5: Empty Battery Duration Distribution (Percentage)
     total_simulation_hours = days * consts.HOURS_PER_DAY
     plot_empty_hours_percentage(
-        ax5, run_empty_hours, config.samples, total_simulation_hours
+        ax5,
+        run_empty_hours,
+        getattr(config, ConfigName.SAMPLES),
+        total_simulation_hours,
     )
 
     plt.tight_layout(rect=(0, 0.03, 1, 0.95))

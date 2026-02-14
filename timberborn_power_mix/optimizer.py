@@ -7,7 +7,8 @@ from numpy.random import Generator
 from timberborn_power_mix import consts
 from timberborn_power_mix.models import SimulationOptions, EnergyMixParams
 from timberborn_power_mix.rng import RNGService
-from timberborn_power_mix.simulation import simulate_scenario, calculate_total_cost
+from timberborn_power_mix.simulation.core import simulate_scenario
+from timberborn_power_mix.simulation.helpers import calculate_total_cost
 
 logger = logging.getLogger(__name__)
 
@@ -128,9 +129,7 @@ def evaluate_config(
     current_params.energy_mix = mix_params
     current_params.samples = samples_per_config
 
-    hours_empty_list, worst_data, avg_surplus = simulate_scenario(
-        current_params, rng_service=rng_service
-    )
+    hours_empty_list, worst_data, avg_surplus = simulate_scenario(current_params)
 
     p95_empty = np.percentile(hours_empty_list, 95)
     cost = calculate_total_cost(mix_params)

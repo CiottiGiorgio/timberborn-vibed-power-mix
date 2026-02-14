@@ -14,11 +14,13 @@ from timberborn_power_mix.simulation.models import (
     SimulationSample,
     BatchedSimulationResult,
     AggregatedSamples,
+    ProducerGroup,
 )
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
 def simulate_scenario(params: SimulationOptions):
+    """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
     # Consumption
     total_consumption_rate = 0
     for name, spec in FACTORY_DATABASE.items():
@@ -49,14 +51,10 @@ def simulate_scenario(params: SimulationOptions):
         params.dry_season_days,
         params.badtide_season_days,
         total_consumption_rate,
-        num_water_wheels,
-        wheel_spec,
-        num_large_windmills,
-        large_windmill_spec,
-        num_windmills,
-        windmill_spec,
-        num_power_wheels,
-        power_wheel_spec,
+        ProducerGroup(num_water_wheels, wheel_spec.power),
+        ProducerGroup(num_large_windmills, large_windmill_spec.power),
+        ProducerGroup(num_windmills, windmill_spec.power),
+        ProducerGroup(num_power_wheels, power_wheel_spec.power),
         total_battery_capacity,
     )
 
@@ -74,23 +72,20 @@ def simulate_scenario(params: SimulationOptions):
 
 @njit(parallel=True, cache=True)
 def _simulate_batch(
-    samples,
-    days,
-    working_hours,
-    wet_season_days,
-    dry_season_days,
-    badtide_season_days,
-    total_consumption_rate,
-    num_water_wheels,
-    wheel_spec,
-    num_large_windmills,
-    large_windmill_spec,
-    num_windmills,
-    windmill_spec,
-    num_power_wheels,
-    power_wheel_spec,
-    total_battery_capacity,
-):
+    samples: int,
+    days: int,
+    working_hours: int,
+    wet_season_days: int,
+    dry_season_days: int,
+    badtide_season_days: int,
+    total_consumption_rate: int,
+    water_wheels: ProducerGroup,
+    large_windmills: ProducerGroup,
+    windmills: ProducerGroup,
+    power_wheels: ProducerGroup,
+    total_battery_capacity: float,
+) -> BatchedSimulationResult:
+    """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = days * consts.HOURS_PER_DAY
     time_hours = np.arange(total_hours)
 
@@ -114,9 +109,9 @@ def _simulate_batch(
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
 
     power_wheel_production_rate = np.where(
-        is_working_hour, num_power_wheels * power_wheel_spec.power, 0.0
+        is_working_hour, power_wheels.count * power_wheels.power, 0.0
     )
-    water_wheel_production_rate = num_water_wheels * wheel_spec.power
+    water_wheel_production_rate = water_wheels.count * water_wheels.power
     base_power_production = (
         np.where(is_water_active, water_wheel_production_rate, 0.0)
         + power_wheel_production_rate
@@ -134,10 +129,8 @@ def _simulate_batch(
             total_hours,
             base_power_production,
             power_consumption,
-            num_large_windmills,
-            large_windmill_spec.power,
-            num_windmills,
-            windmill_spec.power,
+            large_windmills,
+            windmills,
             total_battery_capacity,
         )
         all_power_prod[s] = res.power_production
@@ -167,15 +160,14 @@ def _simulate_batch(
 
 @njit
 def _simulate_core(
-    total_hours,
-    base_power_production,
-    power_consumption,
-    num_large_windmills,
-    large_windmill_production,
-    num_windmills,
-    windmill_production,
-    total_battery_capacity,
+    total_hours: int,
+    base_power_production: np.ndarray,
+    power_consumption: np.ndarray,
+    large_windmills: ProducerGroup,
+    windmills: ProducerGroup,
+    total_battery_capacity: float,
 ) -> SimulationSample:
+    """Performs a single Monte Carlo simulation run, handling stochastic input generation and internal state transitions."""
     # Generate wind data inside the core for better cache locality
     max_segments = (total_hours // consts.WIND_DURATION_MIN_HOURS) + 1
     wind_durations = np.random.randint(
@@ -190,16 +182,16 @@ def _simulate_core(
 
     large_wind_unit_prod = np.where(
         wind_strength_profile > consts.LARGE_WINDMILL_THRESHOLD,
-        wind_strength_profile * large_windmill_production,
+        wind_strength_profile * large_windmills.power,
         0.0,
     )
     small_wind_unit_prod = np.where(
         wind_strength_profile > consts.WINDMILL_THRESHOLD,
-        wind_strength_profile * windmill_production,
+        wind_strength_profile * windmills.power,
         0.0,
     )
-    wind_production = (num_large_windmills * large_wind_unit_prod) + (
-        num_windmills * small_wind_unit_prod
+    wind_production = (large_windmills.count * large_wind_unit_prod) + (
+        windmills.count * small_wind_unit_prod
     )
 
     power_production = base_power_production + wind_production

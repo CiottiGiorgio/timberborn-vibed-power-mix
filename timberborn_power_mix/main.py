@@ -1,10 +1,9 @@
 import logging
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation import simulate_scenario
+from timberborn_power_mix.simulation.core import simulate_scenario
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.cli import create_cli, parse_params
 from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
-from timberborn_power_mix.rng import RNGService
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +45,7 @@ def run_visualization(**kwargs):
 
     logger.info(f"Running {params.samples} simulations for visualization...")
 
-    rng_service = RNGService()
-    hours_empty_list, worst_run_data, _ = simulate_scenario(params, rng_service)
+    hours_empty_list, worst_run_data, _ = simulate_scenario(params)
 
     create_simulation_figure(worst_run_data, params, hours_empty_list)
     plt.show()

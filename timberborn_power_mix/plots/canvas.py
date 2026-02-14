@@ -7,7 +7,7 @@ from timberborn_power_mix.plots.surplus_plot import plot_surplus
 from timberborn_power_mix.plots.battery_plot import plot_battery
 from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percentage
 from timberborn_power_mix import consts
-from timberborn_power_mix.simulation import (
+from timberborn_power_mix.simulation.helpers import (
     calculate_total_cost,
     calculate_total_battery_capacity,
     calculate_season_boundaries,

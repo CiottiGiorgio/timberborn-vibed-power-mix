@@ -7,7 +7,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
 )
-from timberborn_power_mix.consts import ConfigKey
+from timberborn_power_mix.models import ConfigName
 
 p = inflect.engine()
 
@@ -51,21 +51,21 @@ def add_common_params(func):
         )(func)
 
     func = click.option(
-        f"--{ConfigKey.BADTIDE_DAYS.replace('_', '-')}",
+        f"--{ConfigName.BADTIDE_DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_BADTIDE_SEASON_DAYS,
         show_default=True,
         help="Duration of badtide season in days",
     )(func)
     func = click.option(
-        f"--{ConfigKey.DRY_DAYS.replace('_', '-')}",
+        f"--{ConfigName.DRY_DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_DRY_SEASON_DAYS,
         show_default=True,
         help="Duration of dry season in days",
     )(func)
     func = click.option(
-        f"--{ConfigKey.WET_DAYS.replace('_', '-')}",
+        f"--{ConfigName.WET_DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_WET_SEASON_DAYS,
         show_default=True,
@@ -74,21 +74,21 @@ def add_common_params(func):
 
     # 1. Core simulation parameters (Top of the group)
     func = click.option(
-        f"--{ConfigKey.WORKING_HOURS.replace('_', '-')}",
+        f"--{ConfigName.WORKING_HOURS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_WORKING_HOURS,
         show_default=True,
         help="Number of working hours per day",
     )(func)
     func = click.option(
-        f"--{ConfigKey.DAYS.replace('_', '-')}",
+        f"--{ConfigName.DAYS.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_DAYS,
         show_default=True,
         help="Number of days for the simulation",
     )(func)
     func = click.option(
-        f"--{ConfigKey.SAMPLES.replace('_', '-')}",
+        f"--{ConfigName.SAMPLES.replace('_', '-')}",
         type=int,
         default=consts.DEFAULT_SAMPLES,
         show_default=True,
@@ -145,7 +145,7 @@ def create_cli(run_callback, optimize_callback):
     @cli.command(name="optimize")
     @add_common_params
     @click.option(
-        f"--{ConfigKey.ITERATIONS}",
+        f"--{ConfigName.ITERATIONS}",
         type=int,
         default=consts.DEFAULT_OPTIMIZATION_ITERATIONS,
         help="Number of optimization iterations",
@@ -184,7 +184,11 @@ def parse_config(**kwargs) -> SimulationConfig:
     )
 
     return SimulationConfig(
-        **{key: kwargs[key] for key in SimulationConfig.model_fields if key not in [ConfigKey.FACTORIES, ConfigKey.ENERGY_MIX]},
+        **{
+            key: kwargs[key]
+            for key in SimulationConfig.model_fields
+            if key not in [ConfigName.FACTORIES, ConfigName.ENERGY_MIX]
+        },
         factories=factories,
         energy_mix=energy_mix,
     )

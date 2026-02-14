@@ -7,7 +7,7 @@ from timberborn_power_mix.machines import (
     BatteryName,
     PRODUCER_DATABASE,
 )
-from timberborn_power_mix.consts import ConfigKey
+from timberborn_power_mix.models import ConfigName
 
 FactoryConfig = create_model(
     "FactoryConfig", **{key: int for key in FACTORY_DATABASE.keys()}
@@ -33,26 +33,26 @@ class BatchConfig(NamedTuple):
 
 SimulationConfig = create_model(
     "SimulationConfig",
-    **{ConfigKey.SAMPLES: (int, ...)},
-    **{ConfigKey.DAYS: (int, ...)},
-    **{ConfigKey.WORKING_HOURS: (int, ...)},
-    **{ConfigKey.WET_DAYS: (int, ...)},
-    **{ConfigKey.DRY_DAYS: (int, ...)},
-    **{ConfigKey.BADTIDE_DAYS: (int, ...)},
-    **{ConfigKey.FACTORIES: (FactoryConfig, ...)},
-    **{ConfigKey.ENERGY_MIX: (EnergyMixConfig, ...)},
+    **{ConfigName.SAMPLES: int},
+    **{ConfigName.DAYS: int},
+    **{ConfigName.WORKING_HOURS: int},
+    **{ConfigName.WET_DAYS: int},
+    **{ConfigName.DRY_DAYS: int},
+    **{ConfigName.BADTIDE_DAYS: int},
+    **{ConfigName.FACTORIES: FactoryConfig},
+    **{ConfigName.ENERGY_MIX: EnergyMixConfig},
     __base__=BaseModel,
 )
 
 
 def get_batch_config(config: SimulationConfig) -> BatchConfig:
     return BatchConfig(
-        samples=getattr(config, ConfigKey.SAMPLES),
-        days=getattr(config, ConfigKey.DAYS),
-        working_hours=getattr(config, ConfigKey.WORKING_HOURS),
-        wet_days=getattr(config, ConfigKey.WET_DAYS),
-        dry_days=getattr(config, ConfigKey.DRY_DAYS),
-        badtide_days=getattr(config, ConfigKey.BADTIDE_DAYS),
+        samples=getattr(config, ConfigName.SAMPLES),
+        days=getattr(config, ConfigName.DAYS),
+        working_hours=getattr(config, ConfigName.WORKING_HOURS),
+        wet_days=getattr(config, ConfigName.WET_DAYS),
+        dry_days=getattr(config, ConfigName.DRY_DAYS),
+        badtide_days=getattr(config, ConfigName.BADTIDE_DAYS),
     )
 
 

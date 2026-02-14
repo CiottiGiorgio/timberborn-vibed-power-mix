@@ -1,5 +1,3 @@
-from enum import StrEnum
-
 HOURS_PER_DAY = 24
 
 # Simulation Defaults
@@ -20,15 +18,3 @@ WINDMILL_THRESHOLD = 0.30
 
 # Optimization Defaults
 DEFAULT_OPTIMIZATION_ITERATIONS = 150
-
-
-class ConfigKey(StrEnum):
-    SAMPLES = "samples"
-    DAYS = "days"
-    WORKING_HOURS = "working_hours"
-    WET_DAYS = "wet_days"
-    DRY_DAYS = "dry_days"
-    BADTIDE_DAYS = "badtide_days"
-    ITERATIONS = "iterations"
-    FACTORIES = "factories"
-    ENERGY_MIX = "energy_mix"

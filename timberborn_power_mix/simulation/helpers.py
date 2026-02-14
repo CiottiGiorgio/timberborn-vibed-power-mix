@@ -11,7 +11,7 @@ from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
 )
 from timberborn_power_mix.simulation.models import EnergyMixConfig, SimulationConfig
-from timberborn_power_mix.consts import ConfigKey
+from timberborn_power_mix.models import ConfigName
 
 
 def calculate_total_cost(energy_mix: EnergyMixConfig) -> float:
@@ -45,10 +45,10 @@ def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
 def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str]]:
     season_boundaries = []
     curr_day = 0
-    days = getattr(config, ConfigKey.DAYS)
-    wet_days = getattr(config, ConfigKey.WET_DAYS)
-    dry_days = getattr(config, ConfigKey.DRY_DAYS)
-    badtide_days = getattr(config, ConfigKey.BADTIDE_DAYS)
+    days = getattr(config, ConfigName.DAYS)
+    wet_days = getattr(config, ConfigName.WET_DAYS)
+    dry_days = getattr(config, ConfigName.DRY_DAYS)
+    badtide_days = getattr(config, ConfigName.BADTIDE_DAYS)
 
     while curr_day < days:
         season_boundaries.append((curr_day * consts.HOURS_PER_DAY, "Wet"))
@@ -69,9 +69,9 @@ def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str
 
 
 def calculate_power_consumption_profile(config: SimulationConfig) -> np.ndarray:
-    days = getattr(config, ConfigKey.DAYS)
-    working_hours = getattr(config, ConfigKey.WORKING_HOURS)
-    factories = getattr(config, ConfigKey.FACTORIES)
+    days = getattr(config, ConfigName.DAYS)
+    working_hours = getattr(config, ConfigName.WORKING_HOURS)
+    factories = getattr(config, ConfigName.FACTORIES)
 
     total_hours = days * consts.HOURS_PER_DAY
     time_hours = np.arange(total_hours)

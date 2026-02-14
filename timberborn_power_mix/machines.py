@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import NamedTuple, Dict
 
 
@@ -7,7 +7,7 @@ class MachineSpec(NamedTuple):
     cost: int
 
 
-class FactoryName(str, Enum):
+class FactoryName(StrEnum):
     LUMBER_MILL = "lumber_mill"
     GEAR_WORKSHOP = "gear_workshop"
     STEEL_FACTORY = "steel_factory"
@@ -22,14 +22,14 @@ class FactoryName(str, Enum):
     CENTRIFUGE = "centrifuge"
 
 
-class ProducerName(str, Enum):
+class ProducerName(StrEnum):
     WATER_WHEEL = "water_wheel"
     WINDMILL = "windmill"
     LARGE_WINDMILL = "large_windmill"
     POWER_WHEEL = "power_wheel"
 
 
-class BatteryName(str, Enum):
+class BatteryName(StrEnum):
     BATTERY = "battery"
     BATTERY_HEIGHT = "battery_height"
 

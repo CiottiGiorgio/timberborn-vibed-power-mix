@@ -46,12 +46,12 @@ def simulate_scenario(config: SimulationConfig):
 
     batch_res = _simulate_batch(
         config.to_batch_config,
+        total_battery_capacity,
         total_consumption_rate,
-        ProducerGroup(num_water_wheels, wheel_spec.power),
         ProducerGroup(num_large_windmills, large_windmill_spec.power),
         ProducerGroup(num_windmills, windmill_spec.power),
         ProducerGroup(num_power_wheels, power_wheel_spec.power),
-        total_battery_capacity,
+        ProducerGroup(num_water_wheels, wheel_spec.power),
     )
 
     worst_run_data = SimulationResult(
@@ -69,12 +69,12 @@ def simulate_scenario(config: SimulationConfig):
 @njit(parallel=True, cache=True)
 def _simulate_batch(
     config: BatchConfig,
+    total_battery_capacity: float,
     total_consumption_rate: int,
-    water_wheels: ProducerGroup,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
     power_wheels: ProducerGroup,
-    total_battery_capacity: float,
+    water_wheels: ProducerGroup,
 ) -> BatchedSimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
@@ -134,8 +134,8 @@ def _simulate_batch(
     worst_idx = np.argmax(hours_empty_results)
 
     worst_sample = SimulationSample(
-        power_production=all_power_prod[worst_idx],
-        battery_charge=all_batt_charge[worst_idx],
+        power_production=all_power_prod[worst_idx].copy(),
+        battery_charge=all_batt_charge[worst_idx].copy(),
     )
 
     aggregated_samples = AggregatedSamples(

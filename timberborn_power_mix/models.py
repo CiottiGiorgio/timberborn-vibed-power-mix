@@ -1,5 +1,4 @@
 from pydantic import BaseModel, ConfigDict, create_model
-from typing import List, Tuple
 import numpy as np
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
@@ -31,10 +30,6 @@ class SimulationOptions(BaseModel):
 
 class SimulationResult(BaseModel):
     power_production: np.ndarray
-    power_consumption: np.ndarray
     battery_charge: np.ndarray
-    total_battery_capacity: float
-    season_boundaries: List[Tuple[int, str]]
-    total_cost: float
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

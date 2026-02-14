@@ -7,6 +7,12 @@ from timberborn_power_mix.plots.surplus_plot import plot_surplus
 from timberborn_power_mix.plots.battery_plot import plot_battery
 from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percentage
 from timberborn_power_mix import consts
+from timberborn_power_mix.simulation import (
+    calculate_total_cost,
+    calculate_total_battery_capacity,
+    calculate_season_boundaries,
+    calculate_power_consumption_profile,
+)
 
 
 def create_simulation_figure(
@@ -20,16 +26,18 @@ def create_simulation_figure(
     time_days = time_hours / consts.HOURS_PER_DAY
 
     power_production = data.power_production
-    power_consumption = data.power_consumption
+    power_consumption = calculate_power_consumption_profile(params)
     battery_charge = data.battery_charge
 
     # Recompute derived values
     power_surplus = power_production - power_consumption
 
+    total_battery_capacity = calculate_total_battery_capacity(params.energy_mix)
+
     # Effective balance is the surplus that couldn't be absorbed by the battery
     # or the deficit that couldn't be covered by the battery.
     battery_charge_shifted = np.zeros_like(battery_charge)
-    battery_charge_shifted[0] = data.total_battery_capacity / 2.0  # Initial charge
+    battery_charge_shifted[0] = total_battery_capacity / 2.0  # Initial charge
     battery_charge_shifted[1:] = battery_charge[:-1]
     delta_charge = battery_charge - battery_charge_shifted
     effective_balance = power_surplus - delta_charge
@@ -38,9 +46,8 @@ def create_simulation_figure(
     energy_production = np.cumsum(power_production)
     energy_consumption = np.cumsum(power_consumption)
 
-    total_battery_capacity = data.total_battery_capacity
-    season_boundaries = data.season_boundaries
-    total_cost = data.total_cost
+    season_boundaries = calculate_season_boundaries(params)
+    total_cost = calculate_total_cost(params.energy_mix)
 
     power_wheels = getattr(params.energy_mix, "power_wheel")
     water_wheels = getattr(params.energy_mix, "water_wheel")

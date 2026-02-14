@@ -60,7 +60,7 @@ EnergyMixConfig = create_model(
 )
 
 
-class ParallelConfig(NamedTuple):
+class ParallelSimulationConfig(NamedTuple):
     """Subset of SimulationConfig used for parallel simulation configuration."""
 
     samples: int
@@ -85,8 +85,8 @@ CommonConfig = create_model(
 
 class SimulationConfigBase(BaseModel):
     @property
-    def to_parallel_config(self) -> ParallelConfig:
-        return ParallelConfig(
+    def to_parallel_config(self) -> ParallelSimulationConfig:
+        return ParallelSimulationConfig(
             samples=getattr(self, ConfigName.SAMPLES),
             days=getattr(self, ConfigName.DAYS),
             working_hours=getattr(self, ConfigName.WORKING_HOURS),

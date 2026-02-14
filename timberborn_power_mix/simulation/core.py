@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit, prange
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
-    ParallelConfig,
+    ParallelSimulationConfig,
 )
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
@@ -65,7 +65,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
 
 @njit(parallel=True, cache=True)
 def jit_parallel_simulation(
-    config: ParallelConfig,
+    config: ParallelSimulationConfig,
     total_battery_capacity: float,
     total_consumption_rate: int,
     large_windmills: ProducerGroup,

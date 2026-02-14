@@ -9,6 +9,46 @@ from timberborn_power_mix.machines import (
 )
 from timberborn_power_mix.models import ConfigName
 
+"""
+This module defines the configuration and result models for the power simulation.
+Many models are created dynamically using Pydantic's `create_model` to stay in sync 
+with the machine databases defined in `machines.py`.
+
+The dynamic structures effectively look like this:
+
+class FactoryConfig(BaseModel):
+    lumber_mill: int = 0
+    gear_workshop: int = 0
+    ... (all other factories)
+
+class EnergyMixConfig(BaseModel):
+    battery: int = 0
+    battery_height: float = 0.0
+    windmill: int = 0
+    water_wheel: int = 0
+    ... (all other producers)
+
+class SimulationConfig(BaseModel):
+    samples: int
+    days: int
+    working_hours: int
+    wet_days: int
+    dry_days: int
+    badtide_days: int
+    factories: FactoryConfig
+    energy_mix: EnergyMixConfig
+
+class OptimizationConfig(BaseModel):
+    iterations: int
+    samples: int
+    days: int
+    working_hours: int
+    wet_days: int
+    dry_days: int
+    badtide_days: int
+    factories: FactoryConfig
+"""
+
 FactoryConfig = create_model(
     "FactoryConfig", **{key: int for key in FACTORY_DATABASE.keys()}
 )

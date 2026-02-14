@@ -213,6 +213,7 @@ def parse_optimization_config(**kwargs) -> OptimizationConfig:
         **{
             key: value
             for key, value in kwargs.items()
-            if key in OptimizationConfig.model_fields and key not in CommonConfig.model_fields
+            if key in OptimizationConfig.model_fields
+            and key not in CommonConfig.model_fields
         },
     )

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="simulate-simple" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="simulate-bot" type="PythonConfigurationType" factoryName="Python">
     <module name="timberborn-vibed-power-mix" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -15,7 +15,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="RUN_TOOL" value="" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/timberborn_power_mix/main.py" />
-    <option name="PARAMETERS" value="simulate --lumber-mill 1 --wood-workshop 1 --windmill 4 --battery 1 --battery-height 1" />
+    <option name="PARAMETERS" value="simulate --working-hours 24 --bot-part-factory 3 --bot-assembler 1 --large-windmill 7 --battery 3 --battery-height 2" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

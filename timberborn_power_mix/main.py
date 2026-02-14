@@ -8,7 +8,7 @@ from timberborn_power_mix.optimizer import optimize, find_optimal_solutions
 logger = logging.getLogger(__name__)
 
 
-def run_optimization(**kwargs):
+def simulate_optimization(**kwargs):
     """Runs the optimization process."""
     logger.info("Starting optimization...")
     base_config = parse_config(**kwargs)
@@ -38,7 +38,7 @@ def run_optimization(**kwargs):
     )
 
 
-def run_visualization(**kwargs):
+def simulate_visualization(**kwargs):
     """Visualize power and energy profiles for a single configuration."""
 
     config = parse_config(**kwargs)
@@ -53,7 +53,7 @@ def run_visualization(**kwargs):
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    cli = create_cli(run_visualization, run_optimization)
+    cli = create_cli(simulate_visualization, simulate_optimization)
     cli()
 
 

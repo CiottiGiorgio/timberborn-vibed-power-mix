@@ -99,7 +99,7 @@ def add_common_params(func):
 
 
 def add_energy_mix_params(func):
-    """Decorator to add energy mix parameters (for run command)."""
+    """Decorator to add energy mix parameters (for simulate command)."""
 
     # Producers
     for name in reversed(ProducerName):
@@ -129,18 +129,18 @@ def add_energy_mix_params(func):
     return func
 
 
-def create_cli(run_callback, optimize_callback):
+def create_cli(simulate_callback, optimize_callback):
     @click.group()
     def cli():
         """Timberborn Power Mix Simulation and Optimization Tool."""
         pass
 
-    @cli.command(name="run")
+    @cli.command(name="simulate")
     @add_common_params
     @add_energy_mix_params
-    def run_cmd(**kwargs):
-        """Run a simulation with the specified parameters."""
-        run_callback(**kwargs)
+    def simulate_cmd(**kwargs):
+        """Simulate a configuration with the specified parameters."""
+        simulate_callback(**kwargs)
 
     @cli.command(name="optimize")
     @add_common_params

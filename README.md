@@ -14,14 +14,14 @@ poetry install
 
 ## Usage
 
-The tool provides a CLI with two main commands: `run` and `optimize`.
+The tool provides a CLI with two main commands: `simulate` and `optimize`.
 
-### Run Simulation
+### Simulate
 
 Simulate a specific configuration of power producers, consumers, and batteries. This will generate a plot showing power generation, consumption, and battery levels over time.
 
 ```bash
-poetry run tb-power-mix run \
+poetry run tb-power-mix simulate \
     --large-windmill 5 \
     --windmill 2 \
     --battery 3 \

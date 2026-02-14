@@ -136,7 +136,7 @@ class AggregatedSamples(NamedTuple):
     """Holds aggregated metrics and consumption profiles collected across all samples in a simulation parallel."""
 
     hours_empty_results: np.ndarray
-    final_surpluses: np.ndarray
+    average_final_surplus: float
     power_consumption: np.ndarray
 
 

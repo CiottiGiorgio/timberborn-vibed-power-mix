@@ -57,9 +57,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     return SimulationResult(
         hours_empty_results=parallel_res.aggregated_samples.hours_empty_results,
         worst_sample=parallel_res.worst_sample,
-        average_final_surplus=float(
-            np.mean(parallel_res.aggregated_samples.final_surpluses)
-        ),
+        average_final_surplus=parallel_res.aggregated_samples.average_final_surplus,
     )
 
 
@@ -110,7 +108,7 @@ def jit_parallel_simulation(
     all_batt_charge = np.zeros((config.samples, total_hours))
 
     hours_empty_results = np.zeros(config.samples)
-    final_surpluses = np.zeros(config.samples)
+    total_final_surplus = 0.0
 
     for s in prange(config.samples):
         res = jit_stochastic_simulation(
@@ -125,7 +123,7 @@ def jit_parallel_simulation(
         all_batt_charge[s] = res.battery_charge
 
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
-        final_surpluses[s] = np.sum(res.power_production) - np.sum(power_consumption)
+        total_final_surplus += np.sum(res.power_production) - np.sum(power_consumption)
 
     # Find worst run index
     worst_idx = np.argmax(hours_empty_results)
@@ -137,7 +135,7 @@ def jit_parallel_simulation(
 
     aggregated_samples = AggregatedSamples(
         hours_empty_results=hours_empty_results,
-        final_surpluses=final_surpluses,
+        average_final_surplus=total_final_surplus / config.samples,
         power_consumption=power_consumption,
     )
 

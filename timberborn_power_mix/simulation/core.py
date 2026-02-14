@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit, prange
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
-    BatchConfig,
+    ParallelConfig,
 )
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
@@ -12,7 +12,7 @@ from timberborn_power_mix.machines import (
 from timberborn_power_mix import consts
 from timberborn_power_mix.simulation.models import (
     SimulationSample,
-    SimulationResult,
+    ParallelSimulationResult,
     AggregatedSamples,
     ProducerGroup,
 )
@@ -43,8 +43,8 @@ def run_simulation(config: SimulationConfig):
         config.energy_mix
     )
 
-    batch_res = jit_parallel_simulation(
-        config.to_batch_config,
+    parallel_res = jit_parallel_simulation(
+        config.to_parallel_config,
         total_battery_capacity,
         total_consumption_rate,
         ProducerGroup(num_large_windmills, large_windmill_spec.power),
@@ -54,22 +54,22 @@ def run_simulation(config: SimulationConfig):
     )
 
     return (
-        batch_res.aggregated_samples.hours_empty_results,
-        batch_res.worst_sample,
-        np.mean(batch_res.aggregated_samples.final_surpluses),
+        parallel_res.aggregated_samples.hours_empty_results,
+        parallel_res.worst_sample,
+        np.mean(parallel_res.aggregated_samples.final_surpluses),
     )
 
 
 @njit(parallel=True, cache=True)
 def jit_parallel_simulation(
-    config: BatchConfig,
+    config: ParallelConfig,
     total_battery_capacity: float,
     total_consumption_rate: int,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
     power_wheels: ProducerGroup,
     water_wheels: ProducerGroup,
-) -> SimulationResult:
+) -> ParallelSimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
     time_hours = np.arange(total_hours)
@@ -138,7 +138,7 @@ def jit_parallel_simulation(
         power_consumption=power_consumption,
     )
 
-    return SimulationResult(
+    return ParallelSimulationResult(
         worst_sample=worst_sample, aggregated_samples=aggregated_samples
     )
 

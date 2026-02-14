@@ -60,8 +60,8 @@ EnergyMixConfig = create_model(
 )
 
 
-class BatchConfig(NamedTuple):
-    """Subset of SimulationConfig used for batch simulation configuration."""
+class ParallelConfig(NamedTuple):
+    """Subset of SimulationConfig used for parallel simulation configuration."""
 
     samples: int
     days: int
@@ -85,8 +85,8 @@ CommonConfig = create_model(
 
 class SimulationConfigBase(BaseModel):
     @property
-    def to_batch_config(self) -> BatchConfig:
-        return BatchConfig(
+    def to_parallel_config(self) -> ParallelConfig:
+        return ParallelConfig(
             samples=getattr(self, ConfigName.SAMPLES),
             days=getattr(self, ConfigName.DAYS),
             working_hours=getattr(self, ConfigName.WORKING_HOURS),
@@ -133,15 +133,15 @@ class SimulationSample(NamedTuple):
 
 
 class AggregatedSamples(NamedTuple):
-    """Holds aggregated metrics and consumption profiles collected across all samples in a simulation batch."""
+    """Holds aggregated metrics and consumption profiles collected across all samples in a simulation parallel."""
 
     hours_empty_results: np.ndarray
     final_surpluses: np.ndarray
     power_consumption: np.ndarray
 
 
-class SimulationResult(NamedTuple):
-    """Combines the results of a batched simulation, including the worst-performing sample and aggregated statistics."""
+class ParallelSimulationResult(NamedTuple):
+    """Combines the results of a parallel simulation, including the worst-performing sample and aggregated statistics."""
 
     worst_sample: SimulationSample
     aggregated_samples: AggregatedSamples

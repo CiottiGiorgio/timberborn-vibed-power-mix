@@ -1,6 +1,5 @@
 import os
 import pytest
-import numpy as np
 from matplotlib.testing.compare import compare_images
 from tests.helpers import generate_reference_figure, generate_reference_simulation_data
 from timberborn_power_mix.simulation.helpers import calculate_total_cost

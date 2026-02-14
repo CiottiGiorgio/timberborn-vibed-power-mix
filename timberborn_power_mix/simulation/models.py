@@ -1,6 +1,6 @@
 from typing import NamedTuple
 import numpy as np
-from pydantic import create_model, BaseModel, ConfigDict
+from pydantic import create_model, BaseModel
 
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
@@ -58,11 +58,11 @@ SimulationConfig = create_model(
 )
 
 
-class SimulationResult(BaseModel):
+class SimulationResult(NamedTuple):
+    """Represents the time-series data for production and storage state from a simulation run."""
+
     power_production: np.ndarray
     battery_charge: np.ndarray
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class ProducerGroup(NamedTuple):

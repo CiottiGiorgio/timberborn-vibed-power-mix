@@ -4,7 +4,6 @@ from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     SimulationResult,
     BatchConfig,
-    get_batch_config,
 )
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
@@ -46,7 +45,7 @@ def simulate_scenario(config: SimulationConfig):
     )
 
     batch_res = _simulate_batch(
-        get_batch_config(config),
+        config.to_batch_config,
         total_consumption_rate,
         ProducerGroup(num_water_wheels, wheel_spec.power),
         ProducerGroup(num_large_windmills, large_windmill_spec.power),

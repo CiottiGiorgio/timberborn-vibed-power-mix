@@ -31,6 +31,19 @@ class BatchConfig(NamedTuple):
     badtide_days: int
 
 
+class SimulationConfigBase(BaseModel):
+    @property
+    def to_batch_config(self) -> BatchConfig:
+        return BatchConfig(
+            samples=getattr(self, ConfigName.SAMPLES),
+            days=getattr(self, ConfigName.DAYS),
+            working_hours=getattr(self, ConfigName.WORKING_HOURS),
+            wet_days=getattr(self, ConfigName.WET_DAYS),
+            dry_days=getattr(self, ConfigName.DRY_DAYS),
+            badtide_days=getattr(self, ConfigName.BADTIDE_DAYS),
+        )
+
+
 SimulationConfig = create_model(
     "SimulationConfig",
     **{ConfigName.SAMPLES: int},
@@ -41,19 +54,8 @@ SimulationConfig = create_model(
     **{ConfigName.BADTIDE_DAYS: int},
     **{ConfigName.FACTORIES: FactoryConfig},
     **{ConfigName.ENERGY_MIX: EnergyMixConfig},
-    __base__=BaseModel,
+    __base__=SimulationConfigBase,
 )
-
-
-def get_batch_config(config: SimulationConfig) -> BatchConfig:
-    return BatchConfig(
-        samples=getattr(config, ConfigName.SAMPLES),
-        days=getattr(config, ConfigName.DAYS),
-        working_hours=getattr(config, ConfigName.WORKING_HOURS),
-        wet_days=getattr(config, ConfigName.WET_DAYS),
-        dry_days=getattr(config, ConfigName.DRY_DAYS),
-        badtide_days=getattr(config, ConfigName.BADTIDE_DAYS),
-    )
 
 
 class SimulationResult(BaseModel):

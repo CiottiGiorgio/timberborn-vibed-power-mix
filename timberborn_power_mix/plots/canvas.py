@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation.models import SimulationResult, SimulationConfig
+from timberborn_power_mix.simulation.models import SimulationSample, SimulationConfig
 from timberborn_power_mix.plots.power_plot import plot_power
 from timberborn_power_mix.plots.energy_plot import plot_energy
 from timberborn_power_mix.plots.surplus_plot import plot_surplus
@@ -18,7 +18,7 @@ from timberborn_power_mix.models import ConfigName
 
 
 def create_simulation_figure(
-    data: SimulationResult, config: SimulationConfig, run_empty_hours
+    data: SimulationSample, config: SimulationConfig, run_empty_hours
 ):
     # Unpack data
     days = getattr(config, ConfigName.DAYS)

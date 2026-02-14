@@ -2,7 +2,6 @@ import numpy as np
 from numba import njit, prange
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
-    SimulationResult,
     BatchConfig,
 )
 from timberborn_power_mix.machines import (
@@ -54,7 +53,7 @@ def run_simulation(config: SimulationConfig):
         ProducerGroup(num_water_wheels, wheel_spec.power),
     )
 
-    worst_run_data = SimulationResult(
+    worst_run_data = SimulationSample(
         power_production=batch_res.worst_sample.power_production,
         battery_charge=batch_res.worst_sample.battery_charge,
     )

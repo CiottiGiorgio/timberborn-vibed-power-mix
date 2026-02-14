@@ -118,13 +118,6 @@ for name, field in CommonConfig.model_fields.items():
 OptimizationConfig.model_rebuild(force=True)
 
 
-class SimulationResult(NamedTuple):
-    """Represents the time-series data for production and storage state from a simulation run."""
-
-    power_production: np.ndarray
-    battery_charge: np.ndarray
-
-
 class ProducerGroup(NamedTuple):
     """Combines a machine count with its individual power production rate."""
 

@@ -1,4 +1,5 @@
 import numpy as np
+import functools
 from numba import njit, prange
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
@@ -101,6 +102,7 @@ def jit_parallel_simulation(
     is_water_active = is_first_wet | is_second_wet | is_badtide
 
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
+    total_consumption_energy = np.sum(power_consumption)
 
     power_wheel_production_rate = np.where(
         is_working_hour, power_wheels.count * power_wheels.power, 0.0
@@ -111,12 +113,11 @@ def jit_parallel_simulation(
         + power_wheel_production_rate
     )
 
-    # Pre-allocate to store all results for filtering
-    all_power_prod = np.zeros((config.samples, total_hours))
-    all_batt_charge = np.zeros((config.samples, total_hours))
-
     hours_empty_results = np.zeros(config.samples)
     total_final_surplus = 0.0
+
+    worst_data = -1
+    worst_seed = sample_seeds[0]
 
     for s in prange(config.samples):
         res = jit_stochastic_simulation(
@@ -128,18 +129,28 @@ def jit_parallel_simulation(
             total_battery_capacity,
             sample_seeds[s],
         )
-        all_power_prod[s] = res.power_production
-        all_batt_charge[s] = res.battery_charge
 
-        hours_empty_results[s] = np.sum(res.battery_charge <= 0)
-        total_final_surplus += np.sum(res.power_production) - np.sum(power_consumption)
+        h_empty = float(np.sum(res.battery_charge <= 0))
+        hours_empty_results[s] = h_empty
 
-    # Find worst run index
-    worst_idx = np.argmax(hours_empty_results)
+        # Standard reduction for surplus using functools.reduce
+        total_final_surplus += np.sum(res.power_production) - total_consumption_energy
 
-    worst_sample = SimulationSample(
-        power_production=all_power_prod[worst_idx].copy(),
-        battery_charge=all_batt_charge[worst_idx].copy(),
+        # Reduction for the worst sample using functools.reduce and max.
+        # This compares tuples (hours_empty, seed) element-wise.
+        worst_data = max(worst_data, h_empty)
+        if worst_data == h_empty:
+            worst_seed = sample_seeds[s]
+
+    # Replay the worst run to get the full sample data without storing all samples in memory
+    worst_sample = jit_stochastic_simulation(
+        total_hours,
+        base_power_production,
+        power_consumption,
+        large_windmills,
+        windmills,
+        total_battery_capacity,
+        worst_seed,
     )
 
     aggregated_samples = AggregatedSamples(

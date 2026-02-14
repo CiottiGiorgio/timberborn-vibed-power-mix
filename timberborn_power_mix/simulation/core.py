@@ -117,13 +117,13 @@ def jit_parallel_simulation(
 
     for s in prange(config.samples):
         res = jit_stochastic_simulation(
-            total_hours,
+            sample_seeds[s],
             base_power_production,
             power_consumption,
             large_windmills,
             windmills,
             total_battery_capacity,
-            sample_seeds[s],
+            total_hours,
         )
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
         total_final_surplus += np.sum(res.power_production) - total_consumption_energy
@@ -132,13 +132,13 @@ def jit_parallel_simulation(
 
     # Replay the worst run to get the full sample data without storing all samples in memory
     worst_sample = jit_stochastic_simulation(
-        total_hours,
+        sample_seeds[worst_idx],
         base_power_production,
         power_consumption,
         large_windmills,
         windmills,
         total_battery_capacity,
-        sample_seeds[worst_idx],
+        total_hours,
     )
 
     aggregated_samples = AggregatedSamples(
@@ -154,13 +154,13 @@ def jit_parallel_simulation(
 
 @njit
 def jit_stochastic_simulation(
-    total_hours: int,
+    seed: int,
     base_power_production: np.ndarray,
     power_consumption: np.ndarray,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
     total_battery_capacity: float,
-    seed: int,
+    total_hours: int,
 ) -> SimulationSample:
     """Performs a single Monte Carlo simulation run, handling stochastic input generation and internal state transitions."""
     np.random.seed(seed)

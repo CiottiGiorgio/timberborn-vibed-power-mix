@@ -70,8 +70,6 @@ def run_jit_simulation(
     """Manages simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
 
-    sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
-
     # Pre-calculate static profiles
     time_hours = np.arange(total_hours)
     hour_of_day = time_hours % consts.HOURS_PER_DAY
@@ -90,10 +88,14 @@ def run_jit_simulation(
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
 
     hours_empty_results = np.zeros(config.samples)
+    worst_sample = SimulationSample(
+        power_production=np.zeros(total_hours),
+        battery_charge=np.zeros(total_hours),
+    )
+    max_hours_empty = -1.0
 
     for s in range(config.samples):
         res = jit_stochastic_simulation(
-            sample_seeds[s],
             base_power_production,
             power_consumption,
             large_windmills,
@@ -101,20 +103,12 @@ def run_jit_simulation(
             total_battery_capacity,
             total_hours,
         )
-        hours_empty_results[s] = np.sum(res.battery_charge <= 0)
+        hours_empty = np.sum(res.battery_charge <= 0)
+        hours_empty_results[s] = hours_empty
 
-    worst_idx = np.argmax(hours_empty_results)
-
-    # Replay the worst run to get the full sample data without storing all samples in memory
-    worst_sample = jit_stochastic_simulation(
-        sample_seeds[worst_idx],
-        base_power_production,
-        power_consumption,
-        large_windmills,
-        windmills,
-        total_battery_capacity,
-        total_hours,
-    )
+        if hours_empty > max_hours_empty:
+            max_hours_empty = hours_empty
+            worst_sample = res
 
     aggregated_samples = AggregatedSamples(
         power_consumption=power_consumption,
@@ -128,7 +122,6 @@ def run_jit_simulation(
 
 @njit
 def jit_stochastic_simulation(
-    seed: int,
     base_power_production: np.ndarray,
     power_consumption: np.ndarray,
     large_windmills: ProducerGroup,
@@ -137,8 +130,6 @@ def jit_stochastic_simulation(
     total_hours: int,
 ) -> SimulationSample:
     """Performs a single Monte Carlo simulation run, handling stochastic input generation and internal state transitions."""
-    np.random.seed(seed)
-
     # Generate wind data inside the core for better cache locality
     max_segments = (total_hours // consts.WIND_DURATION_MIN_HOURS) + 1
     wind_durations = np.random.randint(

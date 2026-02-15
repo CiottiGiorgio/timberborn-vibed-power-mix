@@ -73,9 +73,14 @@ def jit_parallel_simulation(
     # Generate the array inside the jitted function to avoid memory transfer overhead
     sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
 
+    # Pre-calculate static profiles
+    time_hours = np.arange(total_hours)
+    hour_of_day = time_hours % consts.HOURS_PER_DAY
+    is_working_hour = hour_of_day < config.working_hours
+
     base_power_production = sim_helpers.calculate_base_power_production(
-        total_hours,
-        config.working_hours,
+        time_hours,
+        is_working_hour,
         config.wet_days,
         config.dry_days,
         config.badtide_days,
@@ -83,10 +88,6 @@ def jit_parallel_simulation(
         water_wheels,
     )
 
-    # Pre-calculate static profiles
-    time_hours = np.arange(total_hours)
-    hour_of_day = time_hours % consts.HOURS_PER_DAY
-    is_working_hour = hour_of_day < config.working_hours
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
 
     hours_empty_results = np.zeros(config.samples)

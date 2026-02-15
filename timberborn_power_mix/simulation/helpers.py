@@ -74,8 +74,8 @@ def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str
 
 @njit(inline="always")
 def calculate_base_power_production(
-    total_hours: int,
-    working_hours: int,
+    time_hours: np.ndarray,
+    is_working_hour: np.ndarray,
     wet_days: int,
     dry_days: int,
     badtide_days: int,
@@ -83,12 +83,6 @@ def calculate_base_power_production(
     water_wheels: ProducerGroup,
 ) -> np.ndarray:
     """Calculates the deterministic base power production profile (water wheels and power wheels)."""
-    time_hours = np.arange(total_hours)
-
-    # Pre-calculate static profiles
-    hour_of_day = time_hours % consts.HOURS_PER_DAY
-    is_working_hour = hour_of_day < working_hours
-
     hours_per_wet = wet_days * consts.HOURS_PER_DAY
     hours_per_dry = dry_days * consts.HOURS_PER_DAY
     hours_per_badtide = badtide_days * consts.HOURS_PER_DAY

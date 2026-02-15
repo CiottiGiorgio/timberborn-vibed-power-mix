@@ -95,12 +95,10 @@ def calculate_base_power_production(
     cycle_length_hours = 2 * hours_per_wet + hours_per_dry + hours_per_badtide
 
     hour_of_cycle = time_hours % cycle_length_hours
-    is_first_wet = hour_of_cycle < hours_per_wet
-    is_second_wet = (hour_of_cycle >= (hours_per_wet + hours_per_dry)) & (
-        hour_of_cycle < (2 * hours_per_wet + hours_per_dry)
+    is_dry = (hour_of_cycle >= hours_per_wet) & (
+        hour_of_cycle < (hours_per_wet + hours_per_dry)
     )
-    is_badtide = hour_of_cycle >= (2 * hours_per_wet + hours_per_dry)
-    is_water_active = is_first_wet | is_second_wet | is_badtide
+    is_water_active = ~is_dry
 
     power_wheel_production_rate = np.where(
         is_working_hour, power_wheels.count * power_wheels.power, 0.0

@@ -47,7 +47,7 @@ def generate_reference_simulation_data():
     # 2. Run simulation
     res = run_simulation(config)
 
-    return res.worst_sample, res.hours_empty_results, config
+    return res.worst_sample, res.aggregated_samples.hours_empty_results, config
 
 
 def generate_reference_figure():

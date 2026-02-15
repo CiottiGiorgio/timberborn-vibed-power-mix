@@ -123,15 +123,8 @@ class AggregatedSamples(NamedTuple):
     power_consumption: np.ndarray
 
 
-class ParallelSimulationResult(NamedTuple):
-    """Combines the results of a parallel simulation, including the worst-performing sample and aggregated statistics."""
-
-    worst_sample: SimulationSample
-    aggregated_samples: AggregatedSamples
-
-
 class SimulationResult(NamedTuple):
     """Final output of the simulation process, containing aggregated metrics and the worst-case scenario."""
 
-    hours_empty_results: np.ndarray
     worst_sample: SimulationSample
+    aggregated_samples: AggregatedSamples

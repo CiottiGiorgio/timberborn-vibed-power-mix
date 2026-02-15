@@ -12,7 +12,6 @@ from timberborn_power_mix.machines import (
 from timberborn_power_mix import consts
 from timberborn_power_mix.simulation.models import (
     SimulationSample,
-    ParallelSimulationResult,
     AggregatedSamples,
     ProducerGroup,
     SimulationResult,
@@ -50,7 +49,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     # Generate seeds for each sample to ensure reproducibility in parallel
     sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
 
-    parallel_res = jit_parallel_simulation(
+    return jit_parallel_simulation(
         config.to_parallel_config,
         sample_seeds,
         total_consumption_rate,
@@ -59,11 +58,6 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
         ProducerGroup(num_power_wheels, power_wheel_spec.power),
         ProducerGroup(num_water_wheels, wheel_spec.power),
         total_battery_capacity,
-    )
-
-    return SimulationResult(
-        hours_empty_results=parallel_res.aggregated_samples.hours_empty_results,
-        worst_sample=parallel_res.worst_sample,
     )
 
 
@@ -77,7 +71,7 @@ def jit_parallel_simulation(
     power_wheels: ProducerGroup,
     water_wheels: ProducerGroup,
     total_battery_capacity: float,
-) -> ParallelSimulationResult:
+) -> SimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
     time_hours = np.arange(total_hours)
@@ -142,7 +136,7 @@ def jit_parallel_simulation(
         power_consumption=power_consumption,
     )
 
-    return ParallelSimulationResult(
+    return SimulationResult(
         worst_sample=worst_sample, aggregated_samples=aggregated_samples
     )
 

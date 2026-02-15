@@ -8,7 +8,7 @@ from timberborn_power_mix.plots.battery_plot import plot_battery
 from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percentage
 from timberborn_power_mix import consts
 from timberborn_power_mix.simulation.helpers import (
-    calculate_total_cost,
+    calculate_total_wood_cost,
     calculate_total_battery_capacity,
     calculate_season_boundaries,
 )
@@ -49,7 +49,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     energy_consumption = np.cumsum(power_consumption)
 
     season_boundaries = calculate_season_boundaries(config)
-    total_cost = calculate_total_cost(config.energy_mix)
+    total_cost = calculate_total_wood_cost(config.energy_mix)
 
     power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
     water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)

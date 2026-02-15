@@ -2,7 +2,7 @@ import os
 import pytest
 from matplotlib.testing.compare import compare_images
 from tests.helpers import generate_reference_figure, generate_reference_simulation_data
-from timberborn_power_mix.simulation.helpers import calculate_total_cost
+from timberborn_power_mix.simulation.helpers import calculate_total_wood_cost
 
 
 def test_visual_output(tmp_path):
@@ -35,7 +35,7 @@ def test_visual_output(tmp_path):
     # Windmills: 4 * 40 = 160
     # Batteries: 1 * (84 + 1*6) = 90
     # Total: 250
-    assert calculate_total_cost(config.energy_mix) == 250.0
+    assert calculate_total_wood_cost(config.energy_mix) == 250.0
     assert max_hours_empty >= 0
 
     # 3. Compare with reference image

@@ -18,7 +18,7 @@ from timberborn_power_mix.simulation.models import (
 from timberborn_power_mix.models import ConfigName
 
 
-def calculate_total_cost(energy_mix: EnergyMixConfig) -> float:
+def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> float:
     wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]
     windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILL]
     large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILL]

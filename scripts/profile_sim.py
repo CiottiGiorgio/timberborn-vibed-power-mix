@@ -1,11 +1,11 @@
 import logging
 from scalene import scalene_profiler
-from timberborn_power_mix.simulation.core import run_simulation
+from timberborn_power_mix.simulation.engine import run_simulation
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
-    FactoryConfig,
     EnergyMixConfig,
 )
+from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
     PRODUCER_DATABASE,

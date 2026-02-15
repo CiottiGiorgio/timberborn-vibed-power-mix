@@ -1,9 +1,9 @@
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
-    FactoryConfig,
 )
-from timberborn_power_mix.simulation.core import run_simulation
+from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.simulation.engine import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,

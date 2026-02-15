@@ -1,6 +1,6 @@
 import logging
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation.core import run_simulation
+from timberborn_power_mix.simulation.engine import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.cli import parse_simulation_config
 

@@ -4,12 +4,11 @@ import logging
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
 from timberborn_power_mix.simulation.models import (
-    FactoryConfig,
     EnergyMixConfig,
     SimulationConfig,
-    CommonConfig,
 )
-from timberborn_power_mix.models import ConfigName
+from timberborn_power_mix.optimization.models import OptimizationConfig
+from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig
 
 p = inflect.engine()
 
@@ -153,6 +152,23 @@ def simulate_cmd(**kwargs):
     simulation_orchestrator(**kwargs)
 
 
+@cli.command(name="optimize")
+@add_common_params
+@click.option(
+    f"--{ConfigName.ITERATION.replace('_', '-')}",
+    type=int,
+    default=consts.DEFAULT_ITERATIONS,
+    show_default=True,
+    help="Number of optimization iterations",
+)
+def optimize_cmd(**kwargs):
+    """Optimize the energy mix for a given factory configuration."""
+    from timberborn_power_mix.optimization.engine import run_optimization
+
+    opt_config = parse_optimization_config(**kwargs)
+    run_optimization(opt_config)
+
+
 def parse_common_config(**kwargs) -> CommonConfig:
     """Parses common configuration parameters from kwargs."""
     factories = FactoryConfig(
@@ -195,6 +211,15 @@ def parse_simulation_config(**kwargs) -> SimulationConfig:
     return SimulationConfig(
         **common_config.model_dump(),
         energy_mix=energy_mix,
+    )
+
+
+def parse_optimization_config(**kwargs) -> OptimizationConfig:
+    """Parses optimization configuration from kwargs."""
+    common_config = parse_common_config(**kwargs)
+    return OptimizationConfig(
+        **common_config.model_dump(),
+        iteration=kwargs[ConfigName.ITERATION],
     )
 
 

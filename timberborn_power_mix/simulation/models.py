@@ -3,11 +3,10 @@ import numpy as np
 from pydantic import create_model, BaseModel
 
 from timberborn_power_mix.machines import (
-    FACTORY_DATABASE,
     BatteryName,
     PRODUCER_DATABASE,
 )
-from timberborn_power_mix.models import ConfigName
+from timberborn_power_mix.models import ConfigName, CommonConfig
 
 """
 This module defines the configuration and result models for the power simulation.
@@ -29,20 +28,16 @@ class EnergyMixConfig(BaseModel):
     ... (all other producers)
 
 class SimulationConfig(BaseModel):
+    seed: Optional[int] = None
     samples: int
     days: int
     working_hours: int
     wet_days: int
     dry_days: int
     badtide_days: int
-    seed: Optional[int] = None
     factories: FactoryConfig
     energy_mix: EnergyMixConfig
 """
-
-FactoryConfig = create_model(
-    "FactoryConfig", **{key: int for key in FACTORY_DATABASE.keys()}
-)
 
 EnergyMixConfig = create_model(
     "EnergyMixConfig",
@@ -61,19 +56,6 @@ class JitSimulationConfig(NamedTuple):
     dry_days: int
     badtide_days: int
     seed: Optional[int] = None
-
-
-CommonConfig = create_model(
-    "CommonConfig",
-    **{ConfigName.SAMPLES: int},
-    **{ConfigName.DAYS: int},
-    **{ConfigName.WORKING_HOURS: int},
-    **{ConfigName.WET_DAYS: int},
-    **{ConfigName.DRY_DAYS: int},
-    **{ConfigName.BADTIDE_DAYS: int},
-    **{ConfigName.SEED: (Optional[int], None)},
-    **{ConfigName.FACTORIES: FactoryConfig},
-)
 
 
 class SimulationConfigBase(BaseModel):

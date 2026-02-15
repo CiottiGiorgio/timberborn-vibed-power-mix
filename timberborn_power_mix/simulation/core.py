@@ -173,16 +173,8 @@ def jit_stochastic_simulation(
     current_charge = total_battery_capacity / 2.0
 
     for i in range(total_hours):
-        surplus = power_surplus[i]
-        if surplus > 0:
-            space_available = total_battery_capacity - current_charge
-            energy_to_store = min(surplus, space_available)
-            current_charge += energy_to_store
-        else:
-            deficit = -surplus
-            energy_available = current_charge
-            energy_from_battery = min(deficit, energy_available)
-            current_charge -= energy_from_battery
+        potential_charge = current_charge + power_surplus[i]
+        current_charge = max(0.0, min(potential_charge, total_battery_capacity))
         battery_charge[i] = current_charge
 
     return SimulationSample(

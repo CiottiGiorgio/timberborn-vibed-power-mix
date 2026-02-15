@@ -51,8 +51,8 @@ EnergyMixConfig = create_model(
 )
 
 
-class ParallelSimulationConfig(NamedTuple):
-    """Subset of SimulationConfig used for parallel simulation configuration."""
+class JitSimulationConfig(NamedTuple):
+    """Subset of SimulationConfig used for jitted simulation configuration."""
 
     samples: int
     days: int
@@ -78,8 +78,8 @@ CommonConfig = create_model(
 
 class SimulationConfigBase(BaseModel):
     @property
-    def to_parallel_config(self) -> ParallelSimulationConfig:
-        return ParallelSimulationConfig(
+    def to_jit_config(self) -> JitSimulationConfig:
+        return JitSimulationConfig(
             samples=getattr(self, ConfigName.SAMPLES),
             days=getattr(self, ConfigName.DAYS),
             working_hours=getattr(self, ConfigName.WORKING_HOURS),
@@ -117,7 +117,7 @@ class SimulationSample(NamedTuple):
 
 
 class AggregatedSamples(NamedTuple):
-    """Holds aggregated metrics and consumption profiles collected across all samples in a simulation parallel."""
+    """Holds aggregated metrics and consumption profiles collected across all samples in a simulation."""
 
     power_consumption: np.ndarray
     hours_empty_results: np.ndarray

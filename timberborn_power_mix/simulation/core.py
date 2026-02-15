@@ -1,8 +1,8 @@
 import numpy as np
-from numba import njit, prange
+from numba import njit
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
-    ParallelSimulationConfig,
+    JitSimulationConfig,
 )
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
@@ -43,11 +43,11 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
         config.energy_mix
     )
 
-    # Seeding externally as requested
-    np.random.seed(config.seed)
+    if config.seed:
+        sim_helpers.seed(config.seed)
 
-    return jit_parallel_simulation(
-        config.to_parallel_config,
+    return run_jit_simulation(
+        config.to_jit_config,
         total_consumption_rate,
         ProducerGroup(num_large_windmills, large_windmill_spec.power),
         ProducerGroup(num_windmills, windmill_spec.power),
@@ -57,9 +57,9 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     )
 
 
-@njit(parallel=True, cache=True)
-def jit_parallel_simulation(
-    config: ParallelSimulationConfig,
+@njit(cache=True)
+def run_jit_simulation(
+    config: JitSimulationConfig,
     total_consumption_rate: int,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
@@ -67,10 +67,9 @@ def jit_parallel_simulation(
     water_wheels: ProducerGroup,
     total_battery_capacity: float,
 ) -> SimulationResult:
-    """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
+    """Manages simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
 
-    # Generate the array inside the jitted function to avoid memory transfer overhead
     sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
 
     # Pre-calculate static profiles
@@ -92,7 +91,7 @@ def jit_parallel_simulation(
 
     hours_empty_results = np.zeros(config.samples)
 
-    for s in prange(config.samples):
+    for s in range(config.samples):
         res = jit_stochastic_simulation(
             sample_seeds[s],
             base_power_production,

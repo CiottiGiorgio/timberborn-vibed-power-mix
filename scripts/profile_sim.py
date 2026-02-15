@@ -35,7 +35,7 @@ def run_profiled_simulation():
     energy_mix = EnergyMixConfig(**energy_data)
 
     config = SimulationConfig(
-        samples=1_000_000,
+        samples=50_000,
         days=132,
         wet_days=sim_consts.DEFAULT_WET_SEASON_DAYS,
         dry_days=sim_consts.DEFAULT_DRY_SEASON_DAYS,

@@ -7,7 +7,6 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
     CommonConfig,
-    OptimizationConfig,
 )
 from timberborn_power_mix.models import ConfigName
 
@@ -137,10 +136,10 @@ def add_energy_mix_params(func):
     return func
 
 
-def create_cli(simulate_callback, optimize_callback):
+def create_cli(simulate_callback):
     @click.group()
     def cli():
-        """Timberborn Power Mix Simulation and Optimization Tool."""
+        """Timberborn Power Mix Simulation Tool."""
         pass
 
     @cli.command(name="simulate")
@@ -149,18 +148,6 @@ def create_cli(simulate_callback, optimize_callback):
     def simulate_cmd(**kwargs):
         """Simulate a configuration with the specified parameters."""
         simulate_callback(**kwargs)
-
-    @cli.command(name="optimize")
-    @add_common_params
-    @click.option(
-        f"--{ConfigName.ITERATIONS}",
-        type=int,
-        default=consts.DEFAULT_OPTIMIZATION_ITERATIONS,
-        help="Number of optimization iterations",
-    )
-    def optimize_cmd(**kwargs):
-        """Optimize the energy mix for the specified parameters."""
-        optimize_callback(**kwargs)
 
     return cli
 
@@ -207,19 +194,4 @@ def parse_simulation_config(**kwargs) -> SimulationConfig:
     return SimulationConfig(
         **common_config.model_dump(),
         energy_mix=energy_mix,
-    )
-
-
-def parse_optimization_config(**kwargs) -> OptimizationConfig:
-    """Parses full optimization configuration from kwargs."""
-    common_config = parse_common_config(**kwargs)
-
-    return OptimizationConfig(
-        **common_config.model_dump(),
-        **{
-            key: value
-            for key, value in kwargs.items()
-            if key in OptimizationConfig.model_fields
-            and key not in CommonConfig.model_fields
-        },
     )

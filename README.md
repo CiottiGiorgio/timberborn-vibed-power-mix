@@ -1,6 +1,6 @@
 # Timberborn Vibed Power Mix
 
-A simulation and optimization tool for power management in Timberborn. This tool helps you determine the optimal mix of power sources and batteries to sustain your factories through wet, dry, and badtide seasons.
+A simulation tool for power management in Timberborn. This tool helps you determine the optimal mix of power sources and batteries to sustain your factories through wet, dry, and badtide seasons.
 
 ![Reference Visual Output](tests/reference_visual_output.png)
 
@@ -14,7 +14,7 @@ poetry install
 
 ## Usage
 
-The tool provides a CLI with two main commands: `simulate` and `optimize`.
+The tool provides a CLI with one main command: `simulate`.
 
 ### Simulate
 
@@ -38,21 +38,6 @@ poetry run tb-power-mix simulate \
 - `--samples [count]`: Number of Monte Carlo simulations to run (default: 1000).
 - `--days [count]`: Duration of the simulation in days.
 
-### Optimize
-
-Find the most cost-effective power mix that meets your factory's demands with minimal downtime.
-
-```bash
-poetry run tb-power-mix optimize \
-    --lumber-mill 5 \
-    --gear-workshop 2 \
-    --iterations 500
-```
-
-**Key Parameters:**
-- `--iterations [count]`: Number of optimization iterations to run.
-- `--[consumer-name] [count]`: Specify the factories you need to power.
-
 ## Data Insights
 
 The simulation accounts for:
@@ -63,8 +48,6 @@ The simulation accounts for:
   - **Badtide**: Water wheels continue to function (assuming contaminated water still flows).
 - **Working Hours**: Factories only consume power during specified working hours (default: 16h/day).
 - **Battery Physics**: Gravity battery capacity scales with height.
-
-The optimizer looks for solutions where the factories are unpowered for less than 5% of the time in the 95th percentile worst-case scenario.
 
 ### Visualizing Performance
 The generated plots help you understand the dynamics of your power grid:

@@ -38,17 +38,6 @@ class SimulationConfig(BaseModel):
     seed: Optional[int] = None
     factories: FactoryConfig
     energy_mix: EnergyMixConfig
-
-class OptimizationConfig(BaseModel):
-    iterations: int
-    samples: int
-    days: int
-    working_hours: int
-    wet_days: int
-    dry_days: int
-    badtide_days: int
-    seed: Optional[int] = None
-    factories: FactoryConfig
 """
 
 FactoryConfig = create_model(
@@ -111,16 +100,6 @@ SimulationConfig = create_model(
 for name, field in CommonConfig.model_fields.items():
     SimulationConfig.model_fields[name] = field
 SimulationConfig.model_rebuild(force=True)
-
-OptimizationConfig = create_model(
-    "OptimizationConfig",
-    **{ConfigName.ITERATIONS: int},
-)
-
-# Flatten CommonConfig into OptimizationConfig
-for name, field in CommonConfig.model_fields.items():
-    OptimizationConfig.model_fields[name] = field
-OptimizationConfig.model_rebuild(force=True)
 
 
 class ProducerGroup(NamedTuple):

@@ -43,15 +43,11 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
         config.energy_mix
     )
 
-    # Handle seeding outside Numba. np.random.seed(None) is valid and re-initializes from entropy.
+    # Seeding externally as requested
     np.random.seed(config.seed)
-
-    # Generate seeds for each sample to ensure reproducibility in parallel
-    sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
 
     return jit_parallel_simulation(
         config.to_parallel_config,
-        sample_seeds,
         total_consumption_rate,
         ProducerGroup(num_large_windmills, large_windmill_spec.power),
         ProducerGroup(num_windmills, windmill_spec.power),
@@ -64,7 +60,6 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
 @njit(parallel=True, cache=True)
 def jit_parallel_simulation(
     config: ParallelSimulationConfig,
-    sample_seeds: np.ndarray,
     total_consumption_rate: int,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
@@ -74,6 +69,9 @@ def jit_parallel_simulation(
 ) -> SimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
+
+    # Generate the array inside the jitted function to avoid memory transfer overhead
+    sample_seeds = np.random.randint(0, 2**31 - 1, size=config.samples)
 
     base_power_production = sim_helpers.calculate_base_power_production(
         total_hours,

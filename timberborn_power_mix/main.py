@@ -19,7 +19,7 @@ def simulate_visualization(**kwargs):
 
     res = run_simulation(config)
 
-    create_simulation_figure(res, config)
+    create_simulation_figure(config, res)
     plt.show()
 
 

@@ -16,7 +16,7 @@ from timberborn_power_mix.machines import ProducerName, BatteryName
 from timberborn_power_mix.models import ConfigName
 
 
-def create_simulation_figure(res: SimulationResult, config: SimulationConfig):
+def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     # Unpack data
     data = res.worst_sample
     run_empty_hours = res.aggregated_samples.hours_empty_results

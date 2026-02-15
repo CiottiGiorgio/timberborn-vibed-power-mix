@@ -55,5 +55,5 @@ def generate_reference_figure():
     Generates the reference plot figure.
     """
     res, config = generate_reference_simulation_data()
-    fig = create_simulation_figure(res, config)
+    fig = create_simulation_figure(config, res)
     return fig

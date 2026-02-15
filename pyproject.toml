@@ -21,7 +21,7 @@ dependencies = [
 packages = [{include = "timberborn_power_mix"}]
 
 [project.scripts]
-tb-power-mix = "timberborn_power_mix.main:main"
+tb-power-mix = "timberborn_power_mix.cli:cli"
 
 [tool.poetry.group.dev.dependencies]
 black = "^26"

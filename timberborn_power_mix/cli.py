@@ -1,5 +1,6 @@
 import click
 import inflect
+import logging
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
 from timberborn_power_mix.simulation.models import (
@@ -136,20 +137,20 @@ def add_energy_mix_params(func):
     return func
 
 
-def create_cli(simulate_callback):
-    @click.group()
-    def cli():
-        """Timberborn Power Mix Simulation Tool."""
-        pass
+@click.group()
+def cli():
+    """Timberborn Power Mix Simulation Tool."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    @cli.command(name="simulate")
-    @add_common_params
-    @add_energy_mix_params
-    def simulate_cmd(**kwargs):
-        """Simulate a configuration with the specified parameters."""
-        simulate_callback(**kwargs)
 
-    return cli
+@cli.command(name="simulate")
+@add_common_params
+@add_energy_mix_params
+def simulate_cmd(**kwargs):
+    """Simulate a configuration with the specified parameters."""
+    from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
+
+    simulation_orchestrator(**kwargs)
 
 
 def parse_common_config(**kwargs) -> CommonConfig:
@@ -195,3 +196,7 @@ def parse_simulation_config(**kwargs) -> SimulationConfig:
         **common_config.model_dump(),
         energy_mix=energy_mix,
     )
+
+
+if __name__ == "__main__":
+    cli()

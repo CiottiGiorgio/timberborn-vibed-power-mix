@@ -2,15 +2,12 @@ import logging
 import matplotlib.pyplot as plt
 from timberborn_power_mix.simulation.core import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
-from timberborn_power_mix.cli import (
-    create_cli,
-    parse_simulation_config,
-)
+from timberborn_power_mix.cli import parse_simulation_config
 
 logger = logging.getLogger(__name__)
 
 
-def simulate_visualization(**kwargs):
+def simulation_orchestrator(**kwargs):
     """Visualize power and energy profiles for a single configuration."""
 
     config = parse_simulation_config(**kwargs)
@@ -21,13 +18,3 @@ def simulate_visualization(**kwargs):
 
     create_simulation_figure(config, res)
     plt.show()
-
-
-def main():
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-    cli = create_cli(simulate_visualization)
-    cli()
-
-
-if __name__ == "__main__":
-    main()

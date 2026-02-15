@@ -72,7 +72,7 @@ def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str
     return season_boundaries
 
 
-@njit
+@njit(inline="always")
 def calculate_base_power_production(
     total_hours: int,
     working_hours: int,

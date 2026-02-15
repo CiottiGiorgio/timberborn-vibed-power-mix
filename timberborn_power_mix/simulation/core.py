@@ -74,35 +74,22 @@ def jit_parallel_simulation(
 ) -> SimulationResult:
     """Manages parallel simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
-    time_hours = np.arange(total_hours)
+
+    base_power_production = sim_helpers.calculate_base_power_production(
+        total_hours,
+        config.working_hours,
+        config.wet_days,
+        config.dry_days,
+        config.badtide_days,
+        power_wheels,
+        water_wheels,
+    )
 
     # Pre-calculate static profiles
+    time_hours = np.arange(total_hours)
     hour_of_day = time_hours % consts.HOURS_PER_DAY
     is_working_hour = hour_of_day < config.working_hours
-
-    hours_per_wet = config.wet_days * consts.HOURS_PER_DAY
-    hours_per_dry = config.dry_days * consts.HOURS_PER_DAY
-    hours_per_badtide = config.badtide_days * consts.HOURS_PER_DAY
-    cycle_length_hours = 2 * hours_per_wet + hours_per_dry + hours_per_badtide
-
-    hour_of_cycle = time_hours % cycle_length_hours
-    is_first_wet = hour_of_cycle < hours_per_wet
-    is_second_wet = (hour_of_cycle >= (hours_per_wet + hours_per_dry)) & (
-        hour_of_cycle < (2 * hours_per_wet + hours_per_dry)
-    )
-    is_badtide = hour_of_cycle >= (2 * hours_per_wet + hours_per_dry)
-    is_water_active = is_first_wet | is_second_wet | is_badtide
-
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
-
-    power_wheel_production_rate = np.where(
-        is_working_hour, power_wheels.count * power_wheels.power, 0.0
-    )
-    water_wheel_production_rate = water_wheels.count * water_wheels.power
-    base_power_production = (
-        np.where(is_water_active, water_wheel_production_rate, 0.0)
-        + power_wheel_production_rate
-    )
 
     hours_empty_results = np.zeros(config.samples)
 

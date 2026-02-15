@@ -1,4 +1,6 @@
 from typing import Tuple, List
+import numpy as np
+from numba import njit
 
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import (
@@ -8,7 +10,11 @@ from timberborn_power_mix.machines import (
     battery_cost,
     battery_capacity,
 )
-from timberborn_power_mix.simulation.models import EnergyMixConfig, SimulationConfig
+from timberborn_power_mix.simulation.models import (
+    EnergyMixConfig,
+    SimulationConfig,
+    ProducerGroup,
+)
 from timberborn_power_mix.models import ConfigName
 
 
@@ -64,3 +70,44 @@ def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str
         season_boundaries.append((curr_day * consts.HOURS_PER_DAY, "Badtide"))
         curr_day += badtide_days
     return season_boundaries
+
+
+@njit(parallel=True, cache=True)
+def calculate_base_power_production(
+    total_hours: int,
+    working_hours: int,
+    wet_days: int,
+    dry_days: int,
+    badtide_days: int,
+    power_wheels: ProducerGroup,
+    water_wheels: ProducerGroup,
+) -> np.ndarray:
+    """Calculates the deterministic base power production profile (water wheels and power wheels)."""
+    time_hours = np.arange(total_hours)
+
+    # Pre-calculate static profiles
+    hour_of_day = time_hours % consts.HOURS_PER_DAY
+    is_working_hour = hour_of_day < working_hours
+
+    hours_per_wet = wet_days * consts.HOURS_PER_DAY
+    hours_per_dry = dry_days * consts.HOURS_PER_DAY
+    hours_per_badtide = badtide_days * consts.HOURS_PER_DAY
+    cycle_length_hours = 2 * hours_per_wet + hours_per_dry + hours_per_badtide
+
+    hour_of_cycle = time_hours % cycle_length_hours
+    is_first_wet = hour_of_cycle < hours_per_wet
+    is_second_wet = (hour_of_cycle >= (hours_per_wet + hours_per_dry)) & (
+        hour_of_cycle < (2 * hours_per_wet + hours_per_dry)
+    )
+    is_badtide = hour_of_cycle >= (2 * hours_per_wet + hours_per_dry)
+    is_water_active = is_first_wet | is_second_wet | is_badtide
+
+    power_wheel_production_rate = np.where(
+        is_working_hour, power_wheels.count * power_wheels.power, 0.0
+    )
+    water_wheel_production_rate = water_wheels.count * water_wheels.power
+
+    return (
+        np.where(is_water_active, water_wheel_production_rate, 0.0)
+        + power_wheel_production_rate
+    )

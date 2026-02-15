@@ -47,13 +47,13 @@ def generate_reference_simulation_data():
     # 2. Run simulation
     res = run_simulation(config)
 
-    return res.worst_sample, res.aggregated_samples.hours_empty_results, config
+    return res, config
 
 
 def generate_reference_figure():
     """
     Generates the reference plot figure.
     """
-    worst_run_data, run_empty_hours, config = generate_reference_simulation_data()
-    fig = create_simulation_figure(worst_run_data, config, run_empty_hours)
+    res, config = generate_reference_simulation_data()
+    fig = create_simulation_figure(res, config)
     return fig

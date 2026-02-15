@@ -27,7 +27,8 @@ def test_visual_output(tmp_path):
     fig.savefig(str(generated_image_path))
 
     # 2. Verify some deterministic outputs (sanity check)
-    worst_run_data, run_empty_hours, config = generate_reference_simulation_data()
+    res, config = generate_reference_simulation_data()
+    run_empty_hours = res.aggregated_samples.hours_empty_results
     max_hours_empty = max(run_empty_hours) if len(run_empty_hours) > 0 else -1
 
     # Cost calculation:

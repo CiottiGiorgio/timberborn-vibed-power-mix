@@ -1,5 +1,4 @@
 from typing import Tuple, List
-import numpy as np
 
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import (
@@ -8,7 +7,6 @@ from timberborn_power_mix.machines import (
     BatteryName,
     battery_cost,
     battery_capacity,
-    FACTORY_DATABASE,
 )
 from timberborn_power_mix.simulation.models import EnergyMixConfig, SimulationConfig
 from timberborn_power_mix.models import ConfigName
@@ -66,21 +64,3 @@ def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str
         season_boundaries.append((curr_day * consts.HOURS_PER_DAY, "Badtide"))
         curr_day += badtide_days
     return season_boundaries
-
-
-def calculate_power_consumption_profile(config: SimulationConfig) -> np.ndarray:
-    days = getattr(config, ConfigName.DAYS)
-    working_hours = getattr(config, ConfigName.WORKING_HOURS)
-    factories = getattr(config, ConfigName.FACTORIES)
-
-    total_hours = days * consts.HOURS_PER_DAY
-    time_hours = np.arange(total_hours)
-    hour_of_day = time_hours % consts.HOURS_PER_DAY
-    is_working_hour = hour_of_day < working_hours
-
-    total_consumption_rate = 0
-    for name, spec in FACTORY_DATABASE.items():
-        count = getattr(factories, name)
-        total_consumption_rate += count * spec.power
-
-    return np.where(is_working_hour, total_consumption_rate, 0.0)

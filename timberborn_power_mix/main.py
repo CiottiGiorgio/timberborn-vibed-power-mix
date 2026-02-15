@@ -19,9 +19,7 @@ def simulate_visualization(**kwargs):
 
     res = run_simulation(config)
 
-    create_simulation_figure(
-        res.worst_sample, config, res.aggregated_samples.hours_empty_results
-    )
+    create_simulation_figure(res, config)
     plt.show()
 
 

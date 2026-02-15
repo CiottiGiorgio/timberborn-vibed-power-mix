@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation.models import SimulationSample, SimulationConfig
+from timberborn_power_mix.simulation.models import SimulationConfig, SimulationResult
 from timberborn_power_mix.plots.power_plot import plot_power
 from timberborn_power_mix.plots.energy_plot import plot_energy
 from timberborn_power_mix.plots.surplus_plot import plot_surplus
@@ -11,16 +11,17 @@ from timberborn_power_mix.simulation.helpers import (
     calculate_total_cost,
     calculate_total_battery_capacity,
     calculate_season_boundaries,
-    calculate_power_consumption_profile,
 )
 from timberborn_power_mix.machines import ProducerName, BatteryName
 from timberborn_power_mix.models import ConfigName
 
 
-def create_simulation_figure(
-    data: SimulationSample, config: SimulationConfig, run_empty_hours
-):
+def create_simulation_figure(res: SimulationResult, config: SimulationConfig):
     # Unpack data
+    data = res.worst_sample
+    run_empty_hours = res.aggregated_samples.hours_empty_results
+    power_consumption = res.aggregated_samples.power_consumption
+
     days = getattr(config, ConfigName.DAYS)
     total_hours = days * consts.HOURS_PER_DAY
 
@@ -28,7 +29,6 @@ def create_simulation_figure(
     time_days = time_hours / consts.HOURS_PER_DAY
 
     power_production = data.power_production
-    power_consumption = calculate_power_consumption_profile(config)
     battery_charge = data.battery_charge
 
     # Recompute derived values

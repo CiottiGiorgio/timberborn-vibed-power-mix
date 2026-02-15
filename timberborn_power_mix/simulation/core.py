@@ -64,7 +64,6 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     return SimulationResult(
         hours_empty_results=parallel_res.aggregated_samples.hours_empty_results,
         worst_sample=parallel_res.worst_sample,
-        average_final_surplus=parallel_res.aggregated_samples.average_final_surplus,
     )
 
 
@@ -101,7 +100,6 @@ def jit_parallel_simulation(
     is_water_active = is_first_wet | is_second_wet | is_badtide
 
     power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
-    total_consumption_energy = np.sum(power_consumption)
 
     power_wheel_production_rate = np.where(
         is_working_hour, power_wheels.count * power_wheels.power, 0.0
@@ -113,7 +111,6 @@ def jit_parallel_simulation(
     )
 
     hours_empty_results = np.zeros(config.samples)
-    total_final_surplus = 0.0
 
     for s in prange(config.samples):
         res = jit_stochastic_simulation(
@@ -126,7 +123,6 @@ def jit_parallel_simulation(
             total_hours,
         )
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
-        total_final_surplus += np.sum(res.power_production) - total_consumption_energy
 
     worst_idx = np.argmax(hours_empty_results)
 
@@ -143,7 +139,6 @@ def jit_parallel_simulation(
 
     aggregated_samples = AggregatedSamples(
         hours_empty_results=hours_empty_results,
-        average_final_surplus=total_final_surplus / config.samples,
         power_consumption=power_consumption,
     )
 

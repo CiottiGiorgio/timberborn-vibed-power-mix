@@ -132,8 +132,8 @@ def jit_parallel_simulation(
     )
 
     aggregated_samples = AggregatedSamples(
-        hours_empty_results=hours_empty_results,
         power_consumption=power_consumption,
+        hours_empty_results=hours_empty_results,
     )
 
     return SimulationResult(

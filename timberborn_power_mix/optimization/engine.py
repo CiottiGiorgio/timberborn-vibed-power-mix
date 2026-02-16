@@ -1,7 +1,7 @@
 import logging
 import math
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Optional
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
@@ -87,7 +87,6 @@ def mutate_mix(
             direction = -1 if rng.random() < reduction_bias else 1
 
         # Aggressive step sizes scaled by temperature factor (0.0 to 1.0)
-        # At high temp, we can jump up to 20 units. At low temp, we fine-tune.
         max_step = max(1, int(20 * temp_factor))
         step = rng.integers(1, max_step, endpoint=True)
 
@@ -114,12 +113,11 @@ def calculate_energy(
     return cost
 
 
-def run_optimization(opt_config: OptimizationConfig):
+def run_optimization(
+    opt_config: OptimizationConfig,
+) -> Tuple[Optional[EnergyMixConfig], float]:
     iterations = getattr(opt_config, ConfigName.ITERATION)
     seed = getattr(opt_config, ConfigName.SEED)
-    logger.info(
-        f"Starting AGGRESSIVE guided simulated annealing for {iterations} iterations..."
-    )
 
     rng = np.random.default_rng(seed)
 
@@ -142,13 +140,13 @@ def run_optimization(opt_config: OptimizationConfig):
     best_feasible_cost = cost if is_feasible else float("inf")
 
     # Annealing parameters
-    initial_temp = 5000.0  # Higher initial temp for more exploration
+    initial_temp = 5000.0
     final_temp = 1.0
 
     for i in range(iterations):
         # Progress factor (1.0 at start, 0.0 at end)
         progress_factor = 1.0 - (i / iterations)
-        temp = initial_temp * (progress_factor**2) + final_temp  # Quadratic cooling
+        temp = initial_temp * (progress_factor**2) + final_temp
 
         # Propose aggressive mutation
         next_mix = mutate_mix(
@@ -167,7 +165,6 @@ def run_optimization(opt_config: OptimizationConfig):
             accept = True
         else:
             delta_e = next_energy - current_energy
-            # Metropolis criterion
             accept = rng.random() < math.exp(-delta_e / temp)
 
         if accept:
@@ -189,13 +186,4 @@ def run_optimization(opt_config: OptimizationConfig):
                 f"Progress: {i}/{iterations} iterations... Current Energy: {current_energy:.2f}, Temp: {temp:.2f}"
             )
 
-    if best_feasible_mix:
-        logger.info("Optimization finished!")
-        logger.info(f"Best Energy Mix (Cost: {best_feasible_cost}):")
-        for field, value in best_feasible_mix.model_dump().items():
-            if value > 0:
-                logger.info(f"  {field}: {value}")
-    else:
-        logger.warning(
-            "Could not find a feasible solution within the given iterations."
-        )
+    return best_feasible_mix, best_feasible_cost

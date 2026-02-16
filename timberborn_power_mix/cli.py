@@ -164,10 +164,10 @@ def simulate_cmd(**kwargs):
 )
 def optimize_cmd(**kwargs):
     """Optimize the energy mix for a given factory configuration."""
-    from timberborn_power_mix.optimization.engine import run_optimization
+    from timberborn_power_mix.optimization.orchestrator import optimization_orchestrator
 
     config = parse_optimization_config(**kwargs)
-    run_optimization(config)
+    optimization_orchestrator(config)
 
 
 def parse_common_config(**kwargs) -> CommonConfig:

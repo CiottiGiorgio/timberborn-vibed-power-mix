@@ -18,11 +18,6 @@ import timberborn_power_mix.optimization.helpers as opt_helpers
 logger = logging.getLogger(__name__)
 
 
-def is_feasible_solution(reliability_score: float, threshold_hours: float) -> bool:
-    """Checks if the reliability score is within the allowed threshold."""
-    return reliability_score <= threshold_hours
-
-
 def evaluate_fitness(config: SimulationConfig) -> FitnessResult:
     """
     Returns FitnessResult(cost, reliability_score, avg_production, avg_consumption).
@@ -70,7 +65,7 @@ def mutate_mix(
     - Mutates 1 to 2 fields.
     - Biases field selection and direction based on production/consumption ratio.
     """
-    is_feasible = is_feasible_solution(res.reliability_score, threshold_hours)
+    is_feasible = res.reliability_score <= threshold_hours
     mix_data = mix.model_dump()
 
     producer_fields = list(PRODUCER_DATABASE.keys())
@@ -146,12 +141,12 @@ def run_optimization(
 
     best_feasible_mix = (
         current_mix
-        if is_feasible_solution(current_res.reliability_score, threshold_hours)
+        if current_res.reliability_score <= threshold_hours
         else None
     )
     best_feasible_cost = (
         current_res.cost
-        if is_feasible_solution(current_res.reliability_score, threshold_hours)
+        if current_res.reliability_score <= threshold_hours
         else float("inf")
     )
 
@@ -170,12 +165,8 @@ def run_optimization(
 
         # Acceptance logic (Hill Climbing)
         accept = False
-        curr_feasible = is_feasible_solution(
-            current_res.reliability_score, threshold_hours
-        )
-        next_feasible = is_feasible_solution(
-            next_res.reliability_score, threshold_hours
-        )
+        curr_feasible = current_res.reliability_score <= threshold_hours
+        next_feasible = next_res.reliability_score <= threshold_hours
 
         if not curr_feasible:
             if next_feasible:

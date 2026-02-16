@@ -6,7 +6,7 @@ from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
 )
-from timberborn_power_mix.optimization.models import OptimizationConfig
+from timberborn_power_mix.optimization.models import OptimizationConfig, FitnessResult
 from timberborn_power_mix.simulation.engine import run_simulation
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
@@ -19,24 +19,22 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 logger = logging.getLogger(__name__)
 
 
-def evaluate_fitness(config: SimulationConfig) -> Tuple[bool, float, float]:
+def is_feasible_solution(reliability_score: float, threshold_hours: float) -> bool:
+    """Checks if the reliability score is within the allowed threshold."""
+    return reliability_score <= threshold_hours
+
+
+def evaluate_fitness(config: SimulationConfig) -> FitnessResult:
     """
-    Returns (is_feasible, cost, reliability_score).
+    Returns FitnessResult(cost, reliability_score).
     reliability_score is the 95th percentile of hours empty.
     """
     res = run_simulation(config)
-    total_hours = config.days * consts.HOURS_PER_DAY
-
-    # 5% of time empty threshold
-    threshold_hours = 0.05 * total_hours
-
     # 95th percentile of hours empty
     percentile_95 = np.percentile(res.aggregated_samples.hours_empty_results, 95)
-
-    is_feasible = percentile_95 <= threshold_hours
     cost = sim_helpers.calculate_total_wood_cost(config.energy_mix)
 
-    return is_feasible, cost, percentile_95
+    return FitnessResult(cost=cost, reliability_score=percentile_95)
 
 
 def get_random_mix(
@@ -56,7 +54,6 @@ def get_random_mix(
 def mutate_mix(
     rng: np.random.Generator,
     mix: EnergyMixConfig,
-    is_feasible: bool,
     reliability_score: float,
     threshold_hours: float,
     temp_factor: float,
@@ -67,6 +64,7 @@ def mutate_mix(
     - Uses larger step sizes scaled by temperature.
     - Strongly biased by feasibility.
     """
+    is_feasible = is_feasible_solution(reliability_score, threshold_hours)
     mix_data = mix.model_dump()
     fields = list(mix_data.keys())
 
@@ -102,12 +100,12 @@ def mutate_mix(
 
 
 def calculate_energy(
-    is_feasible: bool, cost: float, reliability_score: float, threshold_hours: float
+    cost: float, reliability_score: float, threshold_hours: float
 ) -> float:
     """
     Energy function for simulated annealing.
     """
-    if not is_feasible:
+    if not is_feasible_solution(reliability_score, threshold_hours):
         # Heavy penalty for infeasibility to force the search into the feasible region
         return 10_000_000 + (reliability_score - threshold_hours) * 5000
     return cost
@@ -133,11 +131,23 @@ def run_optimization(
     config = SimulationConfig(
         **common_data, energy_mix=current_mix, seed=int(rng.integers(0, 2**32 - 1))
     )
-    is_feasible, cost, reliability = evaluate_fitness(config)
-    current_energy = calculate_energy(is_feasible, cost, reliability, threshold_hours)
+    current_res = evaluate_fitness(config)
+    current_energy = calculate_energy(
+        current_res.cost,
+        current_res.reliability_score,
+        threshold_hours,
+    )
 
-    best_feasible_mix = current_mix if is_feasible else None
-    best_feasible_cost = cost if is_feasible else float("inf")
+    best_feasible_mix = (
+        current_mix
+        if is_feasible_solution(current_res.reliability_score, threshold_hours)
+        else None
+    )
+    best_feasible_cost = (
+        current_res.cost
+        if is_feasible_solution(current_res.reliability_score, threshold_hours)
+        else float("inf")
+    )
 
     # Annealing parameters
     initial_temp = 5000.0
@@ -150,14 +160,20 @@ def run_optimization(
 
         # Propose aggressive mutation
         next_mix = mutate_mix(
-            rng, current_mix, is_feasible, reliability, threshold_hours, progress_factor
+            rng,
+            current_mix,
+            current_res.reliability_score,
+            threshold_hours,
+            progress_factor,
         )
         next_config = SimulationConfig(
             **common_data, energy_mix=next_mix, seed=int(rng.integers(0, 2**32 - 1))
         )
-        next_is_feasible, next_cost, next_reliability = evaluate_fitness(next_config)
+        next_res = evaluate_fitness(next_config)
         next_energy = calculate_energy(
-            next_is_feasible, next_cost, next_reliability, threshold_hours
+            next_res.cost,
+            next_res.reliability_score,
+            threshold_hours,
         )
 
         # Acceptance probability
@@ -170,15 +186,14 @@ def run_optimization(
         if accept:
             current_mix = next_mix
             current_energy = next_energy
-            is_feasible = next_is_feasible
-            reliability = next_reliability
+            current_res = next_res
 
-            if next_is_feasible:
-                if next_cost < best_feasible_cost:
-                    best_feasible_cost = next_cost
+            if is_feasible_solution(next_res.reliability_score, threshold_hours):
+                if next_res.cost < best_feasible_cost:
+                    best_feasible_cost = next_res.cost
                     best_feasible_mix = next_mix
                     logger.info(
-                        f"Iteration {i}: New best feasible mix found! Cost: {next_cost} (Temp: {temp:.2f})"
+                        f"Iteration {i}: New best feasible mix found! Cost: {next_res.cost} (Temp: {temp:.2f})"
                     )
 
         if i % 10 == 0 and i > 0:

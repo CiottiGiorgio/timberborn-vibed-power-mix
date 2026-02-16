@@ -1,3 +1,4 @@
+from typing import NamedTuple
 from pydantic import create_model, BaseModel
 from timberborn_power_mix.models import ConfigName, CommonConfig
 
@@ -35,3 +36,8 @@ OptimizationConfig = create_model(
 for name, field in CommonConfig.model_fields.items():
     OptimizationConfig.model_fields[name] = field
 OptimizationConfig.model_rebuild(force=True)
+
+
+class FitnessResult(NamedTuple):
+    cost: float
+    reliability_score: float

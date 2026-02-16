@@ -25,7 +25,7 @@ def is_feasible_solution(reliability_score: float, threshold_hours: float) -> bo
 
 def evaluate_fitness(config: SimulationConfig) -> FitnessResult:
     """
-    Returns FitnessResult(cost, reliability_score).
+    Returns FitnessResult(cost, reliability_score, avg_production, avg_consumption).
     reliability_score is the 95th percentile of hours empty.
     """
     res = run_simulation(config)
@@ -33,7 +33,16 @@ def evaluate_fitness(config: SimulationConfig) -> FitnessResult:
     percentile_95 = np.percentile(res.aggregated_samples.hours_empty_results, 95)
     cost = sim_helpers.calculate_total_wood_cost(config.energy_mix)
 
-    return FitnessResult(cost=cost, reliability_score=percentile_95)
+    # Calculate averages from simulation results
+    avg_consumption = np.mean(res.aggregated_samples.power_consumption)
+    avg_production = np.mean(res.worst_sample.power_production)
+
+    return FitnessResult(
+        cost=cost,
+        reliability_score=percentile_95,
+        avg_production=avg_production,
+        avg_consumption=avg_consumption,
+    )
 
 
 def get_random_mix(
@@ -53,28 +62,54 @@ def get_random_mix(
 def mutate_mix(
     rng: np.random.Generator,
     mix: EnergyMixConfig,
-    reliability_score: float,
+    res: FitnessResult,
     threshold_hours: float,
 ) -> EnergyMixConfig:
     """
     Guided mutation for hill climbing.
     - Mutates 1 to 2 fields.
-    - Biased by feasibility.
+    - Biases field selection and direction based on production/consumption ratio.
     """
-    is_feasible = is_feasible_solution(reliability_score, threshold_hours)
+    is_feasible = is_feasible_solution(res.reliability_score, threshold_hours)
     mix_data = mix.model_dump()
-    fields = list(mix_data.keys())
 
+    producer_fields = list(PRODUCER_DATABASE.keys())
+    battery_fields = [BatteryName.BATTERY, BatteryName.BATTERY_HEIGHT]
+    all_fields = producer_fields + battery_fields
+
+    # 1. Determine field selection weights
+    weights = np.ones(len(all_fields))
+    if not is_feasible:
+        if res.avg_production < res.avg_consumption:
+            # Production is the bottleneck: strongly bias towards producers
+            for i, field in enumerate(all_fields):
+                if field in producer_fields:
+                    weights[i] = 10.0
+        else:
+            # Production is okay: bias towards batteries to handle peaks/droughts
+            for i, field in enumerate(all_fields):
+                if field in battery_fields:
+                    weights[i] = 5.0
+
+    weights /= np.sum(weights)
+
+    # 2. Select fields to mutate
     num_to_mutate = rng.integers(1, 2, endpoint=True)
-    fields_to_mutate = rng.choice(fields, size=num_to_mutate, replace=False)
+    fields_to_mutate = rng.choice(
+        all_fields, size=num_to_mutate, replace=False, p=weights
+    )
 
+    # 3. Apply mutations
     for field in fields_to_mutate:
         if not is_feasible:
-            # Infeasible: 80% chance to increase
-            direction = 1 if rng.random() < 0.8 else -1
+            # Infeasible: bias towards increasing the selected field
+            if res.avg_production < res.avg_consumption and field in producer_fields:
+                direction = 1 if rng.random() < 0.95 else -1
+            else:
+                direction = 1 if rng.random() < 0.85 else -1
         else:
-            # Feasible: 80% chance to decrease (cost reduction)
-            direction = -1 if rng.random() < 0.8 else 1
+            # Feasible: bias towards decreasing to reduce cost
+            direction = -1 if rng.random() < 0.85 else 1
 
         step = rng.integers(1, 5, endpoint=True)
 
@@ -125,7 +160,7 @@ def run_optimization(
         next_mix = mutate_mix(
             rng,
             current_mix,
-            current_res.reliability_score,
+            current_res,
             threshold_hours,
         )
         next_config = SimulationConfig(

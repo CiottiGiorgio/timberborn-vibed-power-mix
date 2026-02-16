@@ -41,3 +41,5 @@ OptimizationConfig.model_rebuild(force=True)
 class FitnessResult(NamedTuple):
     cost: float
     reliability_score: float
+    avg_production: float
+    avg_consumption: float

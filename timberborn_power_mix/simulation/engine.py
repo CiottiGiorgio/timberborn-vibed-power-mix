@@ -21,7 +21,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
         sim_helpers.seed(config.seed)
 
     return run_jit_simulation(
-        config.to_jit_config, sim_helpers.calculate_jit_cached_consts(config)
+        config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
     )
 
 

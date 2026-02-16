@@ -77,7 +77,6 @@ class JitSimulationCachedConsts(NamedTuple):
 
 
 class SimulationConfigBase(BaseModel):
-    @property
     def to_jit_config(self) -> JitSimulationConfig:
         return JitSimulationConfig(
             samples=getattr(self, ConfigName.SAMPLES),

@@ -13,7 +13,7 @@ from timberborn_power_mix.machines import (
 )
 from timberborn_power_mix import consts
 from timberborn_power_mix.models import ConfigName
-import timberborn_power_mix.simulation.helpers as sim_helpers
+import timberborn_power_mix.optimization.helpers as opt_helpers
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def evaluate_fitness(config: SimulationConfig) -> FitnessResult:
     res = run_simulation(config)
     # 95th percentile of hours empty
     percentile_95 = np.percentile(res.aggregated_samples.hours_empty_results, 95)
-    cost = sim_helpers.calculate_total_wood_cost(config.energy_mix)
+    cost = opt_helpers.calculate_total_wood_cost(config.energy_mix)
 
     # Calculate averages from simulation results
     avg_consumption = float(np.mean(res.aggregated_samples.power_consumption))
@@ -170,8 +170,12 @@ def run_optimization(
 
         # Acceptance logic (Hill Climbing)
         accept = False
-        curr_feasible = is_feasible_solution(current_res.reliability_score, threshold_hours)
-        next_feasible = is_feasible_solution(next_res.reliability_score, threshold_hours)
+        curr_feasible = is_feasible_solution(
+            current_res.reliability_score, threshold_hours
+        )
+        next_feasible = is_feasible_solution(
+            next_res.reliability_score, threshold_hours
+        )
 
         if not curr_feasible:
             if next_feasible:

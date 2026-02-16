@@ -3,67 +3,32 @@ from numba import njit
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     JitSimulationConfig,
-)
-from timberborn_power_mix.machines import (
-    PRODUCER_DATABASE,
-    ProducerName,
+    JitSimulationCachedConsts,
 )
 from timberborn_power_mix import consts
 from timberborn_power_mix.simulation.models import (
     SimulationSample,
     AggregatedSamples,
-    ProducerGroup,
     SimulationResult,
+    ProducerGroup,
 )
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
 def run_simulation(config: SimulationConfig) -> SimulationResult:
     """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
-    # Consumption
-    total_consumption_rate = sim_helpers.calculate_total_consumption_rate(
-        config.factories
-    )
-
-    # Production specs
-    wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]
-    windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILL]
-    large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILL]
-    power_wheel_spec = PRODUCER_DATABASE[ProducerName.POWER_WHEEL]
-
-    # Counts
-    num_water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
-    num_windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
-    num_large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
-    num_power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
-
-    total_battery_capacity = sim_helpers.calculate_total_battery_capacity(
-        config.energy_mix
-    )
-
     if config.seed:
         sim_helpers.seed(config.seed)
 
     return run_jit_simulation(
-        config.to_jit_config,
-        total_consumption_rate,
-        ProducerGroup(num_large_windmills, large_windmill_spec.power),
-        ProducerGroup(num_windmills, windmill_spec.power),
-        ProducerGroup(num_power_wheels, power_wheel_spec.power),
-        ProducerGroup(num_water_wheels, wheel_spec.power),
-        total_battery_capacity,
+        config.to_jit_config, sim_helpers.calculate_jit_cached_consts(config)
     )
 
 
 @njit(cache=True)
 def run_jit_simulation(
     config: JitSimulationConfig,
-    total_consumption_rate: int,
-    large_windmills: ProducerGroup,
-    windmills: ProducerGroup,
-    power_wheels: ProducerGroup,
-    water_wheels: ProducerGroup,
-    total_battery_capacity: float,
+    sim_consts: JitSimulationCachedConsts,
 ) -> SimulationResult:
     """Manages simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
@@ -79,11 +44,13 @@ def run_jit_simulation(
         config.wet_days,
         config.dry_days,
         config.badtide_days,
-        power_wheels,
-        water_wheels,
+        sim_consts.power_wheels,
+        sim_consts.water_wheels,
     )
 
-    power_consumption = np.where(is_working_hour, total_consumption_rate, 0.0)
+    power_consumption = np.where(
+        is_working_hour, sim_consts.total_consumption_rate, 0.0
+    )
 
     hours_empty_results = np.zeros(config.samples)
     worst_sample = SimulationSample(
@@ -96,9 +63,9 @@ def run_jit_simulation(
         res = jit_stochastic_simulation(
             base_power_production,
             power_consumption,
-            large_windmills,
-            windmills,
-            total_battery_capacity,
+            sim_consts.large_windmills,
+            sim_consts.windmills,
+            sim_consts.total_battery_capacity,
             total_hours,
         )
         hours_empty = np.sum(res.battery_charge <= 0)

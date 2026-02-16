@@ -58,6 +58,24 @@ class JitSimulationConfig(NamedTuple):
     seed: Optional[int] = None
 
 
+class ProducerGroup(NamedTuple):
+    """Combines a machine count with its individual power production rate."""
+
+    count: int
+    power: int
+
+
+class JitSimulationCachedConsts(NamedTuple):
+    """Constants for the jitted simulation that don't change between samples."""
+
+    total_consumption_rate: int
+    total_battery_capacity: float
+    large_windmills: ProducerGroup
+    windmills: ProducerGroup
+    power_wheels: ProducerGroup
+    water_wheels: ProducerGroup
+
+
 class SimulationConfigBase(BaseModel):
     @property
     def to_jit_config(self) -> JitSimulationConfig:
@@ -82,13 +100,6 @@ SimulationConfig = create_model(
 for name, field in CommonConfig.model_fields.items():
     SimulationConfig.model_fields[name] = field
 SimulationConfig.model_rebuild(force=True)
-
-
-class ProducerGroup(NamedTuple):
-    """Combines a machine count with its individual power production rate."""
-
-    count: int
-    power: int
 
 
 class SimulationSample(NamedTuple):

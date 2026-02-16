@@ -15,6 +15,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
     ProducerGroup,
+    JitSimulationCachedConsts,
 )
 from timberborn_power_mix.models import ConfigName, FactoryConfig
 
@@ -53,6 +54,34 @@ def calculate_total_consumption_rate(factories: FactoryConfig) -> int:
         count = getattr(factories, name)
         total_consumption_rate += count * spec.power
     return total_consumption_rate
+
+
+def calculate_jit_cached_consts(config: SimulationConfig) -> JitSimulationCachedConsts:
+    # Consumption
+    total_consumption_rate = calculate_total_consumption_rate(config.factories)
+
+    # Production specs
+    wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]
+    windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILL]
+    large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILL]
+    power_wheel_spec = PRODUCER_DATABASE[ProducerName.POWER_WHEEL]
+
+    # Counts
+    num_water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
+    num_windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
+    num_large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
+    num_power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
+
+    total_battery_capacity = calculate_total_battery_capacity(config.energy_mix)
+
+    return JitSimulationCachedConsts(
+        total_consumption_rate=total_consumption_rate,
+        total_battery_capacity=total_battery_capacity,
+        large_windmills=ProducerGroup(num_large_windmills, large_windmill_spec.power),
+        windmills=ProducerGroup(num_windmills, windmill_spec.power),
+        power_wheels=ProducerGroup(num_power_wheels, power_wheel_spec.power),
+        water_wheels=ProducerGroup(num_water_wheels, wheel_spec.power),
+    )
 
 
 def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str]]:

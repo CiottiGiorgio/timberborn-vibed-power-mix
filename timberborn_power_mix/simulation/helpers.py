@@ -21,6 +21,7 @@ from timberborn_power_mix.models import ConfigName, FactoryConfig
 
 
 def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> float:
+    """Calculates the total wood cost of all machines in the energy mix."""
     wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]
     windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILL]
     large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILL]
@@ -43,12 +44,14 @@ def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> float:
 
 
 def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
+    """Calculates the total energy storage capacity of all batteries in the mix."""
     num_batteries = getattr(energy_mix, BatteryName.BATTERY)
     battery_height = getattr(energy_mix, BatteryName.BATTERY_HEIGHT)
     return num_batteries * battery_capacity(battery_height)
 
 
 def calculate_total_consumption_rate(factories: FactoryConfig) -> int:
+    """Calculates the total power consumption rate of all active factories."""
     total_consumption_rate = 0
     for name, spec in FACTORY_DATABASE.items():
         count = getattr(factories, name)
@@ -57,6 +60,7 @@ def calculate_total_consumption_rate(factories: FactoryConfig) -> int:
 
 
 def calculate_jit_cached_consts(config: SimulationConfig) -> JitSimulationCachedConsts:
+    """Pre-calculates static simulation constants from the full configuration."""
     # Consumption
     total_consumption_rate = calculate_total_consumption_rate(config.factories)
 
@@ -85,6 +89,7 @@ def calculate_jit_cached_consts(config: SimulationConfig) -> JitSimulationCached
 
 
 def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str]]:
+    """Determines the start hour and name of each season in the simulation timeline."""
     season_boundaries = []
     curr_day = 0
     days = getattr(config, ConfigName.DAYS)

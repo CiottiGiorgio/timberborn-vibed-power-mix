@@ -94,13 +94,6 @@ def add_common_params(func):
         show_default=True,
         help="Number of days for the simulation",
     )(func)
-    func = click.option(
-        f"--{ConfigName.SAMPLES.replace('_', '-')}",
-        type=int,
-        default=consts.DEFAULT_SAMPLES,
-        show_default=True,
-        help="Number of samples per simulation",
-    )(func)
 
     return func
 
@@ -145,6 +138,13 @@ def cli():
 @cli.command(name="simulate")
 @add_common_params
 @add_energy_mix_params
+@click.option(
+    f"--{ConfigName.SAMPLES.replace('_', '-')}",
+    type=int,
+    default=consts.DEFAULT_SIMULATION_SAMPLES,
+    show_default=True,
+    help="Number of samples per simulation",
+)
 def simulate_cmd(**kwargs):
     """Simulate a configuration with the specified parameters."""
     from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
@@ -161,6 +161,13 @@ def simulate_cmd(**kwargs):
     default=consts.DEFAULT_ITERATIONS,
     show_default=True,
     help="Number of optimization iterations",
+)
+@click.option(
+    f"--{ConfigName.SAMPLES.replace('_', '-')}",
+    type=int,
+    default=consts.DEFAULT_OPTIMIZATION_SAMPLES,
+    show_default=True,
+    help="Number of samples per simulation during optimization",
 )
 def optimize_cmd(**kwargs):
     """Optimize the energy mix for a given factory configuration."""

@@ -6,7 +6,6 @@ from timberborn_power_mix.simulation.models import (
 )
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
-    FACTORY_DATABASE,
     ProducerName,
 )
 from timberborn_power_mix import consts
@@ -22,10 +21,9 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 def run_simulation(config: SimulationConfig) -> SimulationResult:
     """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
     # Consumption
-    total_consumption_rate = 0
-    for name, spec in FACTORY_DATABASE.items():
-        count = getattr(config.factories, name)
-        total_consumption_rate += count * spec.power
+    total_consumption_rate = sim_helpers.calculate_total_consumption_rate(
+        config.factories
+    )
 
     # Production specs
     wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]

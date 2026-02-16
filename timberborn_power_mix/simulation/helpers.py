@@ -5,6 +5,7 @@ from numba import njit
 from timberborn_power_mix import consts
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
+    FACTORY_DATABASE,
     ProducerName,
     BatteryName,
     battery_cost,
@@ -15,7 +16,7 @@ from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     ProducerGroup,
 )
-from timberborn_power_mix.models import ConfigName
+from timberborn_power_mix.models import ConfigName, FactoryConfig
 
 
 def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> float:
@@ -44,6 +45,14 @@ def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
     num_batteries = getattr(energy_mix, BatteryName.BATTERY)
     battery_height = getattr(energy_mix, BatteryName.BATTERY_HEIGHT)
     return num_batteries * battery_capacity(battery_height)
+
+
+def calculate_total_consumption_rate(factories: FactoryConfig) -> int:
+    total_consumption_rate = 0
+    for name, spec in FACTORY_DATABASE.items():
+        count = getattr(factories, name)
+        total_consumption_rate += count * spec.power
+    return total_consumption_rate
 
 
 def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str]]:

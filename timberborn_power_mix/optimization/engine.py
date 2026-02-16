@@ -1,5 +1,4 @@
 import logging
-import random
 import math
 import numpy as np
 from typing import Tuple
@@ -41,18 +40,21 @@ def evaluate_fitness(config: SimulationConfig) -> Tuple[bool, float, float]:
 
 
 def get_random_mix(
-    max_machines: int = 100, max_battery_height: int = 20
+    rng: np.random.Generator, max_machines: int = 100, max_battery_height: int = 20
 ) -> EnergyMixConfig:
     mix_data = {
-        BatteryName.BATTERY: random.randint(0, max_machines),
-        BatteryName.BATTERY_HEIGHT: float(random.randint(1, max_battery_height)),
+        BatteryName.BATTERY: rng.integers(0, max_machines, endpoint=True),
+        BatteryName.BATTERY_HEIGHT: float(
+            rng.integers(1, max_battery_height, endpoint=True)
+        ),
     }
     for name in PRODUCER_DATABASE.keys():
-        mix_data[name] = random.randint(0, max_machines)
+        mix_data[name] = int(rng.integers(0, max_machines, endpoint=True))
     return EnergyMixConfig(**mix_data)
 
 
 def mutate_mix(
+    rng: np.random.Generator,
     mix: EnergyMixConfig,
     is_feasible: bool,
     reliability_score: float,
@@ -69,33 +71,33 @@ def mutate_mix(
     fields = list(mix_data.keys())
 
     # Mutate 1 to 3 fields simultaneously
-    num_to_mutate = random.randint(1, 3)
-    fields_to_mutate = random.sample(fields, num_to_mutate)
+    num_to_mutate = rng.integers(1, 3, endpoint=True)
+    fields_to_mutate = rng.choice(fields, size=num_to_mutate, replace=False)
 
     for field in fields_to_mutate:
         # Determine direction based on feasibility
         if not is_feasible:
             # We need more power or storage - 90% bias to increase
-            direction = 1 if random.random() < 0.9 else -1
+            direction = 1 if rng.random() < 0.9 else -1
         else:
             # We are reliable, try to reduce cost
             # Bias towards reduction scales with safety margin and temperature
             safety_margin = (threshold_hours - reliability_score) / threshold_hours
             reduction_bias = 0.3 + safety_margin * 0.6
-            direction = -1 if random.random() < reduction_bias else 1
+            direction = -1 if rng.random() < reduction_bias else 1
 
         # Aggressive step sizes scaled by temperature factor (0.0 to 1.0)
         # At high temp, we can jump up to 20 units. At low temp, we fine-tune.
         max_step = max(1, int(20 * temp_factor))
-        step = random.randint(1, max_step)
+        step = rng.integers(1, max_step, endpoint=True)
 
         if field == BatteryName.BATTERY_HEIGHT:
             # Height changes are more sensitive
             height_step = max(1.0, 5.0 * temp_factor)
-            delta = direction * random.uniform(1.0, height_step)
+            delta = direction * rng.uniform(1.0, height_step)
             mix_data[field] = max(1.0, round(mix_data[field] + delta, 1))
         else:
-            mix_data[field] = max(0, mix_data[field] + direction * step)
+            mix_data[field] = max(0, int(mix_data[field] + direction * step))
 
     return EnergyMixConfig(**mix_data)
 
@@ -114,19 +116,25 @@ def calculate_energy(
 
 def run_optimization(opt_config: OptimizationConfig):
     iterations = getattr(opt_config, ConfigName.ITERATION)
+    seed = getattr(opt_config, ConfigName.SEED)
     logger.info(
         f"Starting AGGRESSIVE guided simulated annealing for {iterations} iterations..."
     )
 
+    rng = np.random.default_rng(seed)
+
     common_data = opt_config.model_dump()
     common_data.pop(ConfigName.ITERATION)
+    common_data.pop(ConfigName.SEED)
 
     total_hours = opt_config.days * consts.HOURS_PER_DAY
     threshold_hours = 0.05 * total_hours
 
     # Initial state
-    current_mix = get_random_mix()
-    config = SimulationConfig(**common_data, energy_mix=current_mix)
+    current_mix = get_random_mix(rng)
+    config = SimulationConfig(
+        **common_data, energy_mix=current_mix, seed=int(rng.integers(0, 2**32 - 1))
+    )
     is_feasible, cost, reliability = evaluate_fitness(config)
     current_energy = calculate_energy(is_feasible, cost, reliability, threshold_hours)
 
@@ -144,9 +152,11 @@ def run_optimization(opt_config: OptimizationConfig):
 
         # Propose aggressive mutation
         next_mix = mutate_mix(
-            current_mix, is_feasible, reliability, threshold_hours, progress_factor
+            rng, current_mix, is_feasible, reliability, threshold_hours, progress_factor
         )
-        next_config = SimulationConfig(**common_data, energy_mix=next_mix)
+        next_config = SimulationConfig(
+            **common_data, energy_mix=next_mix, seed=int(rng.integers(0, 2**32 - 1))
+        )
         next_is_feasible, next_cost, next_reliability = evaluate_fitness(next_config)
         next_energy = calculate_energy(
             next_is_feasible, next_cost, next_reliability, threshold_hours
@@ -158,7 +168,7 @@ def run_optimization(opt_config: OptimizationConfig):
         else:
             delta_e = next_energy - current_energy
             # Metropolis criterion
-            accept = random.random() < math.exp(-delta_e / temp)
+            accept = rng.random() < math.exp(-delta_e / temp)
 
         if accept:
             current_mix = next_mix

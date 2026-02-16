@@ -16,7 +16,7 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
 def run_simulation(config: SimulationConfig) -> SimulationResult:
-    """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
+    """Bridges pure Python and Numba by converting Pydantic configurations into JIT-compatible structures."""
     rng = np.random.default_rng(config.seed)
 
     return run_jit_simulation(
@@ -30,7 +30,11 @@ def run_jit_simulation(
     sim_consts: JitSimulationCachedConsts,
     rng: np.random.Generator,
 ) -> SimulationResult:
-    """Manages simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
+    """
+    Executes the Monte Carlo simulation and aggregates results across all samples.
+    Optimizes performance by pre-calculating shared read-only arrays (like base production and consumption)
+    to be reused across all stochastic runs.
+    """
     total_hours = config.days * consts.HOURS_PER_DAY
 
     # Pre-calculate static profiles

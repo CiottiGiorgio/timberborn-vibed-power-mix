@@ -34,8 +34,8 @@ def evaluate_fitness(config: SimulationConfig) -> FitnessResult:
     cost = sim_helpers.calculate_total_wood_cost(config.energy_mix)
 
     # Calculate averages from simulation results
-    avg_consumption = np.mean(res.aggregated_samples.power_consumption)
-    avg_production = np.mean(res.worst_sample.power_production)
+    avg_consumption = float(np.mean(res.aggregated_samples.power_consumption))
+    avg_production = float(np.mean(res.worst_sample.power_production))
 
     return FitnessResult(
         cost=cost,

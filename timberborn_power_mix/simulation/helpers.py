@@ -115,16 +115,6 @@ def calculate_season_boundaries(config: SimulationConfig) -> List[Tuple[int, str
     return season_boundaries
 
 
-@njit
-def seed(n: int) -> None:
-    """
-    Seeds the random number generator for Numba-jitted functions.
-    Seeding needs to happen from within a jitted function because Numba and NumPy
-    do not share the same random state.
-    """
-    np.random.seed(n)
-
-
 @njit(inline="always")
 def calculate_base_power_production(
     time_hours: np.ndarray,

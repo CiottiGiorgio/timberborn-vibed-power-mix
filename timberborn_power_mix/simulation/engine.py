@@ -17,11 +17,10 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 
 def run_simulation(config: SimulationConfig) -> SimulationResult:
     """Bridges pure Python and Numba by reshaping input parameters and aggregating simulation results for external modules."""
-    if config.seed:
-        sim_helpers.seed(config.seed)
+    rng = np.random.default_rng(config.seed)
 
     return run_jit_simulation(
-        config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
+        config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config), rng
     )
 
 
@@ -29,6 +28,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
 def run_jit_simulation(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
+    rng: np.random.Generator,
 ) -> SimulationResult:
     """Manages simulation execution, including heavy memory allocation and caching of shared read-only arrays."""
     total_hours = config.days * consts.HOURS_PER_DAY
@@ -67,6 +67,7 @@ def run_jit_simulation(
             sim_consts.windmills,
             sim_consts.total_battery_capacity,
             total_hours,
+            rng,
         )
         hours_empty = np.sum(res.battery_charge <= 0)
         hours_empty_results[s] = hours_empty
@@ -93,16 +94,17 @@ def jit_stochastic_simulation(
     windmills: ProducerGroup,
     total_battery_capacity: float,
     total_hours: int,
+    rng: np.random.Generator,
 ) -> SimulationSample:
     """Performs a single Monte Carlo simulation run, handling stochastic input generation and internal state transitions."""
     # Generate wind data inside the core for better cache locality
     max_segments = (total_hours // consts.WIND_DURATION_MIN_HOURS) + 1
-    wind_durations = np.random.randint(
+    wind_durations = rng.integers(
         consts.WIND_DURATION_MIN_HOURS,
         consts.WIND_DURATION_MAX_HOURS,
         size=max_segments,
     )
-    wind_strengths = np.random.random(size=max_segments)
+    wind_strengths = rng.random(size=max_segments)
 
     # Optimized Wind production using expansion
     wind_strength_profile = np.repeat(wind_strengths, wind_durations)[:total_hours]

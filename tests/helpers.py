@@ -3,7 +3,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
 )
 from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.simulation.engine import run_simulation
+from timberborn_power_mix.simulation.engine import run_simulation_multithread
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
@@ -45,7 +45,7 @@ def generate_reference_simulation_data():
     )
 
     # 2. Run simulation
-    res = run_simulation(config)
+    res = run_simulation_multithread(config)
 
     return res, config
 

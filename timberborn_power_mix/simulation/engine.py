@@ -32,8 +32,8 @@ def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
     """Executes the simulation across multiple threads using a ThreadPool."""
     rng = np.random.default_rng(config.seed)
 
-    cpu_count = os.process_cpu_count() or os.cpu_count() or 1
-    requested_threads = config.threads if config.threads is not None else cpu_count
+    cpu_count = os.process_cpu_count() or 1
+    requested_threads = config.threads or cpu_count
     threads = max(1, min(requested_threads, config.samples))
 
     jit_config = config.to_jit_config()

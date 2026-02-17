@@ -23,6 +23,4 @@ def optimization_orchestrator(opt_config: OptimizationConfig):
             if value > 0:
                 logger.info(f"  {field}: {value}")
     else:
-        logger.warning(
-            "Could not find a valid solution within the given iterations."
-        )
+        logger.warning("Could not find a valid solution within the given iterations.")

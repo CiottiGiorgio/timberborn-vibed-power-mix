@@ -34,8 +34,11 @@ def evaluate_individual_task(
     )
 
     total_hours = sim_config_base["days"] * sim_consts.HOURS_PER_DAY
-    avg_hours_empty = np.mean(result.aggregated_samples.hours_empty_results)
-    hours_empty_pct = avg_hours_empty / total_hours
+    # Use 95th percentile for reliability to match the "worst-case" behavior
+    worst_case_hours_empty = np.percentile(
+        result.aggregated_samples.hours_empty_results, 95
+    )
+    hours_empty_pct = worst_case_hours_empty / total_hours
 
     return cost, battery_stress, hours_empty_pct
 

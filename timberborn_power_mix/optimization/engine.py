@@ -1,9 +1,12 @@
 import logging
 import numpy as np
 from typing import List, Tuple, Optional, Dict, Any
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.simulation.engine import run_simulation_multithread
+from timberborn_power_mix.simulation.engine import run_simulation_singlethread
 from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix import consts
 import timberborn_power_mix.optimization.helpers as opt_helpers
@@ -24,24 +27,49 @@ class Individual:
         self.domination_count: int = 0
         self.dominated_solutions: List['Individual'] = []
 
-    def evaluate(self, sim_config_base: Dict[str, Any], rng: np.random.Generator):
-        """Runs simulation and calculates objective scores."""
-        config = SimulationConfig(
-            **sim_config_base,
-            energy_mix=self.mix,
-            seed=int(rng.integers(0, 2**32 - 1))
-        )
-        
-        result = run_simulation_multithread(config)
-        self.cost = opt_helpers.calculate_total_wood_cost(self.mix)
-        capacity = sim_helpers.calculate_total_battery_capacity(self.mix)
-        self.battery_stress = sim_helpers.calculate_battery_stress(
-            result.worst_sample.battery_charge, capacity
-        )
-        
-        total_hours = sim_config_base['days'] * consts.HOURS_PER_DAY
-        avg_hours_empty = np.mean(result.aggregated_samples.hours_empty_results)
-        self.hours_empty_pct = avg_hours_empty / total_hours
+    def set_results(self, cost: float, battery_stress: float, hours_empty_pct: float):
+        """Sets the evaluation results calculated externally."""
+        self.cost = cost
+        self.battery_stress = battery_stress
+        self.hours_empty_pct = hours_empty_pct
+
+def evaluate_individual_task(mix: EnergyMixConfig, sim_config_base: Dict[str, Any], seed: int) -> Tuple[float, float, float]:
+    """
+    Standalone task for parallel evaluation. 
+    Returns (cost, battery_stress, hours_empty_pct).
+    """
+    config = SimulationConfig(
+        **sim_config_base,
+        energy_mix=mix,
+        seed=seed
+    )
+    
+    # Use singlethread here because we are parallelizing at the individual level
+    result = run_simulation_singlethread(config)
+    
+    cost = opt_helpers.calculate_total_wood_cost(mix)
+    capacity = sim_helpers.calculate_total_battery_capacity(mix)
+    battery_stress = sim_helpers.calculate_battery_stress(
+        result.worst_sample.battery_charge, capacity
+    )
+    
+    total_hours = sim_config_base['days'] * consts.HOURS_PER_DAY
+    avg_hours_empty = np.mean(result.aggregated_samples.hours_empty_results)
+    hours_empty_pct = avg_hours_empty / total_hours
+    
+    return cost, battery_stress, hours_empty_pct
+
+def evaluate_population(population: List[Individual], sim_config_base: Dict[str, Any], rng: np.random.Generator, executor: ProcessPoolExecutor):
+    """Evaluates a list of individuals in parallel."""
+    # Filter out already evaluated individuals if necessary (though usually we evaluate all offspring)
+    tasks = []
+    for ind in population:
+        seed = int(rng.integers(0, 2**32 - 1))
+        tasks.append(executor.submit(evaluate_individual_task, ind.mix, sim_config_base, seed))
+    
+    for ind, task in zip(population, tasks):
+        cost, stress, pct = task.result()
+        ind.set_results(cost, stress, pct)
 
 def fast_non_dominated_sort(population: List[Individual]) -> List[List[Individual]]:
     """Groups individuals into Pareto fronts based on Cost and Battery Stress."""
@@ -129,58 +157,55 @@ def get_random_individual(rng: np.random.Generator, max_machines: int = 50, max_
     return Individual(EnergyMixConfig(**data))
 
 def run_optimization(opt_config: OptimizationConfig) -> Tuple[Optional[EnergyMixConfig], float]:
-    """Main NSGA-II Loop."""
+    """Main NSGA-II Loop with parallel evaluation."""
     rng = np.random.default_rng(opt_config.seed)
-    pop_size = 40  # Standard population size
+    pop_size = 40
     generations = opt_config.iteration
     
     sim_config_base = opt_config.model_dump()
     sim_config_base.pop('iteration')
     sim_config_base.pop('seed')
 
-    # 1. Initialize Population
-    population = [get_random_individual(rng) for _ in range(pop_size)]
-    for ind in population:
-        ind.evaluate(sim_config_base, rng)
+    with ProcessPoolExecutor() as executor:
+        # 1. Initialize Population
+        population = [get_random_individual(rng) for _ in range(pop_size)]
+        evaluate_population(population, sim_config_base, rng, executor)
 
-    for gen in range(generations):
-        # 2. Create Offspring
-        offspring = []
-        while len(offspring) < pop_size:
-            p1 = tournament_selection(population, rng)
-            p2 = tournament_selection(population, rng)
-            child = crossover(p1, p2, rng)
-            child = mutate(child, rng)
-            offspring.append(child)
-        
-        # 3. Evaluate Offspring
-        for ind in offspring:
-            ind.evaluate(sim_config_base, rng)
+        for gen in range(generations):
+            # 2. Create Offspring
+            offspring = []
+            while len(offspring) < pop_size:
+                p1 = tournament_selection(population, rng)
+                p2 = tournament_selection(population, rng)
+                child = crossover(p1, p2, rng)
+                child = mutate(child, rng)
+                offspring.append(child)
             
-        # 4. Combine and Sort
-        combined = population + offspring
-        fronts = fast_non_dominated_sort(combined)
-        
-        # 5. Survival Selection
-        new_population = []
-        for front in fronts:
-            calculate_crowding_distance(front)
-            if len(new_population) + len(front) <= pop_size:
-                new_population.extend(front)
-            else:
-                # Fill remaining slots with most diverse individuals
-                front.sort(key=lambda x: x.crowding_distance, reverse=True)
-                new_population.extend(front[:pop_size - len(new_population)])
-                break
-        
-        population = new_population
-        
-        if gen % 5 == 0:
-            best_front = [ind for ind in population if ind.rank == 1]
-            logger.info(f"Gen {gen}: Pareto Front Size {len(best_front)}")
+            # 3. Evaluate Offspring in Parallel
+            evaluate_population(offspring, sim_config_base, rng, executor)
+                
+            # 4. Combine and Sort
+            combined = population + offspring
+            fronts = fast_non_dominated_sort(combined)
+            
+            # 5. Survival Selection
+            new_population = []
+            for front in fronts:
+                calculate_crowding_distance(front)
+                if len(new_population) + len(front) <= pop_size:
+                    new_population.extend(front)
+                else:
+                    front.sort(key=lambda x: x.crowding_distance, reverse=True)
+                    new_population.extend(front[:pop_size - len(new_population)])
+                    break
+            
+            population = new_population
+            
+            if gen % 5 == 0:
+                best_front = [ind for ind in population if ind.rank == 1]
+                logger.info(f"Gen {gen}: Pareto Front Size {len(best_front)}")
 
-    # 6. Final Selection: Closest to 5% reliability target
-    # We look at the entire final population's Pareto Front (Rank 1)
+    # 6. Final Selection
     pareto_front = [ind for ind in population if ind.rank == 1]
     if not pareto_front:
         return None, 0.0

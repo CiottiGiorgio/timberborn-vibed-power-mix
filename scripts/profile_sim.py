@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 
 def run_profiled_simulation():
     # Configuration based on 'simulate-simple' run configuration:
-    # --lumber-mill 1 --wood-workshop 1 --windmill 4 --battery 1 --battery-height 1
+    # --lumber-mill 1 --wood-workshop 1 --windmill 4 --battery-heights 10
 
     factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
     factory_data[FactoryName.LUMBER_MILL] = 1
@@ -29,13 +29,12 @@ def run_profiled_simulation():
     factories = FactoryConfig(**factory_data)
 
     energy_data = {key: 0 for key in PRODUCER_DATABASE.keys()}
-    energy_data[BatteryName.BATTERY] = 1
-    energy_data[BatteryName.BATTERY_HEIGHT] = 1.0
+    energy_data[BatteryName.BATTERY_HEIGHT] = [10]
     energy_data[ProducerName.WINDMILL] = 4
     energy_mix = EnergyMixConfig(**energy_data)
 
     config = SimulationConfig(
-        samples=1_000_000,
+        samples=100_000,
         days=132,
         wet_days=sim_consts.DEFAULT_WET_SEASON_DAYS,
         dry_days=sim_consts.DEFAULT_DRY_SEASON_DAYS,
@@ -44,6 +43,7 @@ def run_profiled_simulation():
         energy_mix=energy_mix,
         factories=factories,
         seed=42,
+        threads=None,
     )
 
     # Warm up Numba to ensure compilation time isn't included in the profile
@@ -59,6 +59,7 @@ def run_profiled_simulation():
 
     try:
         for i in range(num_iterations):
+            print(f"Iteration {i+1}/{num_iterations}...")
             _result = run_simulation_multithread(config)
     finally:
         scalene_profiler.stop()

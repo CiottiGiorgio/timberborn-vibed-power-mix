@@ -14,6 +14,18 @@ import timberborn_power_mix.optimization.helpers as opt_helpers
 logger = logging.getLogger(__name__)
 
 
+# TODO:
+# - check that all plurals exposed in the CLI make sense, either keep is consistently singular or consistently plural
+# - check that we could migrate the optimization engine to pymoo
+# - check that battery height is used propertly throughout the codebase (total capacity where needed, discrete heights where needed)
+# - check that we can better type the return types passed around in the optimization engine
+# - check that we can make more tests on the simulation engine on a more modular level (unit tests, etc.)
+# - check that we can make tests for the optimization engine
+# - find a good strategy to run tests automatically
+# - write ci/cd for tests and linting (not packaging)
+# - modularize the profiling scripts and output files
+
+
 def evaluate_individual_task(
     mix: EnergyMixConfig, sim_config_base: Dict[str, Any], seed: int
 ) -> Tuple[float, float, float]:

@@ -8,6 +8,7 @@ from timberborn_power_mix.machines import (
     FactoryName,
 )
 from timberborn_power_mix.simulation import consts as sim_consts
+from timberborn_power_mix.optimization import consts as opt_consts
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,16 +16,17 @@ logging.basicConfig(level=logging.INFO)
 
 def run_profiled_optimization():
     # Configuration based on 'optimize-bot' run configuration:
-    # --working-hours 24 --bot-part-factory 3 --bot-assembler 1 --iteration 100
+    # --working-hours 24 --bot-part-factory 3 --bot-assembler 1 --iteration 10
 
     factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
     factory_data[FactoryName.BOT_PART_FACTORY] = 3
     factory_data[FactoryName.BOT_ASSEMBLER] = 1
     factories = FactoryConfig(**factory_data)
 
+    # Use a smaller number of iterations and samples for profiling
     config = OptimizationConfig(
-        iteration=100,
-        samples=5000,
+        iteration=10,
+        samples=opt_consts.DEFAULT_OPTIMIZATION_SAMPLES,
         days=sim_consts.DEFAULT_DAYS,
         wet_days=sim_consts.DEFAULT_WET_SEASON_DAYS,
         dry_days=sim_consts.DEFAULT_DRY_SEASON_DAYS,
@@ -32,14 +34,21 @@ def run_profiled_optimization():
         working_hours=24,
         factories=factories,
         seed=42,
+        threads=None,  # Use default (all cores)
     )
 
-    num_runs = 5
+    # Warm up Numba to ensure compilation time isn't included in the profile
+    print("Warming up Numba (compiling jitted functions)...")
+    warmup_config = config.model_copy(update={"iteration": 1, "samples": 1, "days": 1})
+    run_optimization(warmup_config)
+
+    num_runs = 2
     print(f"Starting Scalene profiling for optimization ({num_runs} runs)...")
     scalene_profiler.start()
 
     try:
         for i in range(num_runs):
+            print(f"Run {i+1}/{num_runs}...")
             run_optimization(config)
     finally:
         scalene_profiler.stop()

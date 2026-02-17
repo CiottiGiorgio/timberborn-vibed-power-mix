@@ -2,7 +2,12 @@ import matplotlib.ticker as ticker
 
 
 def plot_battery(
-    ax, time_days, battery_charge, total_battery_capacity, num_batteries, battery_heights
+    ax,
+    time_days,
+    battery_charge,
+    total_battery_capacity,
+    num_batteries,
+    battery_heights,
 ):
     ax.plot(
         time_days,

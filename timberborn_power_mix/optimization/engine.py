@@ -10,7 +10,6 @@ from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix import helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
-import timberborn_power_mix.simulation.helpers as sim_helpers
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ def evaluate_individual_task(
     result = run_simulation_singlethread(config)
 
     cost = opt_helpers.calculate_total_wood_cost(mix)
-    
+
     # Use 95th percentile for both Stress and Hours Empty for consistency
     battery_stress = np.percentile(result.aggregated_samples.stress_results, 95)
 

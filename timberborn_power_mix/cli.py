@@ -72,20 +72,6 @@ def add_common_params(func):
         show_default=True,
         help="Duration of wet season in days",
     )(func)
-
-    # 1. Core simulation parameters (Top of the group)
-    func = click.option(
-        f"--{ConfigName.THREADS}",
-        type=int,
-        default=None,
-        help="Number of threads to use for simulation",
-    )(func)
-    func = click.option(
-        f"--{ConfigName.SEED}",
-        type=int,
-        default=None,
-        help="Seed for the random number generator",
-    )(func)
     func = click.option(
         f"--{ConfigName.WORKING_HOURS.replace('_', '-')}",
         type=int,
@@ -99,6 +85,18 @@ def add_common_params(func):
         default=consts.DEFAULT_DAYS,
         show_default=True,
         help="Number of days for the simulation",
+    )(func)
+    func = click.option(
+        f"--{ConfigName.THREADS}",
+        type=int,
+        default=None,
+        help="Number of threads to use for parallelism",
+    )(func)
+    func = click.option(
+        f"--{ConfigName.SEED}",
+        type=int,
+        default=None,
+        help="Seed for the random number generator",
     )(func)
 
     return func

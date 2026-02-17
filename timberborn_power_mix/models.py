@@ -30,6 +30,7 @@ class CommonConfig(BaseModel):
 
 class ConfigName(StrEnum):
     SEED = "seed"
+    THREADS = "threads"
     SAMPLES = "samples"
     DAYS = "days"
     WORKING_HOURS = "working_hours"
@@ -39,7 +40,6 @@ class ConfigName(StrEnum):
     FACTORIES = "factories"
     ENERGY_MIX = "energy_mix"
     ITERATION = "iteration"
-    THREADS = "threads"
 
 
 FactoryConfig = create_model(
@@ -49,12 +49,12 @@ FactoryConfig = create_model(
 CommonConfig = create_model(
     "CommonConfig",
     **{ConfigName.SEED: (Optional[int], None)},
+    **{ConfigName.THREADS: (Optional[int], None)},
     **{ConfigName.SAMPLES: int},
     **{ConfigName.DAYS: int},
     **{ConfigName.WORKING_HOURS: int},
     **{ConfigName.WET_DAYS: int},
     **{ConfigName.DRY_DAYS: int},
     **{ConfigName.BADTIDE_DAYS: int},
-    **{ConfigName.THREADS: (Optional[int], None)},
     **{ConfigName.FACTORIES: FactoryConfig},
 )

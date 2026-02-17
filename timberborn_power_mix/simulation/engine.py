@@ -65,23 +65,13 @@ def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
     )
 
     # Find the overall worst sample using the Battery Stress Index
-    worst_res = results[0]
-    max_stress = -1.0
     capacity = cached_consts.total_battery_capacity
-
-    for r in results:
-        sample = r.worst_sample
-        # Calculate stress index: sum((1 - charge/capacity)^8)
-        # This prioritizes time spent near zero charge.
-        if capacity > 0:
-            stress = np.sum((1.0 - (sample.battery_charge / capacity)) ** 8)
-        else:
-            # If no batteries, any hour is "empty"
-            stress = float(sample.battery_charge.size)
-
-        if stress > max_stress:
-            max_stress = stress
-            worst_res = r
+    worst_res = max(
+        results,
+        key=lambda r: sim_helpers.calculate_battery_stress(
+            r.worst_sample.battery_charge, capacity
+        ),
+    )
 
     return SimulationResult(
         worst_sample=worst_res.worst_sample,
@@ -140,17 +130,9 @@ def run_jit_simulation(
             total_hours,
             rng,
         )
-        hours_empty = np.sum(res.battery_charge <= 0)
-        hours_empty_results[s] = hours_empty
+        hours_empty_results[s] = np.sum(res.battery_charge <= 0)
 
-        # Battery Stress Index: sum((1 - charge/capacity)^8)
-        # High power (8) ensures that hours at 0% dominate the score,
-        # but time spent near zero still counts significantly.
-        if capacity > 0:
-            stress = np.sum((1.0 - (res.battery_charge / capacity)) ** 8)
-        else:
-            stress = float(total_hours)
-
+        stress = sim_helpers.calculate_battery_stress(res.battery_charge, capacity)
         if s == 0 or stress > max_stress:
             max_stress = stress
             worst_sample = res

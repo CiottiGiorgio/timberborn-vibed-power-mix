@@ -30,11 +30,13 @@ def run_simulation_singlethread(config: SimulationConfig) -> SimulationResult:
 
 def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
     """Executes the simulation across multiple threads using a ThreadPool."""
-    rng = np.random.default_rng(config.seed)
-
     cpu_count = os.process_cpu_count() or 1
     requested_threads = config.threads or cpu_count
     threads = max(1, min(requested_threads, config.samples))
+
+    # Use SeedSequence to spawn independent RNG states for each thread
+    ss = np.random.SeedSequence(config.seed)
+    child_seeds = ss.spawn(threads)
 
     jit_config = config.to_jit_config()
     cached_consts = sim_helpers.calculate_jit_cached_consts(config)
@@ -49,9 +51,9 @@ def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
         (
             jit_config._replace(samples=s),
             cached_consts,
-            np.random.default_rng(rng.integers(0, 2**31 - 1)),
+            np.random.default_rng(child_seeds[i]),
         )
-        for s in samples_per_thread
+        for i, s in enumerate(samples_per_thread)
     ]
 
     with ThreadPool(processes=threads) as executor:

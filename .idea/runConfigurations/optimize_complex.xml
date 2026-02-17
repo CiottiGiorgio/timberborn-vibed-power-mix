@@ -15,7 +15,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="RUN_TOOL" value="" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/timberborn_power_mix/cli.py" />
-    <option name="PARAMETERS" value="optimize --lumber-mill 5 --gear-workshop 3 --steel-factory 2 --wood-workshop 1 --iteration 500" />
+    <option name="PARAMETERS" value="optimize --lumber-mill 5 --gear-workshop 3 --steel-factory 2 --wood-workshop 1" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

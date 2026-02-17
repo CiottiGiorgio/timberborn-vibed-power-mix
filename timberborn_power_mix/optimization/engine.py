@@ -7,7 +7,7 @@ from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixCo
 from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.simulation.engine import run_simulation_singlethread
 from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
-from timberborn_power_mix import consts
+from timberborn_power_mix import consts, helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
@@ -67,7 +67,6 @@ def evaluate_population(
     executor: ProcessPoolExecutor,
 ):
     """Evaluates a list of individuals in parallel."""
-    # Filter out already evaluated individuals if necessary (though usually we evaluate all offspring)
     tasks = []
     for ind in population:
         seed = int(rng.integers(0, 2**32 - 1))
@@ -200,7 +199,10 @@ def run_optimization(
     sim_config_base.pop("iteration")
     sim_config_base.pop("seed")
 
-    with ProcessPoolExecutor() as executor:
+    # Respect user threads config for the ProcessPool
+    max_workers = helpers.calculate_optimal_threads(opt_config.threads, pop_size)
+
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
         # 1. Initialize Population
         population = [get_random_individual(rng) for _ in range(pop_size)]
         evaluate_population(population, sim_config_base, rng, executor)

@@ -27,8 +27,7 @@ def generate_reference_simulation_data():
     factories = FactoryConfig(**factory_data)
 
     energy_data = {key: 0 for key in PRODUCER_DATABASE.keys()}
-    energy_data[BatteryName.BATTERY] = 1
-    energy_data[BatteryName.BATTERY_HEIGHT] = 1.0
+    energy_data[BatteryName.BATTERY_HEIGHT] = [1]
     energy_data[ProducerName.WINDMILL] = 4
     energy_mix = EnergyMixConfig(**energy_data)
 

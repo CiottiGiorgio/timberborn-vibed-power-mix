@@ -6,7 +6,7 @@ from timberborn_power_mix.plots.energy_plot import plot_energy
 from timberborn_power_mix.plots.surplus_plot import plot_surplus
 from timberborn_power_mix.plots.battery_plot import plot_battery
 from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percentage
-from timberborn_power_mix import consts
+from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.optimization.helpers import calculate_total_wood_cost
 from timberborn_power_mix.simulation.helpers import (
     calculate_total_battery_capacity,
@@ -23,10 +23,10 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     power_consumption = res.aggregated_samples.power_consumption
 
     days = getattr(config, ConfigName.DAYS)
-    total_hours = days * consts.HOURS_PER_DAY
+    total_hours = days * sim_consts.HOURS_PER_DAY
 
     time_hours = np.arange(total_hours)
-    time_days = time_hours / consts.HOURS_PER_DAY
+    time_days = time_hours / sim_consts.HOURS_PER_DAY
 
     power_production = data.power_production
     battery_charge = data.battery_charge
@@ -148,7 +148,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     # Add vertical lines for season boundaries to all time-series plots
     for ax in [ax1, ax2, ax3, ax4]:
         for i, (start_hour, label) in enumerate(season_boundaries):
-            start_day = start_hour / consts.HOURS_PER_DAY
+            start_day = start_hour / sim_consts.HOURS_PER_DAY
             # Vertical line
             ax.axvline(
                 x=start_day, color="#444444", linestyle="-", alpha=0.4, linewidth=1.5
@@ -158,9 +158,9 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
             end_hour = (
                 season_boundaries[i + 1][0]
                 if i + 1 < len(season_boundaries)
-                else days * consts.HOURS_PER_DAY
+                else days * sim_consts.HOURS_PER_DAY
             )
-            end_day = end_hour / consts.HOURS_PER_DAY
+            end_day = end_hour / sim_consts.HOURS_PER_DAY
             mid_point = (start_day + end_day) / 2
             if mid_point < days:
                 ax.text(
@@ -205,7 +205,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     )
 
     # Plot 5: Empty Battery Duration Distribution (Percentage)
-    total_simulation_hours = days * consts.HOURS_PER_DAY
+    total_simulation_hours = days * sim_consts.HOURS_PER_DAY
     plot_empty_hours_percentage(
         ax5,
         run_empty_hours,

@@ -8,7 +8,8 @@ from timberborn_power_mix.simulation.models import (
     JitSimulationConfig,
     JitSimulationCachedConsts,
 )
-from timberborn_power_mix import consts, helpers
+from timberborn_power_mix import helpers
+from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.simulation.models import (
     SimulationSample,
     AggregatedSamples,

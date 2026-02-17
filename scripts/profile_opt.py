@@ -7,7 +7,7 @@ from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
     FactoryName,
 )
-from timberborn_power_mix import consts as sim_consts
+from timberborn_power_mix.simulation import consts as sim_consts
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

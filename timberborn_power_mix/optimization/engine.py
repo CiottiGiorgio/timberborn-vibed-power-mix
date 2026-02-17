@@ -4,35 +4,15 @@ from typing import List, Tuple, Optional, Dict, Any
 from concurrent.futures import ProcessPoolExecutor
 
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
-from timberborn_power_mix.optimization.models import OptimizationConfig
+from timberborn_power_mix.optimization.models import OptimizationConfig, Individual
 from timberborn_power_mix.simulation.engine import run_simulation_singlethread
 from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
-from timberborn_power_mix import consts, helpers
+from timberborn_power_mix.simulation import consts as sim_consts
+from timberborn_power_mix import helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 logger = logging.getLogger(__name__)
-
-
-class Individual:
-    """Represents a single power grid configuration in the population."""
-
-    def __init__(self, mix: EnergyMixConfig):
-        self.mix = mix
-        self.cost: float = 0.0
-        self.battery_stress: float = 0.0  # Objective 1: Minimize
-        self.hours_empty_pct: float = 0.0  # Selection criteria
-
-        self.rank: int = 0
-        self.crowding_distance: float = 0.0
-        self.domination_count: int = 0
-        self.dominated_solutions: List["Individual"] = []
-
-    def set_results(self, cost: float, battery_stress: float, hours_empty_pct: float):
-        """Sets the evaluation results calculated externally."""
-        self.cost = cost
-        self.battery_stress = battery_stress
-        self.hours_empty_pct = hours_empty_pct
 
 
 def evaluate_individual_task(
@@ -53,7 +33,7 @@ def evaluate_individual_task(
         result.worst_sample.battery_charge, capacity
     )
 
-    total_hours = sim_config_base["days"] * consts.HOURS_PER_DAY
+    total_hours = sim_config_base["days"] * sim_consts.HOURS_PER_DAY
     avg_hours_empty = np.mean(result.aggregated_samples.hours_empty_results)
     hours_empty_pct = avg_hours_empty / total_hours
 

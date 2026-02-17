@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.ticker as ticker
-from timberborn_power_mix import consts
+from timberborn_power_mix.simulation import consts as sim_consts
 
 
 def plot_energy(ax, time_days, energy_production, energy_consumption, days):
@@ -25,10 +25,10 @@ def plot_energy(ax, time_days, energy_production, energy_consumption, days):
     # To get Power (Energy/Hour), we divide m by 24.
 
     slope_prod, intercept_prod = np.polyfit(time_days, energy_production, 1)
-    avg_prod_power = slope_prod / consts.HOURS_PER_DAY
+    avg_prod_power = slope_prod / sim_consts.HOURS_PER_DAY
 
     slope_cons, intercept_cons = np.polyfit(time_days, energy_consumption, 1)
-    avg_cons_power = slope_cons / consts.HOURS_PER_DAY
+    avg_cons_power = slope_cons / sim_consts.HOURS_PER_DAY
 
     # Create lines for plotting covering the full range
     x_vals = np.array([0, days])

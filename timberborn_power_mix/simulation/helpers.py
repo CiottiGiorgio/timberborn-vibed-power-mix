@@ -2,7 +2,7 @@ from typing import Tuple, List
 import numpy as np
 from numba import njit
 
-from timberborn_power_mix import consts
+from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.machines import (
     PRODUCER_DATABASE,
     FACTORY_DATABASE,

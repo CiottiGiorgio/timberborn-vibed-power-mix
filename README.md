@@ -1,6 +1,6 @@
 # Timberborn Vibed Power Mix
 
-A simulation tool for power management in Timberborn. This tool helps you determine the optimal mix of power sources and batteries to sustain your factories through wet, dry, and badtide seasons.
+A simulation and optimization tool for power management in Timberborn. This tool helps you determine the optimal mix of power sources and batteries to sustain your factories through wet, dry, and badtide seasons.
 
 ![Reference Visual Output](tests/reference_visual_output.png)
 
@@ -14,7 +14,7 @@ poetry install
 
 ## Usage
 
-The tool provides a CLI with one main command: `simulate`.
+The tool provides a CLI with two main commands: `simulate` and `optimize`.
 
 ### Simulate
 
@@ -27,16 +27,24 @@ poetry run tb-power-mix simulate \
     --battery 3 \
     --battery-height 10 \
     --lumber-mill 2 \
-    --gear-workshop 1 \
-    --samples 100
+    --gear-workshop 1
 ```
 
+### Optimize
+
+Find the most efficient power mix for a given set of factories. The optimizer uses the **NSGA-II (Non-dominated Sorting Genetic Algorithm II)** to balance building costs against power reliability.
+
+```bash
+poetry run tb-power-mix optimize \
+    --lumber-mill 5 \
+    --steel-factory 2
+```
+
+The optimizer searches for a **Pareto Frontier** of solutions that minimize both material cost and battery stress, eventually selecting the configuration that hits a target reliability of ~95%.
+
 **Key Parameters:**
-- `--[machine-name] [count]`: Specify the number of producers (e.g., `--large-windmill`, `--water-wheel`) or consumers (e.g., `--lumber-mill`, `--steel-factory`).
-- `--battery [count]`: Number of gravity batteries.
-- `--battery-height [meters]`: Height of the gravity batteries. Can be a single integer or a comma-separated list (e.g., `10,15,10`).
-- `--samples [count]`: Number of Monte Carlo simulations to run (default: 1000).
-- `--days [count]`: Duration of the simulation in days.
+- `--[factory-name] [count]`: Specify the factories you need to power.
+- `--days [count]`: Duration of the simulation cycle.
 
 ## Data Insights
 
@@ -48,6 +56,7 @@ The simulation accounts for:
   - **Badtide**: Water wheels continue to function (assuming contaminated water still flows).
 - **Working Hours**: Factories only consume power during specified working hours (default: 16h/day).
 - **Battery Physics**: Gravity battery capacity scales with height.
+- **Battery Stress Index**: A non-linear metric that penalizes configurations that frequently run low on power, used to guide the optimizer toward stable grids.
 
 ### Visualizing Performance
 The generated plots help you understand the dynamics of your power grid:

@@ -15,27 +15,11 @@ with the machine databases defined in `machines.py`.
 
 The dynamic structures effectively look like this:
 
-class FactoryConfig(BaseModel):
-    lumber_mill: int = 0
-    gear_workshop: int = 0
-    ... (all other factories)
-
 class EnergyMixConfig(BaseModel):
     battery_height: List[int] = []
     windmill: int = 0
     water_wheel: int = 0
     ... (all other producers)
-
-class SimulationConfig(BaseModel):
-    seed: Optional[int] = None
-    samples: int
-    days: int
-    working_hours: int
-    wet_days: int
-    dry_days: int
-    badtide_days: int
-    factories: FactoryConfig
-    energy_mix: EnergyMixConfig
 """
 
 EnergyMixConfig = create_model(
@@ -115,6 +99,7 @@ class AggregatedSamples(NamedTuple):
 
     power_consumption: np.ndarray
     hours_empty_results: np.ndarray
+    stress_results: np.ndarray
 
 
 class SimulationResult(NamedTuple):

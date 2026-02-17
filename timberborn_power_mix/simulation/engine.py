@@ -63,6 +63,9 @@ def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
     all_hours_empty = np.concatenate(
         [r.aggregated_samples.hours_empty_results for r in results]
     )
+    all_stress = np.concatenate(
+        [r.aggregated_samples.stress_results for r in results]
+    )
 
     # Find the overall worst sample using the Battery Stress Index
     capacity = cached_consts.total_battery_capacity
@@ -78,6 +81,7 @@ def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
         aggregated_samples=AggregatedSamples(
             power_consumption=results[0].aggregated_samples.power_consumption,
             hours_empty_results=all_hours_empty,
+            stress_results=all_stress,
         ),
     )
 
@@ -113,6 +117,8 @@ def run_jit_simulation(
     )
 
     hours_empty_results = np.zeros(config.samples)
+    stress_results = np.zeros(config.samples)
+    
     worst_sample = SimulationSample(
         power_production=np.zeros(total_hours),
         battery_charge=np.zeros(total_hours),
@@ -133,6 +139,8 @@ def run_jit_simulation(
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
 
         stress = sim_helpers.calculate_battery_stress(res.battery_charge, capacity)
+        stress_results[s] = stress
+        
         if s == 0 or stress > max_stress:
             max_stress = stress
             worst_sample = res
@@ -140,6 +148,7 @@ def run_jit_simulation(
     aggregated_samples = AggregatedSamples(
         power_consumption=power_consumption,
         hours_empty_results=hours_empty_results,
+        stress_results=stress_results,
     )
 
     return SimulationResult(

@@ -28,13 +28,11 @@ def evaluate_individual_task(
     result = run_simulation_singlethread(config)
 
     cost = opt_helpers.calculate_total_wood_cost(mix)
-    capacity = sim_helpers.calculate_total_battery_capacity(mix)
-    battery_stress = sim_helpers.calculate_battery_stress(
-        result.worst_sample.battery_charge, capacity
-    )
+    
+    # Use 95th percentile for both Stress and Hours Empty for consistency
+    battery_stress = np.percentile(result.aggregated_samples.stress_results, 95)
 
     total_hours = sim_config_base["days"] * sim_consts.HOURS_PER_DAY
-    # Use 95th percentile for reliability to match the "worst-case" behavior
     worst_case_hours_empty = np.percentile(
         result.aggregated_samples.hours_empty_results, 95
     )

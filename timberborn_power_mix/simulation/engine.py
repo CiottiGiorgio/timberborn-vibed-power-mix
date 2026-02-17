@@ -1,3 +1,6 @@
+import os
+from multiprocessing.pool import ThreadPool
+
 import numpy as np
 from numba import njit
 from timberborn_power_mix.simulation.models import (
@@ -19,12 +22,43 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     """Bridges pure Python and Numba by converting Pydantic configurations into JIT-compatible structures."""
     rng = np.random.default_rng(config.seed)
 
-    return run_jit_simulation(
-        config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config), rng
+    # cpu_count = os.process_cpu_count() or 1
+    cpu_count = 1
+    threads = max(1, min(cpu_count, config.samples))
+
+    jit_config = config.to_jit_config()
+    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
+
+    jit_config = jit_config._replace(samples=config.samples // threads)
+
+    with ThreadPool(processes=threads) as executor:
+        results = executor.starmap(
+            run_jit_simulation,
+            [
+                (
+                    jit_config,
+                    cached_consts,
+                    np.random.default_rng(rng.integers(0, 2**31 - 1, size=1)),
+                )
+                for _ in range(threads)
+            ],
+        )
+
+    worst_sample = max(results, key=lambda sample: np.max(sample.aggregated_samples.hours_empty_results), ).worst_sample
+    aggregated_samples = AggregatedSamples(
+        power_consumption=results[0].aggregated_samples.power_consumption,
+        hours_empty_results=np.concatenate(
+            [r.aggregated_samples.hours_empty_results for r in results]
+        ),
+    )
+
+    return SimulationResult(
+        worst_sample=worst_sample,
+        aggregated_samples=aggregated_samples,
     )
 
 
-@njit(cache=True)
+@njit(nogil=True, cache=True)
 def run_jit_simulation(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,

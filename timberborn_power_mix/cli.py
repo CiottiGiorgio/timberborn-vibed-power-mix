@@ -75,6 +75,12 @@ def add_common_params(func):
 
     # 1. Core simulation parameters (Top of the group)
     func = click.option(
+        f"--{ConfigName.THREADS}",
+        type=int,
+        default=None,
+        help="Number of threads to use for simulation",
+    )(func)
+    func = click.option(
         f"--{ConfigName.SEED}",
         type=int,
         default=None,

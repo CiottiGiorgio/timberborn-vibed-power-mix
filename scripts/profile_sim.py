@@ -1,6 +1,6 @@
 import logging
 from scalene import scalene_profiler
-from timberborn_power_mix.simulation.engine import run_simulation
+from timberborn_power_mix.simulation.engine import run_simulation_multithread
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
@@ -49,7 +49,7 @@ def run_profiled_simulation():
     # Warm up Numba to ensure compilation time isn't included in the profile
     print("Warming up Numba (compiling jitted functions)...")
     warmup_config = config.model_copy(update={"samples": 1, "days": 1})
-    run_simulation(warmup_config)
+    run_simulation_multithread(warmup_config)
 
     num_iterations = 5
     print(
@@ -59,7 +59,7 @@ def run_profiled_simulation():
 
     try:
         for i in range(num_iterations):
-            _result = run_simulation(config)
+            _result = run_simulation_multithread(config)
     finally:
         scalene_profiler.stop()
     print("Scalene profiling stopped.")

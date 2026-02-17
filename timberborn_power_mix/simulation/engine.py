@@ -1,5 +1,6 @@
 import os
 from multiprocessing.pool import ThreadPool
+from typing import List
 
 import numpy as np
 from numba import njit
@@ -18,43 +19,76 @@ from timberborn_power_mix.simulation.models import (
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
-def run_simulation(config: SimulationConfig) -> SimulationResult:
-    """Bridges pure Python and Numba by converting Pydantic configurations into JIT-compatible structures."""
+def run_simulation_singlethread(config: SimulationConfig) -> SimulationResult:
+    """Executes the simulation in a single thread."""
+    rng = np.random.default_rng(config.seed)
+    jit_config = config.to_jit_config()
+    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
+
+    return run_jit_simulation(jit_config, cached_consts, rng)
+
+
+def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
+    """Executes the simulation across multiple threads using a ThreadPool."""
     rng = np.random.default_rng(config.seed)
 
-    # cpu_count = os.process_cpu_count() or 1
-    cpu_count = 1
-    threads = max(1, min(cpu_count, config.samples))
+    cpu_count = os.process_cpu_count() or os.cpu_count() or 1
+    requested_threads = config.threads if config.threads is not None else cpu_count
+    threads = max(1, min(requested_threads, config.samples))
 
     jit_config = config.to_jit_config()
     cached_consts = sim_helpers.calculate_jit_cached_consts(config)
 
-    jit_config = jit_config._replace(samples=config.samples // threads)
+    # Distribute samples as evenly as possible across threads
+    samples_per_thread = [config.samples // threads] * threads
+    for i in range(config.samples % threads):
+        samples_per_thread[i] += 1
+
+    # Prepare arguments for each thread with independent RNGs
+    thread_args = [
+        (
+            jit_config._replace(samples=s),
+            cached_consts,
+            np.random.default_rng(rng.integers(0, 2**31 - 1)),
+        )
+        for s in samples_per_thread
+    ]
 
     with ThreadPool(processes=threads) as executor:
-        results = executor.starmap(
-            run_jit_simulation,
-            [
-                (
-                    jit_config,
-                    cached_consts,
-                    np.random.default_rng(rng.integers(0, 2**31 - 1, size=1)),
-                )
-                for _ in range(threads)
-            ],
+        results: List[SimulationResult] = executor.starmap(
+            run_jit_simulation, thread_args
         )
 
-    worst_sample = max(results, key=lambda sample: np.max(sample.aggregated_samples.hours_empty_results), ).worst_sample
-    aggregated_samples = AggregatedSamples(
-        power_consumption=results[0].aggregated_samples.power_consumption,
-        hours_empty_results=np.concatenate(
-            [r.aggregated_samples.hours_empty_results for r in results]
-        ),
+    # Aggregate results
+    all_hours_empty = np.concatenate(
+        [r.aggregated_samples.hours_empty_results for r in results]
     )
 
+    # Find the overall worst sample using the Battery Stress Index
+    worst_res = results[0]
+    max_stress = -1.0
+    capacity = cached_consts.total_battery_capacity
+
+    for r in results:
+        sample = r.worst_sample
+        # Calculate stress index: sum((1 - charge/capacity)^8)
+        # This prioritizes time spent near zero charge.
+        if capacity > 0:
+            stress = np.sum((1.0 - (sample.battery_charge / capacity)) ** 8)
+        else:
+            # If no batteries, any hour is "empty"
+            stress = float(sample.battery_charge.size)
+
+        if stress > max_stress:
+            max_stress = stress
+            worst_res = r
+
     return SimulationResult(
-        worst_sample=worst_sample,
-        aggregated_samples=aggregated_samples,
+        worst_sample=worst_res.worst_sample,
+        aggregated_samples=AggregatedSamples(
+            power_consumption=results[0].aggregated_samples.power_consumption,
+            hours_empty_results=all_hours_empty,
+        ),
     )
 
 
@@ -66,8 +100,6 @@ def run_jit_simulation(
 ) -> SimulationResult:
     """
     Executes the Monte Carlo simulation and aggregates results across all samples.
-    Optimizes performance by pre-calculating shared read-only arrays (like base production and consumption)
-    to be reused across all stochastic runs.
     """
     total_hours = config.days * consts.HOURS_PER_DAY
 
@@ -95,7 +127,8 @@ def run_jit_simulation(
         power_production=np.zeros(total_hours),
         battery_charge=np.zeros(total_hours),
     )
-    max_hours_empty = -1.0
+    max_stress = -1.0
+    capacity = sim_consts.total_battery_capacity
 
     for s in range(config.samples):
         res = jit_stochastic_simulation(
@@ -110,8 +143,16 @@ def run_jit_simulation(
         hours_empty = np.sum(res.battery_charge <= 0)
         hours_empty_results[s] = hours_empty
 
-        if hours_empty > max_hours_empty:
-            max_hours_empty = hours_empty
+        # Battery Stress Index: sum((1 - charge/capacity)^8)
+        # High power (8) ensures that hours at 0% dominate the score,
+        # but time spent near zero still counts significantly.
+        if capacity > 0:
+            stress = np.sum((1.0 - (res.battery_charge / capacity)) ** 8)
+        else:
+            stress = float(total_hours)
+
+        if s == 0 or stress > max_stress:
+            max_stress = stress
             worst_sample = res
 
     aggregated_samples = AggregatedSamples(
@@ -134,8 +175,8 @@ def jit_stochastic_simulation(
     total_hours: int,
     rng: np.random.Generator,
 ) -> SimulationSample:
-    """Performs a single Monte Carlo simulation run, handling stochastic input generation and internal state transitions."""
-    # Generate wind data inside the core for better cache locality
+    """Performs a single Monte Carlo simulation run."""
+    # Generate wind data
     max_segments = (total_hours // consts.WIND_DURATION_MIN_HOURS) + 1
     wind_durations = rng.integers(
         consts.WIND_DURATION_MIN_HOURS,

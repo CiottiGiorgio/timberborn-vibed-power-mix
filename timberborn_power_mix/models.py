@@ -23,6 +23,7 @@ class CommonConfig(BaseModel):
     wet_days: int
     dry_days: int
     badtide_days: int
+    threads: Optional[int] = None
     factories: FactoryConfig
 """
 
@@ -38,6 +39,7 @@ class ConfigName(StrEnum):
     FACTORIES = "factories"
     ENERGY_MIX = "energy_mix"
     ITERATION = "iteration"
+    THREADS = "threads"
 
 
 FactoryConfig = create_model(
@@ -53,5 +55,6 @@ CommonConfig = create_model(
     **{ConfigName.WET_DAYS: int},
     **{ConfigName.DRY_DAYS: int},
     **{ConfigName.BADTIDE_DAYS: int},
+    **{ConfigName.THREADS: (Optional[int], None)},
     **{ConfigName.FACTORIES: FactoryConfig},
 )

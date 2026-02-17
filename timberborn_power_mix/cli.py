@@ -14,27 +14,19 @@ from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig
 p = inflect.engine()
 
 
-class IntOrIntList(click.ParamType):
-    name = "int_or_int_list"
+class IntList(click.ParamType):
+    name = "int_list"
 
     def convert(self, value, param, ctx):
-        if isinstance(value, int):
-            return value
         if isinstance(value, list):
             return value
-
-        # Try to parse as a single int
-        try:
-            return int(value)
-        except ValueError:
-            pass
 
         # Try to parse as a comma-separated list of ints
         try:
             return [int(x.strip()) for x in value.split(",")]
         except ValueError:
             self.fail(
-                f"{value!r} is not a valid integer or comma-separated list of integers",
+                f"{value!r} is not a valid comma-separated list of integers",
                 param,
                 ctx,
             )
@@ -116,19 +108,14 @@ def add_energy_mix_params(func):
             help=f"Number of {p.plural(display_name)}",
         )(func)
 
+    # Use inflect to pluralize the CLI option name and help text
+    display_name = BatteryName.BATTERY_HEIGHT.replace("_", " ")
     func = click.option(
-        f"--{BatteryName.BATTERY_HEIGHT.replace('_', '-')}",
-        type=IntOrIntList(),
-        default="0",
-        help="Height of the gravity batteries (accepts single int or list)",
-    )(func)
-
-    # 2. Battery Count
-    func = click.option(
-        f"--{BatteryName.BATTERY.replace('_', '-')}",
-        type=int,
-        default=0,
-        help="Number of batteries",
+        f"--{p.plural(BatteryName.BATTERY_HEIGHT.replace('_', '-'))}",
+        BatteryName.BATTERY_HEIGHT.value,
+        type=IntList(),
+        default="",
+        help=f"Comma-separated list of {p.plural(display_name)} (e.g., '10,15,10')",
     )(func)
 
     return func
@@ -204,12 +191,8 @@ def parse_common_config(**kwargs) -> CommonConfig:
 
 def parse_simulation_config(**kwargs) -> SimulationConfig:
     """Parses full simulation configuration from kwargs."""
-    battery_height = kwargs[BatteryName.BATTERY_HEIGHT]
-    if isinstance(battery_height, list):
-        if not battery_height:
-            battery_height = 0.0
-        else:
-            battery_height = sum(battery_height) / len(battery_height)
+    battery_height = kwargs.get(BatteryName.BATTERY_HEIGHT, [])
+
     energy_mix = EnergyMixConfig(
         battery_height=battery_height,
         **{

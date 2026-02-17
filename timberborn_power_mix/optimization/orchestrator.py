@@ -20,7 +20,10 @@ def optimization_orchestrator(opt_config: OptimizationConfig):
         logger.info("Optimization finished!")
         logger.info(f"Selected Energy Mix (Total Wood Cost: {best_cost}):")
         for field, value in best_mix.model_dump().items():
-            if value > 0:
+            # Handle both numeric counts and lists (like battery_height)
+            if (isinstance(value, (int, float)) and value > 0) or (
+                isinstance(value, list) and len(value) > 0
+            ):
                 logger.info(f"  {field}: {value}")
     else:
         logger.warning("Could not find a valid solution within the given iterations.")

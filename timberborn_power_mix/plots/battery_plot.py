@@ -2,7 +2,7 @@ import matplotlib.ticker as ticker
 
 
 def plot_battery(
-    ax, time_days, battery_charge, total_battery_capacity, batteries, battery_height
+    ax, time_days, battery_charge, total_battery_capacity, num_batteries, battery_heights
 ):
     ax.plot(
         time_days,
@@ -19,13 +19,13 @@ def plot_battery(
     ax.set_ylabel("Stored Energy (hph)")
     ax.set_xlabel("Time (days)")
 
-    if isinstance(battery_height, list):
-        avg_height = sum(battery_height) / len(battery_height) if battery_height else 0
+    if num_batteries > 0:
+        avg_height = sum(battery_heights) / num_batteries
         height_str = f"Avg {avg_height:.1f}"
     else:
-        height_str = str(battery_height)
+        height_str = "0"
 
-    ax.set_title(f"Battery Status ({batteries} Batteries @ {height_str}m)", pad=20)
+    ax.set_title(f"Battery Status ({num_batteries} Batteries @ {height_str}m)", pad=20)
     ax.legend(loc="upper right")
     ax.grid(True, linestyle="--", alpha=0.7)
 

@@ -21,9 +21,8 @@ from timberborn_power_mix.models import ConfigName, FactoryConfig
 
 def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
     """Calculates the total energy storage capacity of all batteries in the mix."""
-    num_batteries = getattr(energy_mix, BatteryName.BATTERY)
-    battery_height = getattr(energy_mix, BatteryName.BATTERY_HEIGHT)
-    return num_batteries * battery_capacity(battery_height)
+    heights = getattr(energy_mix, BatteryName.BATTERY_HEIGHT)
+    return sum(battery_capacity(h) for h in heights)
 
 
 def calculate_total_consumption_rate(factories: FactoryConfig) -> int:

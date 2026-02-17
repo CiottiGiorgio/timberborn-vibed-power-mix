@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import List, NamedTuple, Optional
 import numpy as np
 from pydantic import create_model, BaseModel
 
@@ -21,8 +21,7 @@ class FactoryConfig(BaseModel):
     ... (all other factories)
 
 class EnergyMixConfig(BaseModel):
-    battery: int = 0
-    battery_height: float = 0.0
+    battery_height: List[int] = []
     windmill: int = 0
     water_wheel: int = 0
     ... (all other producers)
@@ -41,7 +40,7 @@ class SimulationConfig(BaseModel):
 
 EnergyMixConfig = create_model(
     "EnergyMixConfig",
-    **{BatteryName.BATTERY: int, BatteryName.BATTERY_HEIGHT: float},
+    **{BatteryName.BATTERY_HEIGHT: (List[int], [])},
     **{key: int for key in PRODUCER_DATABASE.keys()},
 )
 

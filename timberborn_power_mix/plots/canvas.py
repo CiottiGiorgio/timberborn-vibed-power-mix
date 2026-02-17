@@ -55,8 +55,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
     large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
     windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
-    batteries = getattr(config.energy_mix, BatteryName.BATTERY)
-    battery_height = getattr(config.energy_mix, BatteryName.BATTERY_HEIGHT)
+    battery_heights = getattr(config.energy_mix, BatteryName.BATTERY_HEIGHT)
 
     # Visualization
     # Always create 5 plots
@@ -69,11 +68,12 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     )
 
     # Handle battery height display
-    if isinstance(battery_height, list):
-        avg_height = sum(battery_height) / len(battery_height) if battery_height else 0
+    num_batteries = len(battery_heights)
+    if num_batteries > 0:
+        avg_height = sum(battery_heights) / num_batteries
         height_str = f"Avg: {avg_height:.1f}"
     else:
-        height_str = str(battery_height)
+        height_str = "0"
 
     # Add Energy Mix Info Box
     mix_info = (
@@ -82,7 +82,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
         f"  Water Wheels: {water_wheels}\n"
         f"  Large Windmills: {large_windmills}\n"
         f"  Windmills: {windmills}\n"
-        f"  Batteries: {batteries} (Height: {height_str})"
+        f"  Batteries: {num_batteries} (Height: {height_str})"
     )
 
     # Place text box in top left corner
@@ -200,8 +200,8 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
         time_days,
         battery_charge,
         total_battery_capacity,
-        batteries,
-        battery_height,
+        num_batteries,
+        battery_heights,
     )
 
     # Plot 5: Empty Battery Duration Distribution (Percentage)

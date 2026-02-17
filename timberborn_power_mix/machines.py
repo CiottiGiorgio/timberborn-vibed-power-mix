@@ -30,7 +30,6 @@ class ProducerName(StrEnum):
 
 
 class BatteryName(StrEnum):
-    BATTERY = "battery"
     BATTERY_HEIGHT = "battery_height"
 
 

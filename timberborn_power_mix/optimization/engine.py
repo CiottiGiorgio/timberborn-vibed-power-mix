@@ -130,38 +130,75 @@ def tournament_selection(
 
 
 def crossover(p1: Individual, p2: Individual, rng: np.random.Generator) -> Individual:
-    """Uniform crossover for building counts."""
+    """Uniform crossover for building counts and battery heights."""
     mix1 = p1.mix.model_dump()
     mix2 = p2.mix.model_dump()
     child_mix = {}
-    for key in mix1.keys():
+
+    # Crossover producers
+    for key in PRODUCER_DATABASE.keys():
         child_mix[key] = mix1[key] if rng.random() < 0.5 else mix2[key]
+
+    # Crossover battery heights (list)
+    h1, h2 = mix1[BatteryName.BATTERY_HEIGHT], mix2[BatteryName.BATTERY_HEIGHT]
+    max_len = max(len(h1), len(h2))
+    child_heights = []
+    for i in range(max_len):
+        if i < len(h1) and i < len(h2):
+            child_heights.append(h1[i] if rng.random() < 0.5 else h2[i])
+        elif i < len(h1):
+            if rng.random() < 0.5:
+                child_heights.append(h1[i])
+        elif i < len(h2):
+            if rng.random() < 0.5:
+                child_heights.append(h2[i])
+
+    child_mix[BatteryName.BATTERY_HEIGHT] = child_heights
     return Individual(EnergyMixConfig(**child_mix))
 
 
 def mutate(
     ind: Individual, rng: np.random.Generator, max_machines: int = 100
 ) -> Individual:
-    """Randomly tweaks building counts."""
+    """Randomly tweaks building counts and battery heights."""
     mix_data = ind.mix.model_dump()
-    fields_to_mutate = rng.choice(list(mix_data.keys()), size=rng.integers(1, 3))
-    for field in fields_to_mutate:
-        if field == BatteryName.BATTERY_HEIGHT:
-            mix_data[field] = max(
-                1.0, round(mix_data[field] + rng.uniform(-2.0, 2.0), 1)
-            )
-        else:
+    producers = list(PRODUCER_DATABASE.keys())
+
+    # Decide whether to mutate producers or batteries
+    if rng.random() < 0.7:
+        # Mutate producers
+        fields_to_mutate = rng.choice(producers, size=rng.integers(1, 3))
+        for field in fields_to_mutate:
             delta = rng.integers(-5, 6)
             mix_data[field] = max(0, min(max_machines, int(mix_data[field] + delta)))
+    else:
+        # Mutate batteries
+        heights = mix_data[BatteryName.BATTERY_HEIGHT]
+        mutation_type = rng.random()
+        if mutation_type < 0.2 and len(heights) < max_machines:
+            # Add a battery
+            heights.append(rng.integers(1, 21))
+        elif mutation_type < 0.4 and len(heights) > 0:
+            # Remove a battery
+            heights.pop(rng.integers(0, len(heights)))
+        elif len(heights) > 0:
+            # Tweak an existing battery's height
+            idx = rng.integers(0, len(heights))
+            heights[idx] = max(1, min(20, int(heights[idx] + rng.integers(-3, 4))))
+
+        mix_data[BatteryName.BATTERY_HEIGHT] = heights
+
     return Individual(EnergyMixConfig(**mix_data))
 
 
 def get_random_individual(
     rng: np.random.Generator, max_machines: int = 50, max_height: int = 20
 ) -> Individual:
+    num_batteries = rng.integers(0, max_machines)
     data = {
-        BatteryName.BATTERY: int(rng.integers(0, max_machines)),
-        BatteryName.BATTERY_HEIGHT: float(rng.integers(1, max_height)),
+        BatteryName.BATTERY_HEIGHT: [
+            int(rng.integers(1, max_height + 1)) for _ in range(num_batteries)
+        ],
         **{name: int(rng.integers(0, max_machines)) for name in PRODUCER_DATABASE},
     }
     return Individual(EnergyMixConfig(**data))

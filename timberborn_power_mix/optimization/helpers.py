@@ -15,8 +15,8 @@ def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> float:
         mix_dict[name] * spec.cost for name, spec in PRODUCER_DATABASE.items()
     )
 
-    # Add battery cost
-    return producer_cost + (
-        mix_dict[BatteryName.BATTERY]
-        * battery_cost(mix_dict[BatteryName.BATTERY_HEIGHT])
-    )
+    # Add battery costs from the list of heights
+    heights = mix_dict[BatteryName.BATTERY_HEIGHT]
+    battery_total_cost = sum(battery_cost(h) for h in heights)
+
+    return producer_cost + battery_total_cost

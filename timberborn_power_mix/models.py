@@ -71,6 +71,9 @@ class IntList(click.ParamType):
         if isinstance(value, list):
             return value
 
+        if not value or value.strip() == "":
+            return []
+
         # Try to parse as a comma-separated list of ints
         try:
             return [int(x.strip()) for x in value.split(",")]

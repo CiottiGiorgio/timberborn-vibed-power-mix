@@ -48,7 +48,7 @@ def run_profiled_optimization():
 
     try:
         for i in range(num_runs):
-            print(f"Run {i+1}/{num_runs}...")
+            print(f"Run {i + 1}/{num_runs}...")
             run_optimization(config)
     finally:
         scalene_profiler.stop()

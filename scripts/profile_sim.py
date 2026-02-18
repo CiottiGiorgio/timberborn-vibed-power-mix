@@ -59,7 +59,7 @@ def run_profiled_simulation():
 
     try:
         for i in range(num_iterations):
-            print(f"Iteration {i+1}/{num_iterations}...")
+            print(f"Iteration {i + 1}/{num_iterations}...")
             _result = run_simulation_multithread(config)
     finally:
         scalene_profiler.stop()

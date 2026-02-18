@@ -18,7 +18,6 @@ def test_simulate_no_options():
         ) as mock_orchestrator,
         patch("matplotlib.pyplot.show"),
     ):
-
         result = runner.invoke(cli, ["simulate"])
 
         # Check that the command executed successfully
@@ -46,7 +45,6 @@ def test_optimize_no_options():
     with patch(
         "timberborn_power_mix.optimization.orchestrator.optimization_orchestrator"
     ) as mock_orchestrator:
-
         result = runner.invoke(cli, ["optimize"])
 
         assert result.exit_code == 0

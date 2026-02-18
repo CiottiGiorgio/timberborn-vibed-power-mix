@@ -7,7 +7,7 @@ from timberborn_power_mix.simulation.models import SimulationConfig
 logger = logging.getLogger(__name__)
 
 
-def simulation_orchestrator(config: SimulationConfig):
+def simulation_orchestrator(config: SimulationConfig):  # type: ignore[valid-type]
     """Visualize power and energy profiles for a single configuration."""
 
     logger.info(f"Running {config.samples} simulations for visualization...")

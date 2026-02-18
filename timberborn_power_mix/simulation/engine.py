@@ -19,7 +19,9 @@ from timberborn_power_mix.simulation.models import (
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
-def run_simulation_singlethread(config: SimulationConfig) -> SimulationResult:
+def run_simulation_singlethread(
+    config: SimulationConfig,  # type: ignore[valid-type]
+) -> SimulationResult:
     """Executes the simulation in a single thread."""
     rng = np.random.default_rng(config.seed)
     jit_config = config.to_jit_config()
@@ -28,7 +30,9 @@ def run_simulation_singlethread(config: SimulationConfig) -> SimulationResult:
     return run_jit_simulation(jit_config, cached_consts, rng)
 
 
-def run_simulation_multithread(config: SimulationConfig) -> SimulationResult:
+def run_simulation_multithread(
+    config: SimulationConfig,  # type: ignore[valid-type]
+) -> SimulationResult:
     """Executes the simulation across multiple threads using a ThreadPool."""
     threads = helpers.calculate_optimal_threads(config.threads, config.samples)
 

@@ -159,7 +159,7 @@ def parse_common_config(**kwargs) -> CommonConfig:
     )
 
 
-def parse_simulation_config(**kwargs) -> SimulationConfig:
+def parse_simulation_config(**kwargs) -> SimulationConfig:  # type: ignore[valid-type]
     """Parses full simulation configuration from kwargs."""
     battery_heights = list(kwargs.get(BatteryName.BATTERY_HEIGHTS, ()))
 

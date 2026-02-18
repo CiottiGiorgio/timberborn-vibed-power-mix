@@ -24,8 +24,8 @@ class EnergyMixConfig(BaseModel):
 
 EnergyMixConfig = create_model(
     "EnergyMixConfig",
-    **{BatteryName.BATTERY_HEIGHTS: List[int]},
-    **{key: int for key in PRODUCER_DATABASE.keys()},
+    **{BatteryName.BATTERY_HEIGHTS.value: List[int]},
+    **{key.value: int for key in PRODUCER_DATABASE.keys()},
 )
 
 

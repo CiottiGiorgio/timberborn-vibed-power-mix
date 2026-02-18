@@ -44,18 +44,18 @@ class ConfigName(StrEnum):
 
 
 FactoryConfig = create_model(
-    "FactoryConfig", **{key: int for key in FACTORY_DATABASE.keys()}
+    "FactoryConfig", **{key.value: int for key in FACTORY_DATABASE.keys()}
 )
 
 CommonConfig = create_model(
     "CommonConfig",
-    **{ConfigName.SEED: (Optional[int], None)},
-    **{ConfigName.THREADS: (Optional[int], None)},
-    **{ConfigName.SAMPLES: int},
-    **{ConfigName.DAYS: int},
-    **{ConfigName.WORKING_HOURS: int},
-    **{ConfigName.WET_DAYS: int},
-    **{ConfigName.DRY_DAYS: int},
-    **{ConfigName.BADTIDE_DAYS: int},
-    **{ConfigName.FACTORIES: FactoryConfig},
+    **{ConfigName.SEED.value: (Optional[int], None)},
+    **{ConfigName.THREADS.value: (Optional[int], None)},
+    **{ConfigName.SAMPLES.value: int},
+    **{ConfigName.DAYS.value: int},
+    **{ConfigName.WORKING_HOURS.value: int},
+    **{ConfigName.WET_DAYS.value: int},
+    **{ConfigName.DRY_DAYS.value: int},
+    **{ConfigName.BADTIDE_DAYS.value: int},
+    **{ConfigName.FACTORIES.value: FactoryConfig},
 )

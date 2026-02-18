@@ -29,7 +29,7 @@ class OptimizationConfig(BaseModel):
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
-    **{str(ConfigName.ITERATIONS): int},
+    **{ConfigName.ITERATIONS.value: int},
     __base__=BaseModel,
 )
 
@@ -42,7 +42,7 @@ OptimizationConfig.model_rebuild(force=True)
 class Individual:
     """Represents a single power grid configuration in the population."""
 
-    def __init__(self, mix: EnergyMixConfig):  # type: ignore[valid-type]
+    def __init__(self, mix: EnergyMixConfig):
         self.mix = mix
         self.cost: float = 0.0
         self.battery_stress: float = 0.0  # Objective 1: Minimize

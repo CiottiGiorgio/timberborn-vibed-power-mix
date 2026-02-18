@@ -27,7 +27,9 @@ logger = logging.getLogger(__name__)
 
 
 def evaluate_individual_task(
-    mix: EnergyMixConfig, sim_config_base: Dict[str, Any], seed: int
+    mix: EnergyMixConfig,
+    sim_config_base: Dict[str, Any],
+    seed: int,
 ) -> Tuple[float, float, float]:
     """
     Standalone task for parallel evaluation.
@@ -57,7 +59,7 @@ def evaluate_population(
     sim_config_base: Dict[str, Any],
     rng: np.random.Generator,
     executor: ProcessPoolExecutor,
-):
+) -> None:
     """Evaluates a list of individuals in parallel."""
     tasks = []
     for ind in population:
@@ -104,7 +106,7 @@ def fast_non_dominated_sort(population: List[Individual]) -> List[List[Individua
     return fronts[:-1]
 
 
-def calculate_crowding_distance(front: List[Individual]):
+def calculate_crowding_distance(front: List[Individual]) -> None:
     """Calculates diversity score for individuals in a front."""
     size = len(front)
     if size == 0:
@@ -132,7 +134,7 @@ def tournament_selection(
     population: List[Individual], rng: np.random.Generator
 ) -> Individual:
     """Selects the best individual from a random subset."""
-    participants = rng.choice(population, size=2, replace=False)
+    participants = rng.choice(np.array(population), size=2, replace=False)
     a, b = participants[0], participants[1]
     if a.rank < b.rank:
         return a
@@ -179,7 +181,7 @@ def mutate(
     # Decide whether to mutate producers or batteries
     if rng.random() < 0.7:
         # Mutate producers
-        fields_to_mutate = rng.choice(producers, size=rng.integers(1, 3))
+        fields_to_mutate = rng.choice(np.array(producers), size=rng.integers(1, 3))
         for field in fields_to_mutate:
             delta = rng.integers(-5, 6)
             mix_data[field] = max(0, min(max_machines, int(mix_data[field] + delta)))
@@ -233,12 +235,14 @@ def run_optimization(
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         # 1. Initialize Population
-        population = [get_random_individual(rng) for _ in range(pop_size)]
+        population: List[Individual] = [
+            get_random_individual(rng) for _ in range(pop_size)
+        ]
         evaluate_population(population, sim_config_base, rng, executor)
 
         for gen in range(generations):
             # 2. Create Offspring
-            offspring = []
+            offspring: List[Individual] = []
             while len(offspring) < pop_size:
                 p1 = tournament_selection(population, rng)
                 p2 = tournament_selection(population, rng)
@@ -254,7 +258,7 @@ def run_optimization(
             fronts = fast_non_dominated_sort(combined)
 
             # 5. Survival Selection
-            new_population = []
+            new_population: List[Individual] = []
             for front in fronts:
                 calculate_crowding_distance(front)
                 if len(new_population) + len(front) <= pop_size:

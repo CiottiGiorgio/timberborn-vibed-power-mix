@@ -29,7 +29,7 @@ class OptimizationConfig(BaseModel):
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
-    **{ConfigName.ITERATIONS: int},
+    **{str(ConfigName.ITERATIONS): int},
     __base__=BaseModel,
 )
 
@@ -42,7 +42,7 @@ OptimizationConfig.model_rebuild(force=True)
 class Individual:
     """Represents a single power grid configuration in the population."""
 
-    def __init__(self, mix: EnergyMixConfig):
+    def __init__(self, mix: EnergyMixConfig):  # type: ignore[valid-type]
         self.mix = mix
         self.cost: float = 0.0
         self.battery_stress: float = 0.0  # Objective 1: Minimize
@@ -53,7 +53,9 @@ class Individual:
         self.domination_count: int = 0
         self.dominated_solutions: List["Individual"] = []
 
-    def set_results(self, cost: float, battery_stress: float, hours_empty_pct: float):
+    def set_results(
+        self, cost: float, battery_stress: float, hours_empty_pct: float
+    ) -> None:
         """Sets the evaluation results calculated externally."""
         self.cost = cost
         self.battery_stress = battery_stress

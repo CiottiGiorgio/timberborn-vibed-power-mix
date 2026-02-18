@@ -1,5 +1,6 @@
 import click
 import logging
+from typing import Any, Callable, TypeVar
 from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.optimization import consts as opt_consts
 from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
@@ -10,8 +11,10 @@ from timberborn_power_mix.simulation.models import (
 from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig
 
+F = TypeVar("F", bound=Callable[..., Any])
 
-def add_common_params(func):
+
+def add_common_params(func: F) -> F:
     """Decorator to add common simulation parameters to a click command."""
 
     for name in reversed(FactoryName):
@@ -69,7 +72,7 @@ def add_common_params(func):
     return func
 
 
-def add_energy_mix_params(func):
+def add_energy_mix_params(func: F) -> F:
     """Decorator to add energy mix parameters (for simulate command)."""
 
     # Producers
@@ -109,7 +112,7 @@ def cli() -> None:
     default=sim_consts.DEFAULT_SIMULATION_SAMPLES,
     help="Number of samples per simulation",
 )
-def simulate_cmd(**kwargs):
+def simulate_cmd(**kwargs: Any) -> None:
     """Simulate a configuration with the specified parameters."""
     from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
 
@@ -131,7 +134,7 @@ def simulate_cmd(**kwargs):
     default=opt_consts.DEFAULT_OPTIMIZATION_SAMPLES,
     help="Number of samples per simulation during optimization",
 )
-def optimize_cmd(**kwargs):
+def optimize_cmd(**kwargs: Any) -> None:
     """Optimize the energy mix for a given factory configuration."""
     from timberborn_power_mix.optimization.orchestrator import optimization_orchestrator
 
@@ -139,7 +142,7 @@ def optimize_cmd(**kwargs):
     optimization_orchestrator(config)
 
 
-def parse_common_config(**kwargs) -> CommonConfig:
+def parse_common_config(**kwargs: Any) -> CommonConfig:
     """Parses common configuration parameters from kwargs."""
     factories = FactoryConfig(
         **{
@@ -159,7 +162,7 @@ def parse_common_config(**kwargs) -> CommonConfig:
     )
 
 
-def parse_simulation_config(**kwargs) -> SimulationConfig:  # type: ignore[valid-type]
+def parse_simulation_config(**kwargs: Any) -> SimulationConfig:  # type: ignore[valid-type]
     """Parses full simulation configuration from kwargs."""
     battery_heights = list(kwargs.get(BatteryName.BATTERY_HEIGHTS, ()))
 
@@ -181,7 +184,7 @@ def parse_simulation_config(**kwargs) -> SimulationConfig:  # type: ignore[valid
     )
 
 
-def parse_optimization_config(**kwargs) -> OptimizationConfig:
+def parse_optimization_config(**kwargs: Any) -> OptimizationConfig:
     """Parses optimization configuration from kwargs."""
     common_config = parse_common_config(**kwargs)
     return OptimizationConfig(

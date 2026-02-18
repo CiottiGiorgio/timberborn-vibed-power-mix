@@ -13,8 +13,8 @@ with the machine databases defined in `machines.py`.
 The dynamic structures effectively look like this:
 
 class FactoryConfig(BaseModel):
-    lumber_mills: int = 0
-    gear_workshops: int = 0
+    lumber_mills: int
+    gear_workshops: int
     ... (all other factories)
 
 class CommonConfig(BaseModel):

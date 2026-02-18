@@ -74,19 +74,22 @@ def add_energy_mix_params(func):
 
     # Producers
     for name in reversed(ProducerName):
+        display_name = name.replace("_", " ")
         func = click.option(
             f"--{name.replace('_', '-')}",
             type=int,
             default=0,
-            help=f"Number of {name.replace("_", " ")}",
+            help=f"Number of {display_name}",
         )(func)
 
     # Battery heights
+    display_name = BatteryName.BATTERY_HEIGHTS.replace("_", " ")
     func = click.option(
         f"--{BatteryName.BATTERY_HEIGHTS.replace('_', '-')}",
+        BatteryName.BATTERY_HEIGHTS.value,
         type=IntList(),
-        default=[],
-        help=f"Comma-separated list of {BatteryName.BATTERY_HEIGHTS.replace("_", " ")} (e.g., '10,15,10')",
+        default="",
+        help=f"Comma-separated list of {display_name} (e.g., '10,15,10')",
     )(func)
 
     return func
@@ -159,7 +162,7 @@ def parse_common_config(**kwargs) -> CommonConfig:
 
 def parse_simulation_config(**kwargs) -> SimulationConfig:
     """Parses full simulation configuration from kwargs."""
-    battery_heights = kwargs.get(BatteryName.BATTERY_HEIGHTS, [])
+    battery_heights = kwargs.get(BatteryName.BATTERY_HEIGHTS)
 
     energy_mix = EnergyMixConfig(
         battery_heights=battery_heights,

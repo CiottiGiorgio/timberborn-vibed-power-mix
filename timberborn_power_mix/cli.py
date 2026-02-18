@@ -9,27 +9,9 @@ from timberborn_power_mix.simulation.models import (
     SimulationConfig,
 )
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig
+from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig, IntList
 
 p = inflect.engine()
-
-
-class IntList(click.ParamType):
-    name = "int_list"
-
-    def convert(self, value, param, ctx):
-        if isinstance(value, list):
-            return value
-
-        # Try to parse as a comma-separated list of ints
-        try:
-            return [int(x.strip()) for x in value.split(",")]
-        except ValueError:
-            self.fail(
-                f"{value!r} is not a valid comma-separated list of integers",
-                param,
-                ctx,
-            )
 
 
 def add_common_params(func):

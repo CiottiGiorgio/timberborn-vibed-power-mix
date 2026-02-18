@@ -16,16 +16,16 @@ logging.basicConfig(level=logging.INFO)
 
 def run_profiled_optimization():
     # Configuration based on 'optimize-bot' run configuration:
-    # --working-hours 24 --bot-part-factory 3 --bot-assembler 1 --iteration 10
+    # --working-hours 24 --bot-part-factories 3 --bot-assemblers 1 --iterations 10
 
     factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
-    factory_data[FactoryName.BOT_PART_FACTORY] = 3
-    factory_data[FactoryName.BOT_ASSEMBLER] = 1
+    factory_data[FactoryName.BOT_PART_FACTORIES] = 3
+    factory_data[FactoryName.BOT_ASSEMBLERS] = 1
     factories = FactoryConfig(**factory_data)
 
     # Use a smaller number of iterations and samples for profiling
     config = OptimizationConfig(
-        iteration=10,
+        iterations=10,
         samples=opt_consts.DEFAULT_OPTIMIZATION_SAMPLES,
         days=sim_consts.DEFAULT_DAYS,
         wet_days=sim_consts.DEFAULT_WET_SEASON_DAYS,
@@ -39,7 +39,7 @@ def run_profiled_optimization():
 
     # Warm up Numba to ensure compilation time isn't included in the profile
     print("Warming up Numba (compiling jitted functions)...")
-    warmup_config = config.model_copy(update={"iteration": 1, "samples": 1, "days": 1})
+    warmup_config = config.model_copy(update={"iterations": 1, "samples": 1, "days": 1})
     run_optimization(warmup_config)
 
     num_runs = 2

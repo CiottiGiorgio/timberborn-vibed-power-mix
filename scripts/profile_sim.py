@@ -21,16 +21,16 @@ logging.basicConfig(level=logging.INFO)
 
 def run_profiled_simulation():
     # Configuration based on 'simulate-simple' run configuration:
-    # --lumber-mill 1 --wood-workshop 1 --windmill 4 --battery-heights 10
+    # --lumber-mills 1 --wood-workshops 1 --windmills 4 --battery-heights 10
 
     factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
-    factory_data[FactoryName.LUMBER_MILL] = 1
-    factory_data[FactoryName.WOOD_WORKSHOP] = 1
+    factory_data[FactoryName.LUMBER_MILLS] = 1
+    factory_data[FactoryName.WOOD_WORKSHOPS] = 1
     factories = FactoryConfig(**factory_data)
 
     energy_data = {key: 0 for key in PRODUCER_DATABASE.keys()}
-    energy_data[BatteryName.BATTERY_HEIGHT] = [10]
-    energy_data[ProducerName.WINDMILL] = 4
+    energy_data[BatteryName.BATTERY_HEIGHTS] = [10]
+    energy_data[ProducerName.WINDMILLS] = 4
     energy_mix = EnergyMixConfig(**energy_data)
 
     config = SimulationConfig(

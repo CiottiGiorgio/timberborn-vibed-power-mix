@@ -22,13 +22,13 @@ def generate_reference_simulation_data():
     # 1. Setup parameters
     # We must provide all fields because the models don't have defaults
     factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
-    factory_data[FactoryName.LUMBER_MILL] = 1
-    factory_data[FactoryName.WOOD_WORKSHOP] = 1
+    factory_data[FactoryName.LUMBER_MILLS] = 1
+    factory_data[FactoryName.WOOD_WORKSHOPS] = 1
     factories = FactoryConfig(**factory_data)
 
     energy_data = {key: 0 for key in PRODUCER_DATABASE.keys()}
-    energy_data[BatteryName.BATTERY_HEIGHT] = [1]
-    energy_data[ProducerName.WINDMILL] = 4
+    energy_data[BatteryName.BATTERY_HEIGHTS] = [1]
+    energy_data[ProducerName.WINDMILLS] = 4
     energy_mix = EnergyMixConfig(**energy_data)
 
     config = SimulationConfig(

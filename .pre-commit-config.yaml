@@ -1,44 +1,15 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.4
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
   - repo: local
     hooks:
-      - id: black
-        name: black
-        entry: poetry run black --check .
-        language: system
-        pass_filenames: false
-        always_run: true
-
-      - id: ruff
-        name: ruff
-        entry: poetry run ruff check .
-        language: system
-        pass_filenames: false
-        always_run: true
-
       - id: mypy
         name: mypy
         entry: poetry run mypy --package timberborn_power_mix
         language: system
         pass_filenames: false
         always_run: true
-
-      - id: pytest
-        name: pytest
-        entry: poetry run pytest
-        language: system
-        pass_filenames: false
-        always_run: true
-
-      - id: profile-sim
-        name: profile
-        entry: poetry run scalene run scripts/profile_sim.py
-        language: system
-        pass_filenames: false
-        stages: [manual]
-
-      - id: profile-opt
-        name: profile
-        entry: poetry run scalene run scripts/profile_opt.py
-        language: system
-        pass_filenames: false
-        stages: [manual]

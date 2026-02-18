@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 # - check that we can make tests for the optimization engine
 # - find a good strategy to run tests automatically
 # - write ci/cd for tests and linting (not packaging)
-# - modularize the profiling scripts and output files
 # - the software should care about the WORKING time spent with empty batteries. I actually don't care if I have an empty battery while the factories are closed
 
 

@@ -76,5 +76,15 @@ format = "ruff format ."
 lint = "ruff check . --fix"
 typecheck = "mypy --package timberborn_power_mix"
 test = "pytest"
-profile = "scalene scripts/profile_opt.py"
+
+# Internal tasks for profiling
+_run-profile-sim = "scalene run -o profiling/profile_sim.json scripts/profile_sim.py"
+_view-profile-sim = "scalene view profiling/profile_sim.json"
+_run-profile-opt = "scalene run -o profiling/profile_opt.json scripts/profile_opt.py"
+_view-profile-opt = "scalene view profiling/profile_opt.json"
+
+# Public sequence tasks
+profile-sim = ["_run-profile-sim", "_view-profile-sim"]
+profile-opt = ["_run-profile-opt", "_view-profile-opt"]
+
 all = ["format", "lint", "typecheck", "test"]

@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.ticker as ticker
 from matplotlib.axes import Axes
-from typing import List, Tuple
 
 
 def plot_power(

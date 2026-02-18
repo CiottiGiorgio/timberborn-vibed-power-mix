@@ -27,35 +27,30 @@ def add_common_params(func):
         f"--{ConfigName.BADTIDE_DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS,
-        show_default=True,
         help="Duration of badtide season in days",
     )(func)
     func = click.option(
         f"--{ConfigName.DRY_DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_DRY_SEASON_DAYS,
-        show_default=True,
         help="Duration of dry season in days",
     )(func)
     func = click.option(
         f"--{ConfigName.WET_DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_WET_SEASON_DAYS,
-        show_default=True,
         help="Duration of wet season in days",
     )(func)
     func = click.option(
         f"--{ConfigName.WORKING_HOURS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_WORKING_HOURS,
-        show_default=True,
         help="Number of working hours per day",
     )(func)
     func = click.option(
         f"--{ConfigName.DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_DAYS,
-        show_default=True,
         help="Number of days for the simulation",
     )(func)
     func = click.option(
@@ -110,7 +105,6 @@ def cli():
     f"--{ConfigName.SAMPLES.replace('_', '-')}",
     type=int,
     default=sim_consts.DEFAULT_SIMULATION_SAMPLES,
-    show_default=True,
     help="Number of samples per simulation",
 )
 def simulate_cmd(**kwargs):
@@ -127,14 +121,12 @@ def simulate_cmd(**kwargs):
     f"--{ConfigName.ITERATIONS.replace('_', '-')}",
     type=int,
     default=opt_consts.DEFAULT_ITERATIONS,
-    show_default=True,
     help="Number of optimization iterations",
 )
 @click.option(
     f"--{ConfigName.SAMPLES.replace('_', '-')}",
     type=int,
     default=opt_consts.DEFAULT_OPTIMIZATION_SAMPLES,
-    show_default=True,
     help="Number of samples per simulation during optimization",
 )
 def optimize_cmd(**kwargs):

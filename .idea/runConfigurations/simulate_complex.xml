@@ -15,7 +15,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="RUN_TOOL" value="" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/timberborn_power_mix/cli.py" />
-    <option name="PARAMETERS" value="simulate --working-hours 24 --lumber-mill 2 --gear-workshop 1 --steel-factory 2 --printing-press 2 --wood-workshop 1 --grillmist 1 --centrifuge 1 --large-windmill 12 --battery-heights 1,15" />
+    <option name="PARAMETERS" value="simulate --working-hours 24 --lumber-mills 2 --gear-workshops 1 --steel-factories 2 --printing-presses 2 --wood-workshops 1 --grillmists 1 --centrifuges 1 --large-windmills 12 --battery-heights 1,15" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

@@ -15,7 +15,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="RUN_TOOL" value="" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/timberborn_power_mix/cli.py" />
-    <option name="PARAMETERS" value="optimize --working-hours 24 --bot-part-factory 3 --bot-assembler 1" />
+    <option name="PARAMETERS" value="optimize --working-hours 24 --bot-part-factories 3 --bot-assemblers 1" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

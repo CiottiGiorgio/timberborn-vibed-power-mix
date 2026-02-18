@@ -16,15 +16,15 @@ with the machine databases defined in `machines.py`.
 The dynamic structures effectively look like this:
 
 class EnergyMixConfig(BaseModel):
-    battery_height: List[int] = []
-    windmill: int = 0
-    water_wheel: int = 0
+    battery_heights: List[int] = []
+    windmills: int = 0
+    water_wheels: int = 0
     ... (all other producers)
 """
 
 EnergyMixConfig = create_model(
     "EnergyMixConfig",
-    **{BatteryName.BATTERY_HEIGHT: (List[int], [])},
+    **{BatteryName.BATTERY_HEIGHTS: (List[int], [])},
     **{key: int for key in PRODUCER_DATABASE.keys()},
 )
 

@@ -11,8 +11,8 @@ with the machine databases defined in `machines.py`.
 The dynamic structures effectively look like this:
 
 class FactoryConfig(BaseModel):
-    lumber_mill: int = 0
-    gear_workshop: int = 0
+    lumber_mills: int = 0
+    gear_workshops: int = 0
     ... (all other factories)
 
 class OptimizationConfig(BaseModel):
@@ -24,12 +24,12 @@ class OptimizationConfig(BaseModel):
     dry_days: int
     badtide_days: int
     factories: FactoryConfig
-    iteration: int
+    iterations: int
 """
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
-    **{ConfigName.ITERATION: int},
+    **{ConfigName.ITERATIONS: int},
     __base__=BaseModel,
 )
 

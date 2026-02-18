@@ -1,5 +1,4 @@
 import click
-import inflect
 import logging
 from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.optimization import consts as opt_consts
@@ -11,8 +10,6 @@ from timberborn_power_mix.simulation.models import (
 from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig, IntList
 
-p = inflect.engine()
-
 
 def add_common_params(func):
     """Decorator to add common simulation parameters to a click command."""
@@ -23,7 +20,7 @@ def add_common_params(func):
             f"--{name.replace('_', '-')}",
             type=int,
             default=0,
-            help=f"Number of {p.plural(display_name)}",
+            help=f"Number of {display_name}",
         )(func)
 
     func = click.option(
@@ -82,22 +79,19 @@ def add_energy_mix_params(func):
 
     # Producers
     for name in reversed(ProducerName):
-        display_name = name.replace("_", " ")
         func = click.option(
             f"--{name.replace('_', '-')}",
             type=int,
             default=0,
-            help=f"Number of {p.plural(display_name)}",
+            help=f"Number of {name.replace("_", " ")}",
         )(func)
 
-    # Use inflect to pluralize the CLI option name and help text
-    display_name = BatteryName.BATTERY_HEIGHT.replace("_", " ")
+    # Battery heights
     func = click.option(
-        f"--{p.plural(BatteryName.BATTERY_HEIGHT.replace('_', '-'))}",
-        BatteryName.BATTERY_HEIGHT.value,
+        f"--{BatteryName.BATTERY_HEIGHTS.replace('_', '-')}",
         type=IntList(),
-        default="",
-        help=f"Comma-separated list of {p.plural(display_name)} (e.g., '10,15,10')",
+        default=[],
+        help=f"Comma-separated list of {BatteryName.BATTERY_HEIGHTS.replace("_", " ")} (e.g., '10,15,10')",
     )(func)
 
     return func
@@ -130,7 +124,7 @@ def simulate_cmd(**kwargs):
 @cli.command(name="optimize")
 @add_common_params
 @click.option(
-    f"--{ConfigName.ITERATION.replace('_', '-')}",
+    f"--{ConfigName.ITERATIONS.replace('_', '-')}",
     type=int,
     default=opt_consts.DEFAULT_ITERATIONS,
     show_default=True,
@@ -173,14 +167,15 @@ def parse_common_config(**kwargs) -> CommonConfig:
 
 def parse_simulation_config(**kwargs) -> SimulationConfig:
     """Parses full simulation configuration from kwargs."""
-    battery_height = kwargs.get(BatteryName.BATTERY_HEIGHT, [])
+    battery_heights = kwargs.get(BatteryName.BATTERY_HEIGHTS, [])
 
     energy_mix = EnergyMixConfig(
-        battery_height=battery_height,
+        battery_heights=battery_heights,
         **{
             key: value
             for key, value in kwargs.items()
-            if key in EnergyMixConfig.model_fields and key != BatteryName.BATTERY_HEIGHT
+            if key in EnergyMixConfig.model_fields
+            and key != BatteryName.BATTERY_HEIGHTS
         },
     )
 
@@ -197,7 +192,7 @@ def parse_optimization_config(**kwargs) -> OptimizationConfig:
     common_config = parse_common_config(**kwargs)
     return OptimizationConfig(
         **common_config.model_dump(),
-        iteration=kwargs[ConfigName.ITERATION],
+        iterations=kwargs[ConfigName.ITERATIONS],
     )
 
 

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def optimization_orchestrator(opt_config: OptimizationConfig):
     """Orchestrates the multi-objective NSGA-II optimization process."""
-    iterations = getattr(opt_config, ConfigName.ITERATION)
+    iterations = getattr(opt_config, ConfigName.ITERATIONS)
     logger.info(
         f"Starting NSGA-II Multi-Objective Optimization for {iterations} generations..."
     )

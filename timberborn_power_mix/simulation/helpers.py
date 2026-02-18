@@ -21,7 +21,7 @@ from timberborn_power_mix.models import ConfigName, FactoryConfig
 
 def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
     """Calculates the total energy storage capacity of all batteries in the mix."""
-    heights = getattr(energy_mix, BatteryName.BATTERY_HEIGHT)
+    heights = getattr(energy_mix, BatteryName.BATTERY_HEIGHTS)
     return sum(battery_capacity(h) for h in heights)
 
 
@@ -40,16 +40,16 @@ def calculate_jit_cached_consts(config: SimulationConfig) -> JitSimulationCached
     total_consumption_rate = calculate_total_consumption_rate(config.factories)
 
     # Production specs
-    wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEEL]
-    windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILL]
-    large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILL]
-    power_wheel_spec = PRODUCER_DATABASE[ProducerName.POWER_WHEEL]
+    wheel_spec = PRODUCER_DATABASE[ProducerName.WATER_WHEELS]
+    windmill_spec = PRODUCER_DATABASE[ProducerName.WINDMILLS]
+    large_windmill_spec = PRODUCER_DATABASE[ProducerName.LARGE_WINDMILLS]
+    power_wheel_spec = PRODUCER_DATABASE[ProducerName.POWER_WHEELS]
 
     # Counts
-    num_water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
-    num_windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
-    num_large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
-    num_power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
+    num_water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEELS)
+    num_windmills = getattr(config.energy_mix, ProducerName.WINDMILLS)
+    num_large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILLS)
+    num_power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEELS)
 
     total_battery_capacity = calculate_total_battery_capacity(config.energy_mix)
 

@@ -51,11 +51,11 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     season_boundaries = calculate_season_boundaries(config)
     total_cost = calculate_total_wood_cost(config.energy_mix)
 
-    power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEEL)
-    water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEEL)
-    large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILL)
-    windmills = getattr(config.energy_mix, ProducerName.WINDMILL)
-    battery_heights = getattr(config.energy_mix, BatteryName.BATTERY_HEIGHT)
+    power_wheels = getattr(config.energy_mix, ProducerName.POWER_WHEELS)
+    water_wheels = getattr(config.energy_mix, ProducerName.WATER_WHEELS)
+    large_windmills = getattr(config.energy_mix, ProducerName.LARGE_WINDMILLS)
+    windmills = getattr(config.energy_mix, ProducerName.WINDMILLS)
+    battery_heights = getattr(config.energy_mix, BatteryName.BATTERY_HEIGHTS)
 
     # Visualization
     # Always create 5 plots

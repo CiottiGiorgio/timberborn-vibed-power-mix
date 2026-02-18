@@ -8,53 +8,53 @@ class MachineSpec(NamedTuple):
 
 
 class FactoryName(StrEnum):
-    LUMBER_MILL = "lumber_mill"
-    GEAR_WORKSHOP = "gear_workshop"
-    STEEL_FACTORY = "steel_factory"
-    WOOD_WORKSHOP = "wood_workshop"
-    PAPER_MILL = "paper_mill"
-    PRINTING_PRESS = "printing_press"
-    OBSERVATORY = "observatory"
-    BOT_PART_FACTORY = "bot_part_factory"
-    BOT_ASSEMBLER = "bot_assembler"
-    EXPLOSIVES_FACTORY = "explosives_factory"
-    GRILLMIST = "grillmist"
-    CENTRIFUGE = "centrifuge"
+    LUMBER_MILLS = "lumber_mills"
+    GEAR_WORKSHOPS = "gear_workshops"
+    STEEL_FACTORIES = "steel_factories"
+    WOOD_WORKSHOPS = "wood_workshops"
+    PAPER_MILLS = "paper_mills"
+    PRINTING_PRESSES = "printing_presses"
+    OBSERVATORIES = "observatories"
+    BOT_PART_FACTORIES = "bot_part_factories"
+    BOT_ASSEMBLERS = "bot_assemblers"
+    EXPLOSIVES_FACTORIES = "explosives_factories"
+    GRILLMISTS = "grillmists"
+    CENTRIFUGES = "centrifuges"
 
 
 class ProducerName(StrEnum):
-    WATER_WHEEL = "water_wheel"
-    WINDMILL = "windmill"
-    LARGE_WINDMILL = "large_windmill"
-    POWER_WHEEL = "power_wheel"
+    WATER_WHEELS = "water_wheels"
+    WINDMILLS = "windmills"
+    LARGE_WINDMILLS = "large_windmills"
+    POWER_WHEELS = "power_wheels"
 
 
 class BatteryName(StrEnum):
-    BATTERY_HEIGHT = "battery_height"
+    BATTERY_HEIGHTS = "battery_heights"
 
 
 # Consumers
 FACTORY_DATABASE: Dict[FactoryName, MachineSpec] = {
-    FactoryName.LUMBER_MILL: MachineSpec(power=50, cost=0),
-    FactoryName.GEAR_WORKSHOP: MachineSpec(power=120, cost=0),
-    FactoryName.STEEL_FACTORY: MachineSpec(power=200, cost=0),
-    FactoryName.WOOD_WORKSHOP: MachineSpec(power=250, cost=0),
-    FactoryName.PAPER_MILL: MachineSpec(power=80, cost=0),
-    FactoryName.PRINTING_PRESS: MachineSpec(power=150, cost=0),
-    FactoryName.OBSERVATORY: MachineSpec(power=200, cost=0),
-    FactoryName.BOT_PART_FACTORY: MachineSpec(power=150, cost=0),
-    FactoryName.BOT_ASSEMBLER: MachineSpec(power=250, cost=0),
-    FactoryName.EXPLOSIVES_FACTORY: MachineSpec(power=150, cost=0),
-    FactoryName.GRILLMIST: MachineSpec(power=60, cost=0),
-    FactoryName.CENTRIFUGE: MachineSpec(power=200, cost=0),
+    FactoryName.LUMBER_MILLS: MachineSpec(power=50, cost=0),
+    FactoryName.GEAR_WORKSHOPS: MachineSpec(power=120, cost=0),
+    FactoryName.STEEL_FACTORIES: MachineSpec(power=200, cost=0),
+    FactoryName.WOOD_WORKSHOPS: MachineSpec(power=250, cost=0),
+    FactoryName.PAPER_MILLS: MachineSpec(power=80, cost=0),
+    FactoryName.PRINTING_PRESSES: MachineSpec(power=150, cost=0),
+    FactoryName.OBSERVATORIES: MachineSpec(power=200, cost=0),
+    FactoryName.BOT_PART_FACTORIES: MachineSpec(power=150, cost=0),
+    FactoryName.BOT_ASSEMBLERS: MachineSpec(power=250, cost=0),
+    FactoryName.EXPLOSIVES_FACTORIES: MachineSpec(power=150, cost=0),
+    FactoryName.GRILLMISTS: MachineSpec(power=60, cost=0),
+    FactoryName.CENTRIFUGES: MachineSpec(power=200, cost=0),
 }
 
 # Producers
 PRODUCER_DATABASE: Dict[ProducerName, MachineSpec] = {
-    ProducerName.WATER_WHEEL: MachineSpec(power=150, cost=50),
-    ProducerName.WINDMILL: MachineSpec(power=150, cost=40),
-    ProducerName.LARGE_WINDMILL: MachineSpec(power=300, cost=75),
-    ProducerName.POWER_WHEEL: MachineSpec(power=50, cost=50),
+    ProducerName.WATER_WHEELS: MachineSpec(power=150, cost=50),
+    ProducerName.WINDMILLS: MachineSpec(power=150, cost=40),
+    ProducerName.LARGE_WINDMILLS: MachineSpec(power=300, cost=75),
+    ProducerName.POWER_WHEELS: MachineSpec(power=50, cost=50),
 }
 
 

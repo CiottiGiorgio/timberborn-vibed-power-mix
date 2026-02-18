@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 # TODO:
-# - check that all plurals exposed in the CLI make sense, either keep is consistently singular or consistently plural
 # - check that we could migrate the optimization engine to pymoo
 # - check that battery height is used propertly throughout the codebase (total capacity where needed, discrete heights where needed)
 # - check that we can better type the return types passed around in the optimization engine
@@ -153,7 +152,7 @@ def crossover(p1: Individual, p2: Individual, rng: np.random.Generator) -> Indiv
         child_mix[key] = mix1[key] if rng.random() < 0.5 else mix2[key]
 
     # Crossover battery heights (list)
-    h1, h2 = mix1[BatteryName.BATTERY_HEIGHT], mix2[BatteryName.BATTERY_HEIGHT]
+    h1, h2 = mix1[BatteryName.BATTERY_HEIGHTS], mix2[BatteryName.BATTERY_HEIGHTS]
     max_len = max(len(h1), len(h2))
     child_heights = []
     for i in range(max_len):
@@ -166,7 +165,7 @@ def crossover(p1: Individual, p2: Individual, rng: np.random.Generator) -> Indiv
             if rng.random() < 0.5:
                 child_heights.append(h2[i])
 
-    child_mix[BatteryName.BATTERY_HEIGHT] = child_heights
+    child_mix[BatteryName.BATTERY_HEIGHTS] = child_heights
     return Individual(EnergyMixConfig(**child_mix))
 
 
@@ -186,7 +185,7 @@ def mutate(
             mix_data[field] = max(0, min(max_machines, int(mix_data[field] + delta)))
     else:
         # Mutate batteries
-        heights = mix_data[BatteryName.BATTERY_HEIGHT]
+        heights = mix_data[BatteryName.BATTERY_HEIGHTS]
         mutation_type = rng.random()
         if mutation_type < 0.2 and len(heights) < max_machines:
             # Add a battery
@@ -199,7 +198,7 @@ def mutate(
             idx = rng.integers(0, len(heights))
             heights[idx] = max(1, min(20, int(heights[idx] + rng.integers(-3, 4))))
 
-        mix_data[BatteryName.BATTERY_HEIGHT] = heights
+        mix_data[BatteryName.BATTERY_HEIGHTS] = heights
 
     return Individual(EnergyMixConfig(**mix_data))
 
@@ -209,7 +208,7 @@ def get_random_individual(
 ) -> Individual:
     num_batteries = rng.integers(0, max_machines)
     data = {
-        BatteryName.BATTERY_HEIGHT: [
+        BatteryName.BATTERY_HEIGHTS: [
             int(rng.integers(1, max_height + 1)) for _ in range(num_batteries)
         ],
         **{name: int(rng.integers(0, max_machines)) for name in PRODUCER_DATABASE},
@@ -223,10 +222,10 @@ def run_optimization(
     """Main NSGA-II Loop with parallel evaluation."""
     rng = np.random.default_rng(opt_config.seed)
     pop_size = 40
-    generations = opt_config.iteration
+    generations = opt_config.iterations
 
     sim_config_base = opt_config.model_dump()
-    sim_config_base.pop("iteration")
+    sim_config_base.pop("iterations")
     sim_config_base.pop("seed")
 
     # Respect user threads config for the ProcessPool

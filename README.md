@@ -22,12 +22,11 @@ Simulate a specific configuration of power producers, consumers, and batteries. 
 
 ```bash
 poetry run tb-power-mix simulate \
-    --large-windmill 5 \
-    --windmill 2 \
-    --battery 3 \
-    --battery-height 10 \
-    --lumber-mill 2 \
-    --gear-workshop 1
+    --large-windmills 5 \
+    --windmills 2 \
+    --battery-heights 10,10,10 \
+    --lumber-mills 2 \
+    --gear-workshops 1
 ```
 
 ### Optimize
@@ -36,8 +35,8 @@ Find the most efficient power mix for a given set of factories. The optimizer us
 
 ```bash
 poetry run tb-power-mix optimize \
-    --lumber-mill 5 \
-    --steel-factory 2
+    --lumber-mills 5 \
+    --steel-factories 2
 ```
 
 The optimizer searches for a **Pareto Frontier** of solutions that minimize both material cost and battery stress, eventually selecting the configuration that hits a target reliability of ~95%.

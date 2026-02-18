@@ -1,18 +1,15 @@
 import numpy as np
 import matplotlib.ticker as ticker
+from matplotlib.axes import Axes
+from typing import List, Tuple
 
 
 def plot_power(
-    ax,
-    time_days,
-    power_production,
-    power_consumption,
-    season_boundaries,
-    days,
-    water_wheels,
-    large_windmills,
-    windmills,
-):
+    ax: Axes,
+    time_days: np.ndarray,
+    power_production: np.ndarray,
+    power_consumption: np.ndarray,
+) -> None:
     # Simplified label as details are now in the text box
     production_label = "Total Production"
 

@@ -1,14 +1,17 @@
 import matplotlib.ticker as ticker
+from matplotlib.axes import Axes
+import numpy as np
+from typing import List
 
 
 def plot_battery(
-    ax,
-    time_days,
-    battery_charge,
-    total_battery_capacity,
-    num_batteries,
-    battery_heights,
-):
+    ax: Axes,
+    time_days: np.ndarray,
+    battery_charge: np.ndarray,
+    total_battery_capacity: float,
+    num_batteries: int,
+    battery_heights: List[float],
+) -> None:
     ax.plot(
         time_days,
         battery_charge,

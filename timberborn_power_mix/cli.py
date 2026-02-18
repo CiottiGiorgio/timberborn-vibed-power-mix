@@ -95,7 +95,7 @@ def add_energy_mix_params(func):
 
 
 @click.group()
-def cli():
+def cli() -> None:
     """Timberborn Power Mix Simulation Tool."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 

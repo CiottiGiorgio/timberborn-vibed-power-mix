@@ -1,7 +1,14 @@
 import matplotlib.ticker as ticker
+from matplotlib.axes import Axes
+import numpy as np
 
 
-def plot_surplus(ax, time_days, power_surplus, effective_balance):
+def plot_surplus(
+    ax: Axes,
+    time_days: np.ndarray,
+    power_surplus: np.ndarray,
+    effective_balance: np.ndarray,
+) -> None:
     ax.plot(
         time_days,
         power_surplus,

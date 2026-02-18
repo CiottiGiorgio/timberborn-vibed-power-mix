@@ -1,9 +1,16 @@
 import numpy as np
 import matplotlib.ticker as ticker
+from matplotlib.axes import Axes
 from timberborn_power_mix.simulation import consts as sim_consts
 
 
-def plot_energy(ax, time_days, energy_production, energy_consumption, days):
+def plot_energy(
+    ax: Axes,
+    time_days: np.ndarray,
+    energy_production: np.ndarray,
+    energy_consumption: np.ndarray,
+    days: int,
+) -> None:
     ax.plot(
         time_days,
         energy_production,

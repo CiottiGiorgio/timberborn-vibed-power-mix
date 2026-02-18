@@ -6,7 +6,7 @@ from timberborn_power_mix.models import ConfigName
 logger = logging.getLogger(__name__)
 
 
-def optimization_orchestrator(opt_config: OptimizationConfig):
+def optimization_orchestrator(opt_config: OptimizationConfig) -> None:
     """Orchestrates the multi-objective NSGA-II optimization process."""
     iterations = getattr(opt_config, ConfigName.ITERATIONS)
     logger.info(

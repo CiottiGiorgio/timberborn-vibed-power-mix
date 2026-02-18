@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from timberborn_power_mix.simulation.models import SimulationConfig, SimulationResult
 from timberborn_power_mix.plots.power_plot import plot_power
 from timberborn_power_mix.plots.energy_plot import plot_energy
@@ -16,7 +17,7 @@ from timberborn_power_mix.machines import ProducerName, BatteryName
 from timberborn_power_mix.models import ConfigName
 
 
-def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
+def create_simulation_figure(config: SimulationConfig, res: SimulationResult) -> Figure:
     # Unpack data
     data = res.worst_sample
     run_empty_hours = res.aggregated_samples.hours_empty_results
@@ -181,11 +182,6 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
         time_days,
         power_production,
         power_consumption,
-        season_boundaries,
-        days,
-        water_wheels,
-        large_windmills,
-        windmills,
     )
 
     # Plot 2: Energy
@@ -209,7 +205,6 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult):
     plot_empty_hours_percentage(
         ax5,
         run_empty_hours,
-        getattr(config, ConfigName.SAMPLES),
         total_simulation_hours,
     )
 

@@ -1,12 +1,12 @@
+from typing import Any, cast
 import numpy as np
-import matplotlib.ticker as ticker
 from matplotlib.axes import Axes
-from typing import List, cast, Any
+import matplotlib.ticker as ticker
 
 
 def plot_empty_hours_percentage(
     ax: Axes,
-    run_empty_hours: List[float],
+    run_empty_hours: np.ndarray,
     total_simulation_hours: int,
 ) -> None:
     # Calculate percentages

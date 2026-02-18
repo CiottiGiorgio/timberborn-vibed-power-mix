@@ -20,7 +20,7 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
 def run_simulation_singlethread(
-    config: SimulationConfig,  # type: ignore[valid-type]
+    config: SimulationConfig,
 ) -> SimulationResult:
     """Executes the simulation in a single thread."""
     rng = np.random.default_rng(config.seed)
@@ -31,7 +31,7 @@ def run_simulation_singlethread(
 
 
 def run_simulation_multithread(
-    config: SimulationConfig,  # type: ignore[valid-type]
+    config: SimulationConfig,
 ) -> SimulationResult:
     """Executes the simulation across multiple threads using a ThreadPool."""
     threads = helpers.calculate_optimal_threads(config.threads, config.samples)

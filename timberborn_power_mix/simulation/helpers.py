@@ -35,7 +35,7 @@ def calculate_total_consumption_rate(factories: FactoryConfig) -> int:
 
 
 def calculate_jit_cached_consts(
-    config: SimulationConfig,  # type: ignore[valid-type]
+    config: SimulationConfig,
 ) -> JitSimulationCachedConsts:
     """Pre-calculates static simulation constants from the full configuration."""
     # Consumption
@@ -66,7 +66,7 @@ def calculate_jit_cached_consts(
 
 
 def calculate_season_boundaries(
-    config: SimulationConfig,  # type: ignore[valid-type]
+    config: SimulationConfig,
 ) -> List[Tuple[int, str]]:
     """Determines the start hour and name of each season in the simulation timeline."""
     season_boundaries = []

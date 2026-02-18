@@ -13,6 +13,8 @@ from timberborn_power_mix.machines import (
 from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
+)
+from timberborn_power_mix.structures import (
     ProducerGroup,
     JitSimulationCachedConsts,
 )

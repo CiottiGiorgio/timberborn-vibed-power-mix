@@ -19,18 +19,20 @@ def plot_empty_hours_percentage(
         max_val = max(run_empty_percentages)
         # Ensure we have at least one bin if max_val is 0
         if max_val == 0:
-            bins = np.arange(0, 2, 1)  # 0-1%
+            bins = np.arange(0, 2, 1, dtype=float)  # 0-1%
         else:
-            bins = np.arange(0, max_val + 2, 1)
+            bins = np.arange(0, max_val + 2, 1, dtype=float)
 
         # Plot the histogram
-        n, bins_out, patches = ax.hist(
+        n_raw, bins_out, patches_raw = ax.hist(
             run_empty_percentages,
             bins=cast(Any, bins),
             color="red",
             alpha=0.7,
             edgecolor="black",
         )
+        n = cast(Any, n_raw)
+        patches = cast(Any, patches_raw)
 
         # Style the first bar (0-1%) to be grey with diagonal hatching
         if len(patches) > 0:

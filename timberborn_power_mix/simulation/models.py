@@ -1,12 +1,15 @@
-from typing import List, NamedTuple, Optional
-import numpy as np
+from typing import List
 from pydantic import create_model, BaseModel
 
 from timberborn_power_mix.machines import (
     BatteryName,
     PRODUCER_DATABASE,
 )
-from timberborn_power_mix.models import ConfigName, CommonConfig
+from timberborn_power_mix.models import CommonConfig
+from timberborn_power_mix.structures import (
+    ConfigName,
+    JitSimulationConfig,
+)
 
 """
 This module defines the configuration and result models for the power simulation.
@@ -27,36 +30,6 @@ EnergyMixConfig = create_model(
     **{BatteryName.BATTERY_HEIGHTS.value: List[int]},
     **{key.value: int for key in PRODUCER_DATABASE.keys()},
 )
-
-
-class JitSimulationConfig(NamedTuple):
-    """Subset of SimulationConfig used for jitted simulation configuration."""
-
-    samples: int
-    days: int
-    working_hours: int
-    wet_days: int
-    dry_days: int
-    badtide_days: int
-    seed: Optional[int] = None
-
-
-class ProducerGroup(NamedTuple):
-    """Combines a machine count with its individual power production rate."""
-
-    count: int
-    power: int
-
-
-class JitSimulationCachedConsts(NamedTuple):
-    """Constants for the jitted simulation that don't change between samples."""
-
-    total_consumption_rate: int
-    total_battery_capacity: float
-    large_windmills: ProducerGroup
-    windmills: ProducerGroup
-    power_wheels: ProducerGroup
-    water_wheels: ProducerGroup
 
 
 class SimulationConfigBase(BaseModel):
@@ -85,25 +58,3 @@ SimulationConfig = create_model(
 for name, field in CommonConfig.model_fields.items():
     SimulationConfig.model_fields[name] = field
 SimulationConfig.model_rebuild(force=True)
-
-
-class SimulationSample(NamedTuple):
-    """Represents the time-series data for production and storage state from a single simulation run."""
-
-    power_production: np.ndarray
-    battery_charge: np.ndarray
-
-
-class AggregatedSamples(NamedTuple):
-    """Holds aggregated metrics and consumption profiles collected across all samples in a simulation."""
-
-    power_consumption: np.ndarray
-    hours_empty_results: np.ndarray
-    stress_results: np.ndarray
-
-
-class SimulationResult(NamedTuple):
-    """Final output of the simulation process, containing aggregated metrics and the worst-case scenario."""
-
-    worst_sample: SimulationSample
-    aggregated_samples: AggregatedSamples

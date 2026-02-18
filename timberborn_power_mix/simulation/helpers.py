@@ -16,7 +16,8 @@ from timberborn_power_mix.simulation.models import (
     ProducerGroup,
     JitSimulationCachedConsts,
 )
-from timberborn_power_mix.models import ConfigName, FactoryConfig
+from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.structures import ConfigName
 
 
 def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
@@ -117,9 +118,9 @@ def calculate_base_power_production(
     is_water_active = ~is_dry
 
     power_wheel_production_rate = np.where(
-        is_working_hour, power_wheels.count * power_wheels.power, 0.0
+        is_working_hour, power_wheels.quantity * power_wheels.power, 0.0
     )
-    water_wheel_production_rate = water_wheels.count * water_wheels.power
+    water_wheel_production_rate = water_wheels.quantity * water_wheels.power
 
     return (
         np.where(is_water_active, water_wheel_production_rate, 0.0)

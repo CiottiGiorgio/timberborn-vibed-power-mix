@@ -1,7 +1,7 @@
 import logging
 from timberborn_power_mix.optimization.engine import run_optimization
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.models import ConfigName
+from timberborn_power_mix.structures import ConfigName
 
 logger = logging.getLogger(__name__)
 

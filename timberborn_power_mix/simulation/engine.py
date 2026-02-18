@@ -5,12 +5,12 @@ import numpy as np
 from numba import njit
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
-    JitSimulationConfig,
-    JitSimulationCachedConsts,
 )
 from timberborn_power_mix import helpers
 from timberborn_power_mix.simulation import consts
-from timberborn_power_mix.simulation.models import (
+from timberborn_power_mix.structures import (
+    JitSimulationConfig,
+    JitSimulationCachedConsts,
     SimulationSample,
     AggregatedSamples,
     SimulationResult,
@@ -191,8 +191,8 @@ def jit_stochastic_simulation(
         wind_strength_profile * windmills.power,
         0.0,
     )
-    wind_production = (large_windmills.count * large_wind_unit_prod) + (
-        windmills.count * small_wind_unit_prod
+    wind_production = (large_windmills.quantity * large_wind_unit_prod) + (
+        windmills.quantity * small_wind_unit_prod
     )
 
     power_production = base_power_production + wind_production

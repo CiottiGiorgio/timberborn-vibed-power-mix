@@ -1,8 +1,8 @@
-from enum import StrEnum
 from typing import Optional
 
 from pydantic import create_model
 from timberborn_power_mix.machines import FACTORY_DATABASE
+from timberborn_power_mix.structures import ConfigName
 
 """
 This module defines the base configuration models for the power simulation.
@@ -27,20 +27,6 @@ class CommonConfig(BaseModel):
     badtide_days: int
     factories: FactoryConfig
 """
-
-
-class ConfigName(StrEnum):
-    SEED = "seed"
-    THREADS = "threads"
-    SAMPLES = "samples"
-    DAYS = "days"
-    WORKING_HOURS = "working_hours"
-    WET_DAYS = "wet_days"
-    DRY_DAYS = "dry_days"
-    BADTIDE_DAYS = "badtide_days"
-    FACTORIES = "factories"
-    ENERGY_MIX = "energy_mix"
-    ITERATIONS = "iterations"
 
 
 FactoryConfig = create_model(

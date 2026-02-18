@@ -9,7 +9,8 @@ from timberborn_power_mix.simulation.models import (
     SimulationConfig,
 )
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig
+from timberborn_power_mix.models import CommonConfig, FactoryConfig
+from timberborn_power_mix.structures import ConfigName
 
 F = TypeVar("F", bound=Callable[..., Any])
 

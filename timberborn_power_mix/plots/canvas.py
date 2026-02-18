@@ -14,7 +14,7 @@ from timberborn_power_mix.simulation.helpers import (
     calculate_season_boundaries,
 )
 from timberborn_power_mix.machines import ProducerName, BatteryName
-from timberborn_power_mix.models import ConfigName
+from timberborn_power_mix.structures import ConfigName
 
 
 def create_simulation_figure(config: SimulationConfig, res: SimulationResult) -> Figure:

@@ -1,6 +1,7 @@
 from typing import List
 from pydantic import create_model, BaseModel
-from timberborn_power_mix.models import ConfigName, CommonConfig
+from timberborn_power_mix.models import CommonConfig
+from timberborn_power_mix.structures import ConfigName
 from timberborn_power_mix.simulation.models import EnergyMixConfig
 
 """

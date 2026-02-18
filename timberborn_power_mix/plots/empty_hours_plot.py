@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.ticker as ticker
 from matplotlib.axes import Axes
-from typing import List
+from typing import List, cast, Any
 
 
 def plot_empty_hours_percentage(
@@ -24,8 +24,12 @@ def plot_empty_hours_percentage(
             bins = np.arange(0, max_val + 2, 1)
 
         # Plot the histogram
-        n, bins, patches = ax.hist(
-            run_empty_percentages, bins=bins, color="red", alpha=0.7, edgecolor="black"
+        n, bins_out, patches = ax.hist(
+            run_empty_percentages,
+            bins=cast(Any, bins),
+            color="red",
+            alpha=0.7,
+            edgecolor="black",
         )
 
         # Style the first bar (0-1%) to be grey with diagonal hatching
@@ -40,14 +44,14 @@ def plot_empty_hours_percentage(
             max_freq_excluding_first = max(n[1:])
             # Add some headroom (e.g., 10%)
             if max_freq_excluding_first > 0:
-                ax.set_ylim(0, max_freq_excluding_first * 1.1)
+                ax.set_ylim(0, float(max_freq_excluding_first * 1.1))
 
         # Calculate percentiles and mean for ALL samples
         if run_empty_percentages:
-            p5 = np.percentile(run_empty_percentages, 5)
-            p50 = np.percentile(run_empty_percentages, 50)
-            p95 = np.percentile(run_empty_percentages, 95)
-            mean_val = np.mean(run_empty_percentages)
+            p5 = float(np.percentile(run_empty_percentages, 5))
+            p50 = float(np.percentile(run_empty_percentages, 50))
+            p95 = float(np.percentile(run_empty_percentages, 95))
+            mean_val = float(np.mean(run_empty_percentages))
 
             # Add vertical lines for percentiles
             ax.axvline(

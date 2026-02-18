@@ -1,6 +1,7 @@
 import matplotlib.ticker as ticker
 from matplotlib.axes import Axes
 import numpy as np
+from typing import cast, Sequence
 
 
 def plot_surplus(
@@ -22,7 +23,7 @@ def plot_surplus(
         time_days,
         effective_balance,
         0,
-        where=(effective_balance > 0),
+        where=cast(Sequence[bool], effective_balance > 0),
         facecolor="green",
         alpha=0.6,
         label="Unstored Surplus",
@@ -31,7 +32,7 @@ def plot_surplus(
         time_days,
         effective_balance,
         0,
-        where=(effective_balance < 0),
+        where=cast(Sequence[bool], effective_balance < 0),
         facecolor="red",
         alpha=0.6,
         label="Uncovered Deficit",

@@ -147,11 +147,11 @@ def crossover(p1: Individual, p2: Individual, rng: np.random.Generator) -> Indiv
     """Uniform crossover for building counts and battery heights."""
     mix1 = p1.mix.model_dump()
     mix2 = p2.mix.model_dump()
-    child_mix = {}
+    child_mix: Dict[str, Any] = {}
 
     # Crossover producers
     for key in PRODUCER_DATABASE.keys():
-        child_mix[key] = mix1[key] if rng.random() < 0.5 else mix2[key]
+        child_mix[key.value] = mix1[key] if rng.random() < 0.5 else mix2[key]
 
     # Crossover battery heights (list)
     h1, h2 = mix1[BatteryName.BATTERY_HEIGHTS], mix2[BatteryName.BATTERY_HEIGHTS]
@@ -167,7 +167,7 @@ def crossover(p1: Individual, p2: Individual, rng: np.random.Generator) -> Indiv
             if rng.random() < 0.5:
                 child_heights.append(h2[i])
 
-    child_mix[BatteryName.BATTERY_HEIGHTS] = child_heights
+    child_mix[BatteryName.BATTERY_HEIGHTS.value] = child_heights
     return Individual(EnergyMixConfig(**child_mix))
 
 
@@ -200,20 +200,27 @@ def mutate(
             idx = rng.integers(0, len(heights))
             heights[idx] = max(1, min(20, int(heights[idx] + rng.integers(-3, 4))))
 
-        mix_data[BatteryName.BATTERY_HEIGHTS] = heights
+        mix_data[BatteryName.BATTERY_HEIGHTS.value] = heights
 
-    return Individual(EnergyMixConfig(**mix_data))
+    # Ensure all keys are strings for Pydantic
+    final_data = {
+        (k.value if hasattr(k, "value") else str(k)): v for k, v in mix_data.items()
+    }
+    return Individual(EnergyMixConfig(**final_data))
 
 
 def get_random_individual(
     rng: np.random.Generator, max_machines: int = 50, max_height: int = 20
 ) -> Individual:
     num_batteries = rng.integers(0, max_machines)
-    data = {
-        BatteryName.BATTERY_HEIGHTS: [
+    data: Dict[str, Any] = {
+        BatteryName.BATTERY_HEIGHTS.value: [
             int(rng.integers(1, max_height + 1)) for _ in range(num_batteries)
         ],
-        **{name: int(rng.integers(0, max_machines)) for name in PRODUCER_DATABASE},
+        **{
+            name.value: int(rng.integers(0, max_machines))
+            for name in PRODUCER_DATABASE.keys()
+        },
     }
     return Individual(EnergyMixConfig(**data))
 

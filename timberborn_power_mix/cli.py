@@ -8,7 +8,7 @@ from timberborn_power_mix.simulation.models import (
     SimulationConfig,
 )
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig, IntList
+from timberborn_power_mix.models import ConfigName, CommonConfig, FactoryConfig
 
 
 def add_common_params(func):
@@ -83,13 +83,12 @@ def add_energy_mix_params(func):
         )(func)
 
     # Battery heights
-    display_name = BatteryName.BATTERY_HEIGHTS.replace("_", " ")
     func = click.option(
-        f"--{BatteryName.BATTERY_HEIGHTS.replace('_', '-')}",
+        "--battery",
         BatteryName.BATTERY_HEIGHTS.value,
-        type=IntList(),
-        default="",
-        help=f"Comma-separated list of {display_name} (e.g., '10,15,10')",
+        type=int,
+        multiple=True,
+        help="Height of a gravity battery. Can be specified multiple times (e.g., '--battery 10 --battery 15')",
     )(func)
 
     return func
@@ -162,7 +161,7 @@ def parse_common_config(**kwargs) -> CommonConfig:
 
 def parse_simulation_config(**kwargs) -> SimulationConfig:
     """Parses full simulation configuration from kwargs."""
-    battery_heights = kwargs.get(BatteryName.BATTERY_HEIGHTS)
+    battery_heights = list(kwargs.get(BatteryName.BATTERY_HEIGHTS, ()))
 
     energy_mix = EnergyMixConfig(
         battery_heights=battery_heights,

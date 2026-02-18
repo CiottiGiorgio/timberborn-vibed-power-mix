@@ -24,7 +24,7 @@ Simulate a specific configuration of power producers, consumers, and batteries. 
 poetry run tb-power-mix simulate \
     --large-windmills 5 \
     --windmills 2 \
-    --battery-heights 10,10,10 \
+    --battery 10 --battery 10 --battery 10 \
     --lumber-mills 2 \
     --gear-workshops 1
 ```

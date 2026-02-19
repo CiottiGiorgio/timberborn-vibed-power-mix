@@ -23,6 +23,18 @@ class EnergyMixConfig(BaseModel):
     windmills: int
     water_wheels: int
     ... (all other producers)
+
+class SimulationConfig(BaseModel):
+    energy_mix: EnergyMixConfig
+    seed: Optional[int] = None
+    threads: Optional[int] = None
+    samples: int
+    days: int
+    working_hours: int
+    wet_days: int
+    dry_days: int
+    badtide_days: int
+    factories: FactoryConfig
 """
 
 EnergyMixConfig = create_model(

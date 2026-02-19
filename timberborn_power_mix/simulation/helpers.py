@@ -128,18 +128,3 @@ def calculate_base_power_production(
         np.where(is_water_active, water_wheel_production_rate, 0.0)
         + power_wheel_production_rate
     )
-
-
-@njit(cache=True)
-def calculate_battery_stress(
-    battery_charge: np.ndarray, total_battery_capacity: float
-) -> float:
-    """
-    Calculates a stress index for the battery state.
-    Higher values indicate more time spent near zero charge.
-    """
-    if total_battery_capacity <= 0:
-        return float(battery_charge.size)
-
-    # sum((1 - charge/capacity)^8)
-    return np.sum((1.0 - (battery_charge / total_battery_capacity)) ** 8)

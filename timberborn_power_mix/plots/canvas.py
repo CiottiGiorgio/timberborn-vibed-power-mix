@@ -20,7 +20,7 @@ from timberborn_power_mix.structures import ConfigName
 
 def create_simulation_figure(config: SimulationConfig, res: SimulationResult) -> Figure:
     # Unpack data
-    data = res.worst_sample
+    data = res.p95_sample
     run_empty_hours = res.aggregated_samples.hours_empty_results
     power_consumption = res.aggregated_samples.power_consumption
 
@@ -119,10 +119,10 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
         bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.5),
     )
 
-    # Add Disclaimer about Worst Case
+    # Add Disclaimer about p95 Case
     disclaimer_text = (
-        "Note: The time-series plots (1-4) show the 'worst-case' sample\n"
-        "(the one with the most time spent with an empty battery)."
+        "Note: The time-series plots (1-4) show the 'p95' sample\n"
+        "(the one representing the 95th percentile of time spent with an empty battery)."
     )
     fig.text(
         0.5,

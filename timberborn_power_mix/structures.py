@@ -59,11 +59,10 @@ class AggregatedSamples(NamedTuple):
 
     power_consumption: np.ndarray
     hours_empty_results: np.ndarray
-    stress_results: np.ndarray
 
 
 class SimulationResult(NamedTuple):
-    """Final output of the simulation process, containing aggregated metrics and the worst-case scenario."""
+    """Final output of the simulation process, containing aggregated metrics and the p95 scenario."""
 
-    worst_sample: SimulationSample
+    p95_sample: SimulationSample
     aggregated_samples: AggregatedSamples

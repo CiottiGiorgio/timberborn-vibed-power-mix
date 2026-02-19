@@ -97,13 +97,7 @@ class PowerMixProblem(ElementwiseProblem):
         )
         hours_empty_pct = float(worst_case_hours_empty / total_hours)
 
-        # We still calculate stress as extra info
-        battery_stress = float(
-            np.percentile(result.aggregated_samples.stress_results, 95)
-        )
-
         out["F"] = [cost, hours_empty_pct]
-        out["battery_stress"] = battery_stress
         out["mix"] = mix
 
 

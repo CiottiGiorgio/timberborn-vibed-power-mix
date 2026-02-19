@@ -3,13 +3,40 @@ repos:
     rev: v0.9.4
     hooks:
       - id: ruff
+        stages: [pre-commit]
       - id: ruff-format
+        stages: [pre-commit]
 
   - repo: local
     hooks:
+      - id: ruff-check-all
+        name: ruff check all
+        entry: poetry run ruff check .
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+      - id: ruff-format-all
+        name: ruff format all
+        entry: poetry run ruff format . --check
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
       - id: mypy
         name: mypy
         entry: poetry run mypy --package timberborn_power_mix
         language: system
         pass_filenames: false
         always_run: true
+        stages: [pre-push]
+
+      - id: pytest
+        name: pytest
+        entry: poetry run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

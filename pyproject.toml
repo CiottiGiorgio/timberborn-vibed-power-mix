@@ -7,13 +7,14 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13, <4"
 dependencies = [
     "matplotlib>=3.10.0",
     "numpy>=2.2.1",
     "pydantic>=2.0.0",
     "click>=8.1.7",
     "numba>=0.61.0",
+    "pymoo>=0.6",
 ]
 
 [tool.poetry]
@@ -54,8 +55,9 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = "numba.*"
+module = ["numba.*", "pymoo"]
 ignore_missing_imports = true
+follow_imports = "skip"
 
 [[tool.mypy.overrides]]
 module = [

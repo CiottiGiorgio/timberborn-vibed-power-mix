@@ -1,8 +1,7 @@
-from typing import List
 from pydantic import create_model, BaseModel
 from timberborn_power_mix.models import CommonConfig
 from timberborn_power_mix.structures import ConfigName
-from timberborn_power_mix.simulation.models import EnergyMixConfig
+from timberborn_power_mix.optimization import consts
 
 """
 This module defines the configuration models for the power optimization.
@@ -25,12 +24,12 @@ class OptimizationConfig(BaseModel):
     dry_days: int
     badtide_days: int
     factories: FactoryConfig
-    iterations: int
+    iterations: int = 10
 """
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
-    **{ConfigName.ITERATIONS.value: int},
+    **{ConfigName.ITERATIONS.value: (int, consts.DEFAULT_ITERATIONS)},
     __base__=BaseModel,
 )
 
@@ -38,26 +37,3 @@ OptimizationConfig = create_model(
 for name, field in CommonConfig.model_fields.items():
     OptimizationConfig.model_fields[name] = field
 OptimizationConfig.model_rebuild(force=True)
-
-
-class Individual:
-    """Represents a single power grid configuration in the population."""
-
-    def __init__(self, mix: EnergyMixConfig):
-        self.mix = mix
-        self.cost: float = 0.0
-        self.battery_stress: float = 0.0  # Objective 1: Minimize
-        self.hours_empty_pct: float = 0.0  # Selection criteria
-
-        self.rank: int = 0
-        self.crowding_distance: float = 0.0
-        self.domination_count: int = 0
-        self.dominated_solutions: List["Individual"] = []
-
-    def set_results(
-        self, cost: float, battery_stress: float, hours_empty_pct: float
-    ) -> None:
-        """Sets the evaluation results calculated externally."""
-        self.cost = cost
-        self.battery_stress = battery_stress
-        self.hours_empty_pct = hours_empty_pct

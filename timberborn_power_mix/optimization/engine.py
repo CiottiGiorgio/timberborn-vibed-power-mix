@@ -1,10 +1,18 @@
 import logging
 import numpy as np
-from typing import List, Tuple, Optional, Dict, Any
-from concurrent.futures import ProcessPoolExecutor
+from typing import Tuple, Optional, Dict, Any
+from multiprocessing.pool import ThreadPool
+
+from pymoo.core.problem import ElementwiseProblem
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.operators.sampling.rnd import IntegerRandomSampling
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PM
+from pymoo.optimize import minimize
+from pymoo.termination import get_termination
 
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
-from timberborn_power_mix.optimization.models import OptimizationConfig, Individual
+from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.simulation.engine import run_simulation_singlethread
 from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix.simulation import consts as sim_consts
@@ -13,10 +21,8 @@ import timberborn_power_mix.optimization.helpers as opt_helpers
 
 logger = logging.getLogger(__name__)
 
-
 # TODO:
-# - check that we could migrate the optimization engine to pymoo
-# - check that battery height is used propertly throughout the codebase (total capacity where needed, discrete heights where needed)
+# - check that battery height is used properly throughout the codebase (total capacity where needed, discrete heights where needed)
 # - check that we can better type the return types passed around in the optimization engine
 # - check that we can make more tests on the simulation engine on a more modular level (unit tests, etc.)
 # - check that we can make tests for the optimization engine
@@ -24,271 +30,126 @@ logger = logging.getLogger(__name__)
 # - write ci/cd for tests and linting (not packaging)
 # - the software should care about the WORKING time spent with empty batteries. I actually don't care if I have an empty battery while the factories are closed
 
-
-def evaluate_individual_task(
-    mix: EnergyMixConfig,
-    sim_config_base: Dict[str, Any],
-    seed: int,
-) -> Tuple[float, float, float]:
-    """
-    Standalone task for parallel evaluation.
-    Returns (cost, battery_stress, hours_empty_pct).
-    """
-    config = SimulationConfig(**sim_config_base, energy_mix=mix, seed=seed)
-
-    # Use singlethread here because we are parallelizing at the individual level
-    result = run_simulation_singlethread(config)
-
-    cost = opt_helpers.calculate_total_wood_cost(mix)
-
-    # Use 95th percentile for both Stress and Hours Empty for consistency
-    battery_stress = np.percentile(result.aggregated_samples.stress_results, 95)
-
-    total_hours = sim_config_base["days"] * sim_consts.HOURS_PER_DAY
-    worst_case_hours_empty = np.percentile(
-        result.aggregated_samples.hours_empty_results, 95
-    )
-    hours_empty_pct = worst_case_hours_empty / total_hours
-
-    return cost, battery_stress, hours_empty_pct
+MAX_MACHINES = 50
+MAX_BATTERIES = 25
+MAX_HEIGHT = 15
 
 
-def evaluate_population(
-    population: List[Individual],
-    sim_config_base: Dict[str, Any],
-    rng: np.random.Generator,
-    executor: ProcessPoolExecutor,
-) -> None:
-    """Evaluates a list of individuals in parallel."""
-    tasks = []
-    for ind in population:
-        seed = int(rng.integers(0, 2**32 - 1))
-        tasks.append(
-            executor.submit(evaluate_individual_task, ind.mix, sim_config_base, seed)
+class PowerMixProblem(ElementwiseProblem):
+    def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
+        self.opt_config = opt_config
+        self.sim_config_base = opt_config.model_dump()
+        self.sim_config_base.pop("iterations")
+        self.sim_config_base.pop("seed")
+
+        self.producers = list(PRODUCER_DATABASE.keys())
+        self.n_producers = len(self.producers)
+
+        # Variables:
+        # [0...n_producers-1]: Producer counts
+        # [n_producers]: Number of batteries
+        # [n_producers+1]: Uniform battery height
+        n_var = self.n_producers + 2
+
+        xl = np.zeros(n_var, dtype=int)
+        xu = np.zeros(n_var, dtype=int)
+
+        # Producer bounds
+        xu[: self.n_producers] = MAX_MACHINES
+
+        # Num batteries bounds
+        xu[self.n_producers] = MAX_BATTERIES
+
+        # Uniform battery height bounds
+        xl[self.n_producers + 1] = 1
+        xu[self.n_producers + 1] = MAX_HEIGHT
+
+        super().__init__(n_var=n_var, n_obj=2, xl=xl, xu=xu, **kwargs)
+
+    def _evaluate(
+        self, x: np.ndarray, out: Dict[str, Any], *args: Any, **kwargs: Any
+    ) -> None:
+        # 1. Reconstruct EnergyMixConfig
+        mix_data: Dict[str, Any] = {}
+        for i, producer in enumerate(self.producers):
+            mix_data[producer.value] = int(x[i])
+
+        num_batteries = int(x[self.n_producers])
+        uniform_height = int(x[self.n_producers + 1])
+        mix_data[BatteryName.BATTERY_HEIGHTS.value] = [uniform_height] * num_batteries
+
+        mix = EnergyMixConfig(**mix_data)
+
+        # 2. Run Simulation
+        eval_seed = hash(tuple(x)) % (2**32)
+        config = SimulationConfig(
+            **self.sim_config_base, energy_mix=mix, seed=eval_seed
+        )
+        result = run_simulation_singlethread(config)
+
+        # 3. Calculate Objectives
+        cost = float(opt_helpers.calculate_total_wood_cost(mix))
+
+        # Objective 2: Minimize Unreliability (95th percentile of hours empty)
+        total_hours = self.sim_config_base["days"] * sim_consts.HOURS_PER_DAY
+        worst_case_hours_empty = np.percentile(
+            result.aggregated_samples.hours_empty_results, 95
+        )
+        hours_empty_pct = float(worst_case_hours_empty / total_hours)
+
+        # We still calculate stress as extra info
+        battery_stress = float(
+            np.percentile(result.aggregated_samples.stress_results, 95)
         )
 
-    for ind, task in zip(population, tasks):
-        cost, stress, pct = task.result()
-        ind.set_results(cost, stress, pct)
-
-
-def fast_non_dominated_sort(population: List[Individual]) -> List[List[Individual]]:
-    """Groups individuals into Pareto fronts based on Cost and Battery Stress."""
-    fronts: List[List[Individual]] = [[]]
-    for p in population:
-        p.domination_count = 0
-        p.dominated_solutions = []
-        for q in population:
-            if (p.cost <= q.cost and p.battery_stress <= q.battery_stress) and (
-                p.cost < q.cost or p.battery_stress < q.battery_stress
-            ):
-                p.dominated_solutions.append(q)
-            elif (q.cost <= p.cost and q.battery_stress <= p.battery_stress) and (
-                q.cost < p.cost or q.battery_stress < p.battery_stress
-            ):
-                p.domination_count += 1
-        if p.domination_count == 0:
-            p.rank = 1
-            fronts[0].append(p)
-
-    i = 0
-    while len(fronts[i]) > 0:
-        next_front = []
-        for p in fronts[i]:
-            for q in p.dominated_solutions:
-                q.domination_count -= 1
-                if q.domination_count == 0:
-                    q.rank = i + 2
-                    next_front.append(q)
-        i += 1
-        fronts.append(next_front)
-    return fronts[:-1]
-
-
-def calculate_crowding_distance(front: List[Individual]) -> None:
-    """Calculates diversity score for individuals in a front."""
-    size = len(front)
-    if size == 0:
-        return
-    if size <= 2:
-        for ind in front:
-            ind.crowding_distance = float("inf")
-        return
-
-    for ind in front:
-        ind.crowding_distance = 0.0
-    for obj in ["cost", "battery_stress"]:
-        front.sort(key=lambda x: getattr(x, obj))
-        front[0].crowding_distance = float("inf")
-        front[-1].crowding_distance = float("inf")
-        obj_range = getattr(front[-1], obj) - getattr(front[0], obj)
-        if obj_range > 0:
-            for i in range(1, size - 1):
-                front[i].crowding_distance += (
-                    getattr(front[i + 1], obj) - getattr(front[i - 1], obj)
-                ) / obj_range
-
-
-def tournament_selection(
-    population: List[Individual], rng: np.random.Generator
-) -> Individual:
-    """Selects the best individual from a random subset."""
-    participants = rng.choice(np.array(population), size=2, replace=False)
-    a, b = participants[0], participants[1]
-    if a.rank < b.rank:
-        return a
-    if b.rank < a.rank:
-        return b
-    return a if a.crowding_distance > b.crowding_distance else b
-
-
-def crossover(p1: Individual, p2: Individual, rng: np.random.Generator) -> Individual:
-    """Uniform crossover for building counts and battery heights."""
-    mix1 = p1.mix.model_dump()
-    mix2 = p2.mix.model_dump()
-    child_mix: Dict[str, Any] = {}
-
-    # Crossover producers
-    for key in PRODUCER_DATABASE.keys():
-        child_mix[key.value] = mix1[key] if rng.random() < 0.5 else mix2[key]
-
-    # Crossover battery heights (list)
-    h1, h2 = mix1[BatteryName.BATTERY_HEIGHTS], mix2[BatteryName.BATTERY_HEIGHTS]
-    max_len = max(len(h1), len(h2))
-    child_heights = []
-    for i in range(max_len):
-        if i < len(h1) and i < len(h2):
-            child_heights.append(h1[i] if rng.random() < 0.5 else h2[i])
-        elif i < len(h1):
-            if rng.random() < 0.5:
-                child_heights.append(h1[i])
-        elif i < len(h2):
-            if rng.random() < 0.5:
-                child_heights.append(h2[i])
-
-    child_mix[BatteryName.BATTERY_HEIGHTS.value] = child_heights
-    return Individual(EnergyMixConfig(**child_mix))
-
-
-def mutate(
-    ind: Individual, rng: np.random.Generator, max_machines: int = 100
-) -> Individual:
-    """Randomly tweaks building counts and battery heights."""
-    mix_data = ind.mix.model_dump()
-    producers = list(PRODUCER_DATABASE.keys())
-
-    # Decide whether to mutate producers or batteries
-    if rng.random() < 0.7:
-        # Mutate producers
-        fields_to_mutate = rng.choice(np.array(producers), size=rng.integers(1, 3))
-        for field in fields_to_mutate:
-            delta = rng.integers(-5, 6)
-            mix_data[field] = max(0, min(max_machines, int(mix_data[field] + delta)))
-    else:
-        # Mutate batteries
-        heights = mix_data[BatteryName.BATTERY_HEIGHTS]
-        mutation_type = rng.random()
-        if mutation_type < 0.2 and len(heights) < max_machines:
-            # Add a battery
-            heights.append(rng.integers(1, 21))
-        elif mutation_type < 0.4 and len(heights) > 0:
-            # Remove a battery
-            heights.pop(rng.integers(0, len(heights)))
-        elif len(heights) > 0:
-            # Tweak an existing battery's height
-            idx = rng.integers(0, len(heights))
-            heights[idx] = max(1, min(20, int(heights[idx] + rng.integers(-3, 4))))
-
-        mix_data[BatteryName.BATTERY_HEIGHTS.value] = heights
-
-    # Ensure all keys are strings for Pydantic
-    final_data = {
-        (k.value if hasattr(k, "value") else str(k)): v for k, v in mix_data.items()
-    }
-    return Individual(EnergyMixConfig(**final_data))
-
-
-def get_random_individual(
-    rng: np.random.Generator, max_machines: int = 50, max_height: int = 20
-) -> Individual:
-    num_batteries = rng.integers(0, max_machines)
-    data: Dict[str, Any] = {
-        BatteryName.BATTERY_HEIGHTS.value: [
-            int(rng.integers(1, max_height + 1)) for _ in range(num_batteries)
-        ],
-        **{
-            name.value: int(rng.integers(0, max_machines))
-            for name in PRODUCER_DATABASE.keys()
-        },
-    }
-    return Individual(EnergyMixConfig(**data))
+        out["F"] = [cost, hours_empty_pct]
+        out["battery_stress"] = battery_stress
+        out["mix"] = mix
 
 
 def run_optimization(
     opt_config: OptimizationConfig,
 ) -> Tuple[Optional[EnergyMixConfig], float]:
-    """Main NSGA-II Loop with parallel evaluation."""
-    rng = np.random.default_rng(opt_config.seed)
+    """Main NSGA-II Loop using pymoo with parallel evaluation."""
     pop_size = 40
-    generations = opt_config.iterations
+    n_threads = helpers.calculate_optimal_threads(opt_config.threads, pop_size)
 
-    sim_config_base = opt_config.model_dump()
-    sim_config_base.pop("iterations")
-    sim_config_base.pop("seed")
+    with ThreadPool(n_threads) as pool:
+        problem = PowerMixProblem(opt_config, elementwise_runner=pool.map)
 
-    # Respect user threads config for the ProcessPool
-    max_workers = helpers.calculate_optimal_threads(opt_config.threads, pop_size)
+        algorithm = NSGA2(
+            pop_size=pop_size,
+            sampling=IntegerRandomSampling(),
+            crossover=SBX(prob=0.9, eta=15, vtype=float),
+            mutation=PM(prob=0.1, eta=20, vtype=float),
+            eliminate_duplicates=True,
+        )
 
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        # 1. Initialize Population
-        population: List[Individual] = [
-            get_random_individual(rng) for _ in range(pop_size)
-        ]
-        evaluate_population(population, sim_config_base, rng, executor)
+        # Stop after either the generation limit or a hardcoded 60-second time limit
+        termination = get_termination("time", 60)
 
-        for gen in range(generations):
-            # 2. Create Offspring
-            offspring: List[Individual] = []
-            while len(offspring) < pop_size:
-                p1 = tournament_selection(population, rng)
-                p2 = tournament_selection(population, rng)
-                child = crossover(p1, p2, rng)
-                child = mutate(child, rng)
-                offspring.append(child)
+        res = minimize(
+            problem,
+            algorithm,
+            termination,
+            seed=opt_config.seed,
+            save_history=False,
+            verbose=True,
+        )
 
-            # 3. Evaluate Offspring in Parallel
-            evaluate_population(offspring, sim_config_base, rng, executor)
-
-            # 4. Combine and Sort
-            combined = population + offspring
-            fronts = fast_non_dominated_sort(combined)
-
-            # 5. Survival Selection
-            new_population: List[Individual] = []
-            for front in fronts:
-                calculate_crowding_distance(front)
-                if len(new_population) + len(front) <= pop_size:
-                    new_population.extend(front)
-                else:
-                    front.sort(key=lambda x: x.crowding_distance, reverse=True)
-                    new_population.extend(front[: pop_size - len(new_population)])
-                    break
-
-            population = new_population
-
-            if gen % 5 == 0:
-                best_front = [ind for ind in population if ind.rank == 1]
-                logger.info(f"Gen {gen}: Pareto Front Size {len(best_front)}")
-
-    # 6. Final Selection
-    pareto_front = [ind for ind in population if ind.rank == 1]
-    if not pareto_front:
+    if res.opt is None:
         return None, 0.0
 
+    # Selection Logic:
+    # Find the solution closest to the target unreliability (e.g. 5%)
     target = 0.05
-    best_ind = min(pareto_front, key=lambda ind: abs(ind.hours_empty_pct - target))
+    best_sol = min(res.opt, key=lambda sol: abs(sol.F[1] - target))
+
+    best_mix = best_sol.get("mix")
+    best_cost = best_sol.F[0]
 
     logger.info(
-        f"Optimization complete. Selected solution with {best_ind.hours_empty_pct:.2%} unreliability."
+        f"Optimization complete. Selected solution with {best_sol.F[1]:.2%} unreliability at cost {best_cost}."
     )
-    return best_ind.mix, best_ind.cost
+
+    return best_mix, best_cost

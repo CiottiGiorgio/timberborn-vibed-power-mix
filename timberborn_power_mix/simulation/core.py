@@ -11,7 +11,7 @@ from timberborn_power_mix.structures import (
 
 @njit
 def jit_stochastic_simulation(
-    seed: int,
+    seed: np.uint32,
     total_hours: int,
     base_power_production: NDArray[np.uint32],
     power_consumption: NDArray[np.uint32],

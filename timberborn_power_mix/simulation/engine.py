@@ -21,7 +21,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
 
     # Generate seeds for all samples
     ss = np.random.SeedSequence(config.seed)
-    all_seeds = ss.generate_state(config.samples, dtype=np.uint64)
+    all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
     res: SimulationResult
     if config.threads is None or config.threads > 1:
@@ -43,7 +43,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
 def run_simulation_singlethread(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-    all_seeds: NDArray[np.uint64],
+    all_seeds: NDArray[np.uint32],
 ) -> SimulationResult:
     base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)
@@ -68,7 +68,7 @@ def run_simulation_multithread(
     config: JitSimulationConfig,
     threads: int,
     sim_consts: JitSimulationCachedConsts,
-    all_seeds: NDArray[np.uint64],
+    all_seeds: NDArray[np.uint32],
 ) -> SimulationResult:
     base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)
@@ -109,7 +109,7 @@ def run_simulation_multithread(
 
 @njit(nogil=True)
 def jit_batched_simulation(
-    seeds: NDArray[np.uint64],
+    seeds: NDArray[np.uint32],
     total_hours: int,
     base_power_production: NDArray[np.uint32],
     power_consumption: NDArray[np.uint32],

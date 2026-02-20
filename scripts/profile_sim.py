@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from scalene import scalene_profiler
-from timberborn_power_mix.simulation.engine import run_simulation_multithreaded
+from timberborn_power_mix.simulation.engine import run_simulation_multithread
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
@@ -59,7 +59,7 @@ def run_profiled_simulation():
     ss = np.random.SeedSequence(config.seed)
     all_seeds = ss.generate_state(config.samples)
 
-    run_simulation_multithreaded(
+    run_simulation_multithread(
         jit_config,
         cached_consts,
         all_seeds,
@@ -74,7 +74,7 @@ def run_profiled_simulation():
     try:
         for i in range(num_iterations):
             print(f"Iteration {i + 1}/{num_iterations}...")
-            _result = run_simulation_multithreaded(
+            _result = run_simulation_multithread(
                 jit_config,
                 cached_consts,
                 all_seeds,

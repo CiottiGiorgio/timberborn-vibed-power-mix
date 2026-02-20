@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import timberborn_power_mix.simulation.helpers as sim_helpers
 import timberborn_power_mix.helpers as helpers
 from timberborn_power_mix.plots.canvas import create_simulation_figure
-from timberborn_power_mix.simulation.engine import run_simulation_multithreaded
+from timberborn_power_mix.simulation.engine import run_simulation_multithread
 from timberborn_power_mix.simulation.models import SimulationConfig
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def run_simulation(config: SimulationConfig) -> None:
     ss = np.random.SeedSequence(config.seed)
     all_seeds = ss.generate_state(config.samples, dtype=np.uint64)
 
-    res = run_simulation_multithreaded(
+    res = run_simulation_multithread(
         jit_config,
         cached_consts,
         all_seeds,

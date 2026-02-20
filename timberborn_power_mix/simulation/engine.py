@@ -16,7 +16,68 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
 @njit(cache=True)
-def run_simulation_multithreaded(
+def run_simulation_singlethread(
+    config: JitSimulationConfig,
+    sim_consts: JitSimulationCachedConsts,
+    all_seeds: NDArray[np.uint64],
+) -> SimulationResult:
+    total_hours = config.days * consts.HOURS_PER_DAY
+
+    # Pre-calculate static profiles
+    time_hours = np.arange(total_hours, dtype=np.int32)
+    hour_of_day = time_hours % consts.HOURS_PER_DAY
+    is_working_hour = hour_of_day < config.working_hours
+
+    base_power_production = sim_helpers.calculate_base_power_production(
+        time_hours,
+        is_working_hour,
+        config.wet_days,
+        config.dry_days,
+        config.badtide_days,
+        sim_consts.power_wheels,
+        sim_consts.water_wheels,
+    )
+
+    power_consumption = np.where(
+        is_working_hour, sim_consts.total_consumption_rate, 0
+    ).astype(np.int32)
+
+    all_hours_empty = jit_batched_simulation(
+        base_power_production,
+        power_consumption,
+        total_hours,
+        sim_consts,
+        all_seeds,
+    )
+
+    aggregated = AggregatedSamples(
+        power_consumption=power_consumption,
+        hours_empty_results=all_hours_empty,
+    )
+
+    # Find p95 sample (Second Pass)
+    p95_hours_empty = np.percentile(all_hours_empty, 95)
+    p95_idx = np.where(all_hours_empty >= p95_hours_empty)[0][0]
+    p95_seed = all_seeds[p95_idx]
+
+    p95_sample = jit_stochastic_simulation(
+        base_power_production,
+        power_consumption,
+        sim_consts.large_windmills,
+        sim_consts.windmills,
+        sim_consts.total_battery_capacity,
+        total_hours,
+        p95_seed,
+    )
+
+    return SimulationResult(
+        p95_sample=p95_sample,
+        aggregated_samples=aggregated,
+    )
+
+
+@njit(cache=True)
+def run_simulation_multithread(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
     all_seeds: NDArray[np.uint64],
@@ -64,67 +125,6 @@ def run_simulation_multithreaded(
         finally:
             pool.close()
             pool.join()
-
-    aggregated = AggregatedSamples(
-        power_consumption=power_consumption,
-        hours_empty_results=all_hours_empty,
-    )
-
-    # Find p95 sample (Second Pass)
-    p95_hours_empty = np.percentile(all_hours_empty, 95)
-    p95_idx = np.where(all_hours_empty >= p95_hours_empty)[0][0]
-    p95_seed = all_seeds[p95_idx]
-
-    p95_sample = jit_stochastic_simulation(
-        base_power_production,
-        power_consumption,
-        sim_consts.large_windmills,
-        sim_consts.windmills,
-        sim_consts.total_battery_capacity,
-        total_hours,
-        p95_seed,
-    )
-
-    return SimulationResult(
-        p95_sample=p95_sample,
-        aggregated_samples=aggregated,
-    )
-
-
-@njit(cache=True)
-def run_simulation_singlethreaded(
-    config: JitSimulationConfig,
-    sim_consts: JitSimulationCachedConsts,
-    all_seeds: NDArray[np.uint64],
-) -> SimulationResult:
-    total_hours = config.days * consts.HOURS_PER_DAY
-
-    # Pre-calculate static profiles
-    time_hours = np.arange(total_hours, dtype=np.int32)
-    hour_of_day = time_hours % consts.HOURS_PER_DAY
-    is_working_hour = hour_of_day < config.working_hours
-
-    base_power_production = sim_helpers.calculate_base_power_production(
-        time_hours,
-        is_working_hour,
-        config.wet_days,
-        config.dry_days,
-        config.badtide_days,
-        sim_consts.power_wheels,
-        sim_consts.water_wheels,
-    )
-
-    power_consumption = np.where(
-        is_working_hour, sim_consts.total_consumption_rate, 0
-    ).astype(np.int32)
-
-    all_hours_empty = jit_batched_simulation(
-        base_power_production,
-        power_consumption,
-        total_hours,
-        sim_consts,
-        all_seeds,
-    )
 
     aggregated = AggregatedSamples(
         power_consumption=power_consumption,

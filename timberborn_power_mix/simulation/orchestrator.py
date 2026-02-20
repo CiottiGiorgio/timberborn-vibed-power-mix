@@ -1,6 +1,9 @@
 import logging
 import matplotlib.pyplot as plt
-from timberborn_power_mix.simulation.engine import run_simulation_multithread
+from timberborn_power_mix.simulation.engine import (
+    run_simulation_multithread,
+    run_simulation_singlethread,
+)
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.simulation.models import SimulationConfig
 
@@ -12,7 +15,10 @@ def simulation_orchestrator(config: SimulationConfig) -> None:
 
     logger.info(f"Running {config.samples} simulations for visualization...")
 
-    res = run_simulation_multithread(config)
+    if config.threads is None or config.threads > 1:
+        res = run_simulation_multithread(config)
+    else:
+        res = run_simulation_singlethread(config)
 
     create_simulation_figure(config, res)
     plt.show()

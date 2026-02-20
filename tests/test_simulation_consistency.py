@@ -1,15 +1,17 @@
 import numpy as np
 import pytest
+from unittest.mock import patch
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
 from timberborn_power_mix.simulation.engine import (
     run_simulation_singlethread,
     run_simulation_multithread,
 )
+from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
 from timberborn_power_mix.machines import (
     BatteryName,
     ProducerName,
-    FACTORY_DATABASE,
     PRODUCER_DATABASE,
+    FACTORY_DATABASE,
     FactoryName,
 )
 from timberborn_power_mix.models import FactoryConfig
@@ -56,14 +58,6 @@ def test_single_vs_multithread_consistency(simulation_config):
     res_multi = run_simulation_multithread(simulation_config)
 
     # 1. Check Aggregated Metrics (Hours Empty)
-    # We sort them because the order might differ in multithreading due to chunking/aggregation
-    # although our current implementation concatenates them in order of chunks.
-    # To be safe and robust, we compare sorted arrays or ensure strict ordering.
-    # Our implementation:
-    #   Single: seeds generated 0..N
-    #   Multi: seeds generated 0..N, split into chunks, processed, then concatenated.
-    #   So the order SHOULD be preserved exactly.
-
     np.testing.assert_array_equal(
         res_single.aggregated_samples.hours_empty_results,
         res_multi.aggregated_samples.hours_empty_results,
@@ -71,10 +65,6 @@ def test_single_vs_multithread_consistency(simulation_config):
     )
 
     # 2. Check p95 Sample Data
-    # The p95 sample is reconstructed using the same seed logic.
-    # If the aggregated results are identical, the p95 index and seed should be identical,
-    # and thus the reconstructed sample should be identical.
-
     np.testing.assert_array_equal(
         res_single.p95_sample.power_production,
         res_multi.p95_sample.power_production,
@@ -108,3 +98,44 @@ def test_seed_determinism(simulation_config):
         res2.aggregated_samples.hours_empty_results,
         err_msg="Simulation is not deterministic across repeated runs",
     )
+
+
+@patch("timberborn_power_mix.simulation.orchestrator.run_simulation_multithread")
+@patch("timberborn_power_mix.simulation.orchestrator.run_simulation_singlethread")
+@patch("timberborn_power_mix.simulation.orchestrator.create_simulation_figure")
+@patch("timberborn_power_mix.simulation.orchestrator.plt.show")
+def test_orchestrator_calls_correct_engine(
+    mock_show, mock_create_fig, mock_single, mock_multi, simulation_config
+):
+    """
+    Verifies that simulation_orchestrator calls the correct engine function
+    based on the number of threads in the configuration.
+    """
+    # Case 1: threads > 1 -> should call multithread
+    config_multi = simulation_config.model_copy(update={"threads": 4})
+    simulation_orchestrator(config_multi)
+
+    mock_multi.assert_called_once_with(config_multi)
+    mock_single.assert_not_called()
+
+    # Reset mocks
+    mock_multi.reset_mock()
+    mock_single.reset_mock()
+
+    # Case 2: threads = 1 -> should call singlethread
+    config_single = simulation_config.model_copy(update={"threads": 1})
+    simulation_orchestrator(config_single)
+
+    mock_single.assert_called_once_with(config_single)
+    mock_multi.assert_not_called()
+
+    # Reset mocks
+    mock_multi.reset_mock()
+    mock_single.reset_mock()
+
+    # Case 3: threads = None -> should call multithread
+    config_none = simulation_config.model_copy(update={"threads": None})
+    simulation_orchestrator(config_none)
+
+    mock_multi.assert_called_once_with(config_none)
+    mock_single.assert_not_called()

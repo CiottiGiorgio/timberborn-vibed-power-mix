@@ -6,15 +6,15 @@ from timberborn_power_mix.structures import ConfigName
 logger = logging.getLogger(__name__)
 
 
-def optimization_orchestrator(opt_config: OptimizationConfig) -> None:
+def optimization_orchestrator(config: OptimizationConfig) -> None:
     """Orchestrates the multi-objective NSGA-II optimization process."""
-    iterations = getattr(opt_config, ConfigName.ITERATIONS)
+    iterations = getattr(config, ConfigName.ITERATIONS)
     logger.info(
         f"Starting NSGA-II Multi-Objective Optimization for {iterations} generations..."
     )
     logger.info("Objectives: Minimize Cost & Minimize Battery Stress")
 
-    best_mix, best_cost = run_optimization(opt_config)
+    best_mix, best_cost = run_optimization(config)
 
     if best_mix:
         logger.info("Optimization finished!")

@@ -11,6 +11,8 @@ from pymoo.operators.mutation.pm import PM
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
 
+
+import timberborn_power_mix.simulation.helpers as sim_helpers
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
 from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.simulation.engine import run_simulation_singlethread
@@ -85,7 +87,9 @@ class PowerMixProblem(ElementwiseProblem):
         config = SimulationConfig(
             **self.sim_config_base, energy_mix=mix, seed=eval_seed
         )
-        result = run_simulation_singlethread(config)
+        result = run_simulation_singlethread(
+            config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
+        )
 
         # 3. Calculate Objectives
         cost = float(opt_helpers.calculate_total_wood_cost(mix))
@@ -102,14 +106,14 @@ class PowerMixProblem(ElementwiseProblem):
 
 
 def run_optimization(
-    opt_config: OptimizationConfig,
+    config: OptimizationConfig,
 ) -> Tuple[Optional[EnergyMixConfig], float]:
     """Main NSGA-II Loop using pymoo with parallel evaluation."""
     pop_size = 40
-    n_threads = helpers.calculate_optimal_threads(opt_config.threads, pop_size)
+    n_threads = helpers.calculate_optimal_threads(config.threads, pop_size)
 
     with ThreadPool(n_threads) as pool:
-        problem = PowerMixProblem(opt_config, elementwise_runner=pool.map)
+        problem = PowerMixProblem(config, elementwise_runner=pool.map)
 
         algorithm = NSGA2(
             pop_size=pop_size,
@@ -126,7 +130,7 @@ def run_optimization(
             problem,
             algorithm,
             termination,
-            seed=opt_config.seed,
+            seed=config.seed,
             save_history=False,
             verbose=True,
         )

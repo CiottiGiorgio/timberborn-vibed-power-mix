@@ -30,7 +30,7 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     return res
 
 
-@njit(cache=True)
+@njit(nogil=True, cache=True)
 def run_simulation_singlethread(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,

@@ -1,140 +1,25 @@
 from multiprocessing.pool import ThreadPool
-from typing import List
 
 import numpy as np
-from numba import njit
-from timberborn_power_mix.simulation.models import (
-    SimulationConfig,
-)
-from timberborn_power_mix import helpers
+from numba import njit, objmode
 from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.structures import (
     JitSimulationConfig,
     JitSimulationCachedConsts,
     SimulationSample,
+    ProducerGroup,
     AggregatedSamples,
     SimulationResult,
-    ProducerGroup,
 )
 import timberborn_power_mix.simulation.helpers as sim_helpers
 
 
-def run_simulation_singlethread(
-    config: SimulationConfig,
-) -> SimulationResult:
-    """Executes the simulation in a single thread."""
-    jit_config = config.to_jit_config()
-    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
-
-    # Generate seeds for all samples
-    ss = np.random.SeedSequence(config.seed)
-    seeds = ss.generate_state(config.samples, dtype=np.uint64)
-
-    aggregated = run_jit_simulation(jit_config, cached_consts, seeds)
-
-    # Find p95 sample
-    p95_sample = _reconstruct_p95_sample(config, cached_consts, aggregated, seeds)
-
-    return SimulationResult(
-        p95_sample=p95_sample,
-        aggregated_samples=aggregated,
-    )
-
-
-def run_simulation_multithread(
-    config: SimulationConfig,
-) -> SimulationResult:
-    """Executes the simulation across multiple threads using a ThreadPool."""
-    threads = helpers.calculate_optimal_threads(config.threads, config.samples)
-
-    jit_config = config.to_jit_config()
-    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
-
-    # Generate all seeds upfront to ensure we can reconstruct any sample
-    ss = np.random.SeedSequence(config.seed)
-    all_seeds = ss.generate_state(config.samples, dtype=np.uint64)
-
-    # Distribute seeds across threads
-    seed_chunks = np.array_split(all_seeds, threads)
-
-    thread_args = [(jit_config, cached_consts, chunk) for chunk in seed_chunks]
-
-    with ThreadPool(processes=threads) as executor:
-        results: List[AggregatedSamples] = executor.starmap(
-            run_jit_simulation, thread_args
-        )
-
-    # Aggregate results
-    all_hours_empty = np.concatenate([r.hours_empty_results for r in results])
-
-    aggregated = AggregatedSamples(
-        power_consumption=results[0].power_consumption,
-        hours_empty_results=all_hours_empty,
-    )
-
-    # Find p95 sample (Second Pass)
-    p95_sample = _reconstruct_p95_sample(config, cached_consts, aggregated, all_seeds)
-
-    return SimulationResult(
-        p95_sample=p95_sample,
-        aggregated_samples=aggregated,
-    )
-
-
-def _reconstruct_p95_sample(
-    config: SimulationConfig,
-    sim_consts: JitSimulationCachedConsts,
-    aggregated: AggregatedSamples,
-    seeds: np.ndarray,
-) -> SimulationSample:
-    """Finds the p95 seed and re-runs that specific simulation to get full data."""
-    total_hours = config.days * consts.HOURS_PER_DAY
-
-    # Get indices that would sort the results
-    sorted_indices = np.argsort(aggregated.hours_empty_results)
-
-    # Pick the index at the 95th percentile position
-    # For N samples, this is the element at floor(0.95 * (N - 1))
-    p95_pos = int(np.floor(0.95 * (len(sorted_indices) - 1)))
-    idx = sorted_indices[p95_pos]
-    target_seed = seeds[idx]
-
-    # Re-calculate base profiles (same as in run_jit_simulation)
-    time_hours = np.arange(total_hours)
-    is_working_hour = (time_hours % consts.HOURS_PER_DAY) < config.working_hours
-
-    base_power_production = sim_helpers.calculate_base_power_production(
-        time_hours,
-        is_working_hour,
-        config.wet_days,
-        config.dry_days,
-        config.badtide_days,
-        sim_consts.power_wheels,
-        sim_consts.water_wheels,
-    )
-    power_consumption = np.where(is_working_hour, sim_consts.total_consumption_rate, 0)
-
-    return jit_stochastic_simulation(
-        base_power_production,
-        power_consumption,
-        sim_consts.large_windmills,
-        sim_consts.windmills,
-        sim_consts.total_battery_capacity,
-        total_hours,
-        target_seed,
-    )
-
-
-@njit(nogil=True, cache=True)
-def run_jit_simulation(
+@njit(cache=True)
+def run_simulation_multithreaded(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-    seeds: np.ndarray,
-) -> AggregatedSamples:
-    """
-    Executes the Monte Carlo simulation and aggregates metrics.
-    Does NOT store full time-series for every sample to save memory.
-    """
+    all_seeds: np.ndarray,
+) -> SimulationResult:
     total_hours = config.days * consts.HOURS_PER_DAY
 
     # Pre-calculate static profiles
@@ -154,8 +39,69 @@ def run_jit_simulation(
 
     power_consumption = np.where(is_working_hour, sim_consts.total_consumption_rate, 0)
 
+    with objmode(all_hours_empty="float64[:]"):
+        pool = ThreadPool(processes=config.threads)
+        seed_chunks = np.array_split(all_seeds, config.threads)
+
+        try:
+            results = pool.starmap(
+                jit_batched_simulation,
+                [
+                    (
+                        base_power_production,
+                        power_consumption,
+                        total_hours,
+                        sim_consts,
+                        seeds,
+                    )
+                    for seeds in seed_chunks
+                ],
+            )
+            all_hours_empty = np.concatenate([r.hours_empty_results for r in results])
+        finally:
+            pool.close()
+            pool.join()
+
+    aggregated = AggregatedSamples(
+        power_consumption=power_consumption,
+        hours_empty_results=all_hours_empty,
+    )
+
+    # Find p95 sample (Second Pass)
+    p95_hours_empty = np.percentile(all_hours_empty, 95)
+    p95_idx = np.where(all_hours_empty >= p95_hours_empty)[0][0]
+    p95_seed = all_seeds[p95_idx]
+
+    p95_sample = jit_stochastic_simulation(
+        base_power_production,
+        power_consumption,
+        sim_consts.large_windmills,
+        sim_consts.windmills,
+        sim_consts.total_battery_capacity,
+        total_hours,
+        p95_seed,
+    )
+
+    return SimulationResult(
+        p95_sample=p95_sample,
+        aggregated_samples=aggregated,
+    )
+
+
+@njit(nogil=True)
+def jit_batched_simulation(
+    base_power_production: np.ndarray,
+    power_consumption: np.ndarray,
+    total_hours: int,
+    sim_consts: JitSimulationCachedConsts,
+    seeds: np.ndarray,
+) -> AggregatedSamples:
+    """
+    Executes the Monte Carlo simulation and aggregates metrics.
+    Does NOT store full time-series for every sample to save memory.
+    """
     n_samples = len(seeds)
-    hours_empty_results = np.zeros(n_samples)
+    hours_empty_results = np.zeros(n_samples, dtype=np.float64)
 
     for s in range(n_samples):
         res = jit_stochastic_simulation(
@@ -170,6 +116,7 @@ def run_jit_simulation(
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
 
     return AggregatedSamples(
+        # TODO: Pointless to return here something we've got as an argument.
         power_consumption=power_consumption,
         hours_empty_results=hours_empty_results,
     )

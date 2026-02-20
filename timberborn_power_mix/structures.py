@@ -21,6 +21,7 @@ class ConfigName(StrEnum):
 class JitSimulationConfig(NamedTuple):
     """Subset of SimulationConfig used for jitted simulation configuration."""
 
+    seed: int
     samples: int
     days: int
     working_hours: int

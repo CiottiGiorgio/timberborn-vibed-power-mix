@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 import numpy as np
 from numpy.typing import NDArray
 
@@ -27,7 +27,6 @@ class JitSimulationConfig(NamedTuple):
     wet_days: int
     dry_days: int
     badtide_days: int
-    seed: Optional[int] = None
 
 
 class ProducerGroup(NamedTuple):

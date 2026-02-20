@@ -1,8 +1,7 @@
 import logging
 
-import numpy as np
 from scalene import scalene_profiler
-from timberborn_power_mix.simulation.engine import run_simulation_multithread
+from timberborn_power_mix.simulation.engine import run_simulation
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,
@@ -16,8 +15,6 @@ from timberborn_power_mix.machines import (
     BatteryName,
 )
 from timberborn_power_mix.simulation import consts as sim_consts
-import timberborn_power_mix.simulation.helpers as sim_helpers
-import timberborn_power_mix.helpers as helpers
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,32 +35,21 @@ def run_profiled_simulation():
     energy_mix = EnergyMixConfig(**energy_data)
 
     config = SimulationConfig(
+        seed=42,
+        threads=None,
         samples=1_000_000,
         days=132,
+        working_hours=sim_consts.DEFAULT_WORKING_HOURS,
         wet_days=sim_consts.DEFAULT_WET_SEASON_DAYS,
         dry_days=sim_consts.DEFAULT_DRY_SEASON_DAYS,
         badtide_days=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS,
-        working_hours=sim_consts.DEFAULT_WORKING_HOURS,
-        energy_mix=energy_mix,
         factories=factories,
-        seed=42,
-        threads=helpers.calculate_optimal_threads(None, 1_000_000),
+        energy_mix=energy_mix,
     )
 
     # Warm up Numba to ensure compilation time isn't included in the profile
     print("Warming up Numba (compiling jitted functions)...")
-    jit_config = config.to_jit_config()
-    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
-
-    # Generate seeds for all samples
-    ss = np.random.SeedSequence(config.seed)
-    all_seeds = ss.generate_state(config.samples)
-
-    run_simulation_multithread(
-        jit_config,
-        cached_consts,
-        all_seeds,
-    )
+    run_simulation(config)
 
     num_iterations = 5
     print(
@@ -74,11 +60,7 @@ def run_profiled_simulation():
     try:
         for i in range(num_iterations):
             print(f"Iteration {i + 1}/{num_iterations}...")
-            _result = run_simulation_multithread(
-                jit_config,
-                cached_consts,
-                all_seeds,
-            )
+            run_simulation(config)
     finally:
         scalene_profiler.stop()
     print("Scalene profiling stopped.")

@@ -56,7 +56,6 @@ class SimulationConfigBase(BaseModel):
             wet_days=getattr(self, ConfigName.WET_DAYS),
             dry_days=getattr(self, ConfigName.DRY_DAYS),
             badtide_days=getattr(self, ConfigName.BADTIDE_DAYS),
-            seed=getattr(self, ConfigName.SEED),
         )
 
 

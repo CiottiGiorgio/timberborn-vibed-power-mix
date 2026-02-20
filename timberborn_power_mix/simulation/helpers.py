@@ -1,4 +1,5 @@
 from typing import Tuple, List
+
 import numpy as np
 from numpy.typing import NDArray
 from numba import njit
@@ -11,6 +12,7 @@ from timberborn_power_mix.machines import (
     BatteryName,
     battery_capacity,
 )
+from timberborn_power_mix.simulation.core import jit_stochastic_simulation
 from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
@@ -18,6 +20,9 @@ from timberborn_power_mix.simulation.models import (
 from timberborn_power_mix.structures import (
     ProducerGroup,
     JitSimulationCachedConsts,
+    JitSimulationConfig,
+    SimulationResult,
+    AggregatedSamples,
 )
 from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.structures import ConfigName
@@ -98,34 +103,81 @@ def calculate_season_boundaries(
     return season_boundaries
 
 
-@njit(inline="always")
-def calculate_base_power_production(
-    time_hours: NDArray[np.uint32],
-    is_working_hour: NDArray[np.bool_],
-    wet_days: int,
-    dry_days: int,
-    badtide_days: int,
-    power_wheels: ProducerGroup,
-    water_wheels: ProducerGroup,
-) -> NDArray[np.uint32]:
-    """Calculates the deterministic base power production profile (water wheels and power wheels)."""
-    hours_per_wet = wet_days * consts.HOURS_PER_DAY
-    hours_per_dry = dry_days * consts.HOURS_PER_DAY
-    hours_per_badtide = badtide_days * consts.HOURS_PER_DAY
+@njit
+def jit_simulation_prelude(
+    config: JitSimulationConfig,
+    sim_consts: JitSimulationCachedConsts,
+) -> Tuple[NDArray[np.uint32], NDArray[np.uint32], int]:
+    total_hours = config.days * consts.HOURS_PER_DAY
+
+    # Pre-calculate static profiles
+    time_hours = np.arange(total_hours, dtype=np.uint32)
+    hour_of_day = time_hours % consts.HOURS_PER_DAY
+    is_working_hour = hour_of_day < config.working_hours
+
+    # Inlined calculate_base_power_production logic
+    hours_per_wet = config.wet_days * consts.HOURS_PER_DAY
+    hours_per_dry = config.dry_days * consts.HOURS_PER_DAY
+    hours_per_badtide = config.badtide_days * consts.HOURS_PER_DAY
     cycle_length_hours = 2 * hours_per_wet + hours_per_dry + hours_per_badtide
 
     hour_of_cycle = time_hours % cycle_length_hours
-    is_dry: NDArray[np.bool_] = (hour_of_cycle >= hours_per_wet) & (
+    is_dry = (hour_of_cycle >= hours_per_wet) & (
         hour_of_cycle < (hours_per_wet + hours_per_dry)
     )
     is_water_active = ~is_dry
 
-    power_wheel_production_rate: NDArray[np.uint32] = np.where(
-        is_working_hour, power_wheels.quantity * power_wheels.power, 0
+    power_wheel_production_rate = np.where(
+        is_working_hour,
+        sim_consts.power_wheels.quantity * sim_consts.power_wheels.power,
+        0,
     )
-    water_wheel_production_rate = water_wheels.quantity * water_wheels.power
+    water_wheel_production_rate = (
+        sim_consts.water_wheels.quantity * sim_consts.water_wheels.power
+    )
 
-    return (
+    base_power_production = (
         np.where(is_water_active, water_wheel_production_rate, 0)
         + power_wheel_production_rate
+    ).astype(np.uint32)
+
+    power_consumption = np.where(
+        is_working_hour, sim_consts.total_consumption_rate, 0
+    ).astype(np.uint32)
+
+    return base_power_production, power_consumption, total_hours
+
+
+@njit
+def jit_simulation_conclusion(
+    all_hours_empty: NDArray[np.uint32],
+    all_seeds: NDArray[np.uint64],
+    base_power_production: NDArray[np.uint32],
+    power_consumption: NDArray[np.uint32],
+    sim_consts: JitSimulationCachedConsts,
+    total_hours: int,
+) -> SimulationResult:
+    aggregated = AggregatedSamples(
+        power_consumption=power_consumption,
+        hours_empty_results=all_hours_empty,
+    )
+
+    # Find p95 sample (Second Pass)
+    p95_hours_empty = np.percentile(all_hours_empty, 95)
+    p95_idx = np.where(all_hours_empty >= p95_hours_empty)[0][0]
+    p95_seed = all_seeds[p95_idx]
+
+    p95_sample = jit_stochastic_simulation(
+        base_power_production,
+        power_consumption,
+        sim_consts.large_windmills,
+        sim_consts.windmills,
+        sim_consts.total_battery_capacity,
+        total_hours,
+        p95_seed,
+    )
+
+    return SimulationResult(
+        p95_sample=p95_sample,
+        aggregated_samples=aggregated,
     )

@@ -27,23 +27,18 @@ def run_simulation(config: SimulationConfig) -> SimulationResult:
     if config.threads is None or config.threads > 1:
         threads = helpers.calculate_optimal_threads(config.threads, config.samples)
 
-        res = run_simulation_multithread(
-            jit_config,
-            threads,
-            cached_consts,
-            all_seeds,
-        )
+        res = run_simulation_multithread(all_seeds, jit_config, threads, cached_consts)
     else:
-        res = run_simulation_singlethread(jit_config, cached_consts, all_seeds)
+        res = run_simulation_singlethread(all_seeds, jit_config, cached_consts)
 
     return res
 
 
 @njit(cache=True)
 def run_simulation_singlethread(
+    all_seeds: NDArray[np.uint32],
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-    all_seeds: NDArray[np.uint32],
 ) -> SimulationResult:
     base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)
@@ -65,10 +60,10 @@ def run_simulation_singlethread(
 
 @njit(cache=True)
 def run_simulation_multithread(
+    all_seeds: NDArray[np.uint32],
     config: JitSimulationConfig,
     threads: int,
     sim_consts: JitSimulationCachedConsts,
-    all_seeds: NDArray[np.uint32],
 ) -> SimulationResult:
     base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)

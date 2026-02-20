@@ -61,13 +61,13 @@ def test_single_vs_multithread_consistency(simulation_config):
     all_seeds = ss.generate_state(simulation_config.samples, dtype=np.uint64)
 
     # Run single-threaded simulation
-    res_single = run_simulation_singlethread(jit_config, sim_consts, all_seeds)
+    res_single = run_simulation_singlethread(all_seeds, jit_config, sim_consts)
 
     # Run multi-threaded simulation
     threads = helpers.calculate_optimal_threads(
         simulation_config.threads, simulation_config.samples
     )
-    res_multi = run_simulation_multithread(jit_config, threads, sim_consts, all_seeds)
+    res_multi = run_simulation_multithread(all_seeds, jit_config, threads, sim_consts)
 
     # 1. Check Aggregated Metrics (Hours Empty)
     np.testing.assert_array_equal(

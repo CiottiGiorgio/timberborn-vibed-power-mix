@@ -60,7 +60,7 @@ def run_simulation_multithreaded(
                     for seeds in seed_chunks
                 ],
             )
-            all_hours_empty = np.concatenate([r.hours_empty_results for r in results])
+            all_hours_empty = np.concatenate(results)
         finally:
             pool.close()
             pool.join()
@@ -98,7 +98,7 @@ def jit_batched_simulation(
     total_hours: int,
     sim_consts: JitSimulationCachedConsts,
     seeds: NDArray[np.uint64],
-) -> AggregatedSamples:
+) -> NDArray[np.uint32]:
     """
     Executes the Monte Carlo simulation and aggregates metrics.
     Does NOT store full time-series for every sample to save memory.
@@ -118,11 +118,7 @@ def jit_batched_simulation(
         )
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
 
-    return AggregatedSamples(
-        # TODO: Pointless to return here something we've got as an argument.
-        power_consumption=power_consumption,
-        hours_empty_results=hours_empty_results,
-    )
+    return hours_empty_results
 
 
 @njit

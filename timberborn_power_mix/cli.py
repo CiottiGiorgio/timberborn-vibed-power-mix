@@ -115,10 +115,10 @@ def cli() -> None:
 )
 def simulate_cmd(**kwargs: Any) -> None:
     """Simulate a configuration with the specified parameters."""
-    from timberborn_power_mix.simulation.orchestrator import run_simulation
+    from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
 
     config = parse_simulation_config(**kwargs)
-    run_simulation(config)
+    simulation_orchestrator(config)
 
 
 @cli.command(name="optimize")

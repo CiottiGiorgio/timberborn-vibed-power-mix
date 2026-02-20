@@ -50,7 +50,6 @@ class SimulationConfigBase(BaseModel):
     def to_jit_config(self) -> JitSimulationConfig:
         """Converts the Pydantic model to a JIT-compatible NamedTuple."""
         return JitSimulationConfig(
-            threads=getattr(self, ConfigName.THREADS),
             samples=getattr(self, ConfigName.SAMPLES),
             days=getattr(self, ConfigName.DAYS),
             working_hours=getattr(self, ConfigName.WORKING_HOURS),

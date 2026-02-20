@@ -5,12 +5,38 @@ from numpy.typing import NDArray
 from numba import njit, objmode
 
 from timberborn_power_mix.simulation.core import jit_stochastic_simulation
+from timberborn_power_mix.simulation.models import SimulationConfig
 from timberborn_power_mix.structures import (
     JitSimulationConfig,
     JitSimulationCachedConsts,
     SimulationResult,
 )
 import timberborn_power_mix.simulation.helpers as sim_helpers
+import timberborn_power_mix.helpers as helpers
+
+
+def run_simulation(config: SimulationConfig) -> SimulationResult:
+    jit_config = config.to_jit_config()
+    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
+
+    # Generate seeds for all samples
+    ss = np.random.SeedSequence(config.seed)
+    all_seeds = ss.generate_state(config.samples, dtype=np.uint64)
+
+    res: SimulationResult
+    if config.threads is None or config.threads > 1:
+        threads = helpers.calculate_optimal_threads(config.threads, config.samples)
+
+        res = run_simulation_multithread(
+            jit_config,
+            threads,
+            cached_consts,
+            all_seeds,
+        )
+    else:
+        res = run_simulation_singlethread(jit_config, cached_consts, all_seeds)
+
+    return res
 
 
 @njit(cache=True)
@@ -44,6 +70,7 @@ def run_simulation_singlethread(
 @njit(cache=True)
 def run_simulation_multithread(
     config: JitSimulationConfig,
+    threads: int,
     sim_consts: JitSimulationCachedConsts,
     all_seeds: NDArray[np.uint64],
 ) -> SimulationResult:
@@ -52,8 +79,8 @@ def run_simulation_multithread(
     )
 
     with objmode(all_hours_empty="uint32[:]"):
-        pool = ThreadPool(processes=config.threads)
-        seed_chunks = np.array_split(all_seeds, config.threads)
+        pool = ThreadPool(processes=threads)
+        seed_chunks = np.array_split(all_seeds, threads)
 
         try:
             results = pool.starmap(

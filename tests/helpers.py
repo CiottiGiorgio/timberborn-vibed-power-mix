@@ -3,7 +3,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
 )
 from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.simulation.engine import run_simulation_multithread
+from timberborn_power_mix.simulation.engine import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
@@ -32,19 +32,20 @@ def generate_reference_simulation_data():
     energy_mix = EnergyMixConfig(**energy_data)
 
     config = SimulationConfig(
+        seed=42,
+        threads=1,
         samples=consts.DEFAULT_SAMPLES_PER_SIM,
         days=consts.DEFAULT_DAYS,
+        working_hours=consts.DEFAULT_WORKING_HOURS,
         wet_days=consts.DEFAULT_WET_SEASON_DAYS,
         dry_days=consts.DEFAULT_DRY_SEASON_DAYS,
         badtide_days=consts.DEFAULT_BADTIDE_SEASON_DAYS,
-        working_hours=consts.DEFAULT_WORKING_HOURS,
-        energy_mix=energy_mix,
         factories=factories,
-        seed=42,
+        energy_mix=energy_mix,
     )
 
     # 2. Run simulation
-    res = run_simulation_multithread(config)
+    res = run_simulation(config)
 
     return res, config
 

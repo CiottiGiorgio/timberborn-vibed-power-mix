@@ -5,6 +5,7 @@ from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixCo
 from timberborn_power_mix.simulation.engine import (
     run_simulation_singlethread,
     run_simulation_multithread,
+    run_simulation,
 )
 from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
 from timberborn_power_mix.machines import (
@@ -15,8 +16,14 @@ from timberborn_power_mix.machines import (
     FactoryName,
 )
 from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.structures import (
+    SimulationResult,
+    SimulationSample,
+    AggregatedSamples,
+)
 import timberborn_power_mix.simulation.helpers as sim_helpers
 import timberborn_power_mix.helpers as helpers
+import timberborn_power_mix.simulation.consts as sim_consts
 
 
 @pytest.fixture
@@ -54,20 +61,16 @@ def test_single_vs_multithread_consistency(simulation_config):
     identical results when initialized with the same seed.
     """
     jit_config = simulation_config.to_jit_config()
-    sim_consts = sim_helpers.calculate_jit_cached_consts(simulation_config)
-
-    # Generate seeds for all samples
-    ss = np.random.SeedSequence(simulation_config.seed)
-    all_seeds = ss.generate_state(simulation_config.samples, dtype=np.uint64)
+    sim_consts_jit = sim_helpers.calculate_jit_cached_consts(simulation_config)
 
     # Run single-threaded simulation
-    res_single = run_simulation_singlethread(all_seeds, jit_config, sim_consts)
+    res_single = run_simulation_singlethread(jit_config, sim_consts_jit)
 
     # Run multi-threaded simulation
     threads = helpers.calculate_optimal_threads(
         simulation_config.threads, simulation_config.samples
     )
-    res_multi = run_simulation_multithread(all_seeds, jit_config, threads, sim_consts)
+    res_multi = run_simulation_multithread(jit_config, threads, sim_consts_jit)
 
     # 1. Check Aggregated Metrics (Hours Empty)
     np.testing.assert_array_equal(
@@ -99,11 +102,11 @@ def test_single_vs_multithread_consistency(simulation_config):
 
 def test_seed_determinism(simulation_config):
     """
-    Verifies that running the same simulation twice (single-threaded)
+    Verifies that running the same simulation twice
     with the same seed produces identical results.
     """
-    res1 = run_simulation_singlethread(simulation_config)
-    res2 = run_simulation_singlethread(simulation_config)
+    res1 = run_simulation(simulation_config)
+    res2 = run_simulation(simulation_config)
 
     np.testing.assert_array_equal(
         res1.aggregated_samples.hours_empty_results,
@@ -112,22 +115,37 @@ def test_seed_determinism(simulation_config):
     )
 
 
-@patch("timberborn_power_mix.simulation.orchestrator.run_simulation_multithread")
-@patch("timberborn_power_mix.simulation.orchestrator.run_simulation_singlethread")
+@patch("timberborn_power_mix.simulation.engine.run_simulation_multithread")
+@patch("timberborn_power_mix.simulation.engine.run_simulation_singlethread")
 @patch("timberborn_power_mix.simulation.orchestrator.create_simulation_figure")
 @patch("timberborn_power_mix.simulation.orchestrator.plt.show")
 def test_orchestrator_calls_correct_engine(
-    mock_show, mock_create_fig, mock_single, mock_multi, simulation_config
+    _mock_show, _mock_create_fig, mock_single, mock_multi, simulation_config
 ):
     """
     Verifies that run_simulation calls the correct engine function
     based on the number of threads in the configuration.
     """
+    # Create a dummy result to avoid errors in orchestrator
+    total_hours = simulation_config.days * sim_consts.HOURS_PER_DAY
+    dummy_res = SimulationResult(
+        p95_sample=SimulationSample(
+            power_production=np.zeros(total_hours, dtype=np.uint32),
+            battery_charge=np.zeros(total_hours, dtype=np.uint32),
+        ),
+        aggregated_samples=AggregatedSamples(
+            power_consumption=np.zeros(total_hours, dtype=np.uint32),
+            hours_empty_results=np.zeros(simulation_config.samples, dtype=np.uint32),
+        ),
+    )
+    mock_multi.return_value = dummy_res
+    mock_single.return_value = dummy_res
+
     # Case 1: threads > 1 -> should call multithread
     config_multi = simulation_config.model_copy(update={"threads": 4})
     simulation_orchestrator(config_multi)
 
-    mock_multi.assert_called_once_with(config_multi)
+    mock_multi.assert_called_once()
     mock_single.assert_not_called()
 
     # Reset mocks
@@ -138,7 +156,7 @@ def test_orchestrator_calls_correct_engine(
     config_single = simulation_config.model_copy(update={"threads": 1})
     simulation_orchestrator(config_single)
 
-    mock_single.assert_called_once_with(config_single)
+    mock_single.assert_called_once()
     mock_multi.assert_not_called()
 
     # Reset mocks
@@ -149,5 +167,5 @@ def test_orchestrator_calls_correct_engine(
     config_none = simulation_config.model_copy(update={"threads": None})
     simulation_orchestrator(config_none)
 
-    mock_multi.assert_called_once_with(config_none)
+    mock_multi.assert_called_once()
     mock_single.assert_not_called()

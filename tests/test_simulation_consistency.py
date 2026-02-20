@@ -3,11 +3,13 @@ import pytest
 from unittest.mock import patch
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
 from timberborn_power_mix.simulation.engine import (
-    run_simulation_singlethread,
-    run_simulation_multithread,
+    jit_singlethread_simulation,
+    jit_multithread_simulation,
+)
+from timberborn_power_mix.simulation.orchestrator import (
+    simulation_orchestrator,
     run_simulation,
 )
-from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
 from timberborn_power_mix.machines import (
     BatteryName,
     ProducerName,
@@ -64,13 +66,13 @@ def test_single_vs_multithread_consistency(simulation_config):
     sim_consts_jit = sim_helpers.calculate_jit_cached_consts(simulation_config)
 
     # Run single-threaded simulation
-    res_single = run_simulation_singlethread(jit_config, sim_consts_jit)
+    res_single = jit_singlethread_simulation(jit_config, sim_consts_jit)
 
     # Run multi-threaded simulation
     threads = helpers.calculate_optimal_threads(
         simulation_config.threads, simulation_config.samples
     )
-    res_multi = run_simulation_multithread(jit_config, threads, sim_consts_jit)
+    res_multi = jit_multithread_simulation(jit_config, threads, sim_consts_jit)
 
     # 1. Check Aggregated Metrics (Hours Empty)
     np.testing.assert_array_equal(

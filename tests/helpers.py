@@ -3,7 +3,7 @@ from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
 )
 from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.simulation.engine import run_simulation
+from timberborn_power_mix.simulation.orchestrator import run_simulation
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,

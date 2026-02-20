@@ -5,33 +5,16 @@ from numpy.typing import NDArray
 from numba import njit, objmode
 
 from timberborn_power_mix.simulation.core import jit_stochastic_simulation
-from timberborn_power_mix.simulation.models import SimulationConfig
 from timberborn_power_mix.structures import (
     JitSimulationConfig,
     JitSimulationCachedConsts,
     SimulationResult,
 )
 import timberborn_power_mix.simulation.helpers as sim_helpers
-import timberborn_power_mix.helpers as helpers
 
 
-def run_simulation(config: SimulationConfig) -> SimulationResult:
-    jit_config = config.to_jit_config()
-    cached_consts = sim_helpers.calculate_jit_cached_consts(config)
-
-    res: SimulationResult
-    if config.threads is None or config.threads > 1:
-        threads = helpers.calculate_optimal_threads(config.threads, config.samples)
-
-        res = run_simulation_multithread(jit_config, threads, cached_consts)
-    else:
-        res = run_simulation_singlethread(jit_config, cached_consts)
-
-    return res
-
-
-@njit(nogil=True, cache=True)
-def run_simulation_singlethread(
+@njit(cache=True)
+def jit_singlethread_simulation(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
 ) -> SimulationResult:
@@ -47,7 +30,7 @@ def run_simulation_singlethread(
         all_seeds, total_hours, base_power_production, power_consumption, sim_consts
     )
 
-    return sim_helpers.jit_simulation_conclusion(
+    return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,
         all_seeds,
         base_power_production,
@@ -57,8 +40,27 @@ def run_simulation_singlethread(
     )
 
 
+@njit(nogil=True)
+def jit_singlethread_simulation_no_plots(
+    config: JitSimulationConfig, sim_consts: JitSimulationCachedConsts
+) -> np.uint32:
+    with objmode(all_seeds="uint32[:]"):
+        ss = np.random.SeedSequence(config.seed)
+        all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
+
+    base_power_production, power_consumption, total_hours = (
+        sim_helpers.jit_simulation_prelude(config, sim_consts)
+    )
+
+    all_hours_empty = jit_batched_simulation(
+        all_seeds, total_hours, base_power_production, power_consumption, sim_consts
+    )
+
+    return np.percentile(all_hours_empty, 95)
+
+
 @njit(cache=True)
-def run_simulation_multithread(
+def jit_multithread_simulation(
     config: JitSimulationConfig,
     threads: int,
     sim_consts: JitSimulationCachedConsts,
@@ -94,7 +96,7 @@ def run_simulation_multithread(
             pool.close()
             pool.join()
 
-    return sim_helpers.jit_simulation_conclusion(
+    return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,
         all_seeds,
         base_power_production,

@@ -149,7 +149,7 @@ def jit_simulation_prelude(
 
 
 @njit
-def jit_simulation_conclusion(
+def jit_simulation_epilogue(
     all_hours_empty: NDArray[np.uint32],
     all_seeds: NDArray[np.uint32],
     base_power_production: NDArray[np.uint32],

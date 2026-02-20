@@ -1,7 +1,7 @@
 import logging
 
 from scalene import scalene_profiler
-from timberborn_power_mix.simulation.engine import run_simulation
+from timberborn_power_mix.simulation.orchestrator import run_simulation
 from timberborn_power_mix.simulation.models import (
     SimulationConfig,
     EnergyMixConfig,

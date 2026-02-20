@@ -15,7 +15,9 @@ from pymoo.termination import get_termination
 import timberborn_power_mix.simulation.helpers as sim_helpers
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.simulation.engine import run_simulation_singlethread
+from timberborn_power_mix.simulation.engine import (
+    jit_singlethread_simulation_no_plots,
+)
 from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix import helpers
@@ -87,7 +89,7 @@ class PowerMixProblem(ElementwiseProblem):
         config = SimulationConfig(
             **self.sim_config_base, energy_mix=mix, seed=eval_seed
         )
-        result = run_simulation_singlethread(
+        result = jit_singlethread_simulation_no_plots(
             config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
         )
 
@@ -96,10 +98,7 @@ class PowerMixProblem(ElementwiseProblem):
 
         # Objective 2: Minimize Unreliability (95th percentile of hours empty)
         total_hours = self.sim_config_base["days"] * sim_consts.HOURS_PER_DAY
-        worst_case_hours_empty = np.percentile(
-            result.aggregated_samples.hours_empty_results, 95
-        )
-        hours_empty_pct = float(worst_case_hours_empty / total_hours)
+        hours_empty_pct = float(result / total_hours)
 
         out["F"] = [cost, hours_empty_pct]
         out["mix"] = mix

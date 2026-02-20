@@ -50,11 +50,7 @@ def run_simulation_singlethread(
     )
 
     all_hours_empty = jit_batched_simulation(
-        base_power_production,
-        power_consumption,
-        total_hours,
-        sim_consts,
-        all_seeds,
+        all_seeds, total_hours, base_power_production, power_consumption, sim_consts
     )
 
     return sim_helpers.jit_simulation_conclusion(
@@ -87,11 +83,11 @@ def run_simulation_multithread(
                 jit_batched_simulation,
                 [
                     (
+                        seeds,
+                        total_hours,
                         base_power_production,
                         power_consumption,
-                        total_hours,
                         sim_consts,
-                        seeds,
                     )
                     for seeds in seed_chunks
                 ],
@@ -113,11 +109,11 @@ def run_simulation_multithread(
 
 @njit(nogil=True)
 def jit_batched_simulation(
+    seeds: NDArray[np.uint64],
+    total_hours: int,
     base_power_production: NDArray[np.uint32],
     power_consumption: NDArray[np.uint32],
-    total_hours: int,
     sim_consts: JitSimulationCachedConsts,
-    seeds: NDArray[np.uint64],
 ) -> NDArray[np.uint32]:
     """
     Executes the Monte Carlo simulation and aggregates metrics.
@@ -128,13 +124,13 @@ def jit_batched_simulation(
 
     for s in range(n_samples):
         res = jit_stochastic_simulation(
+            seeds[s],
+            total_hours,
             base_power_production,
             power_consumption,
+            sim_consts.total_battery_capacity,
             sim_consts.large_windmills,
             sim_consts.windmills,
-            sim_consts.total_battery_capacity,
-            total_hours,
-            seeds[s],
         )
         hours_empty_results[s] = np.sum(res.battery_charge <= 0)
 

@@ -168,13 +168,13 @@ def jit_simulation_conclusion(
     p95_seed = all_seeds[p95_idx]
 
     p95_sample = jit_stochastic_simulation(
+        p95_seed,
+        total_hours,
         base_power_production,
         power_consumption,
+        sim_consts.total_battery_capacity,
         sim_consts.large_windmills,
         sim_consts.windmills,
-        sim_consts.total_battery_capacity,
-        total_hours,
-        p95_seed,
     )
 
     return SimulationResult(

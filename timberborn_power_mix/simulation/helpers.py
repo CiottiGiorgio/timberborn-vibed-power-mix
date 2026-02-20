@@ -1,5 +1,6 @@
 from typing import Tuple, List
 import numpy as np
+from numpy.typing import NDArray
 from numba import njit
 
 from timberborn_power_mix.simulation import consts
@@ -99,14 +100,14 @@ def calculate_season_boundaries(
 
 @njit(inline="always")
 def calculate_base_power_production(
-    time_hours: np.ndarray,
-    is_working_hour: np.ndarray,
+    time_hours: NDArray[np.uint32],
+    is_working_hour: NDArray[np.bool_],
     wet_days: int,
     dry_days: int,
     badtide_days: int,
     power_wheels: ProducerGroup,
     water_wheels: ProducerGroup,
-) -> np.ndarray:
+) -> NDArray[np.int32]:
     """Calculates the deterministic base power production profile (water wheels and power wheels)."""
     hours_per_wet = wet_days * consts.HOURS_PER_DAY
     hours_per_dry = dry_days * consts.HOURS_PER_DAY
@@ -120,11 +121,11 @@ def calculate_base_power_production(
     is_water_active = ~is_dry
 
     power_wheel_production_rate = np.where(
-        is_working_hour, power_wheels.quantity * power_wheels.power, 0.0
+        is_working_hour, power_wheels.quantity * power_wheels.power, 0
     )
     water_wheel_production_rate = water_wheels.quantity * water_wheels.power
 
     return (
-        np.where(is_water_active, water_wheel_production_rate, 0.0)
+        np.where(is_water_active, water_wheel_production_rate, 0)
         + power_wheel_production_rate
-    )
+    ).astype(np.int32)

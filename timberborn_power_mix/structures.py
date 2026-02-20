@@ -1,6 +1,7 @@
 from enum import StrEnum
 from typing import NamedTuple, Optional
 import numpy as np
+from numpy.typing import NDArray
 
 
 class ConfigName(StrEnum):
@@ -51,15 +52,15 @@ class JitSimulationCachedConsts(NamedTuple):
 class SimulationSample(NamedTuple):
     """Represents the time-series data for production and storage state from a single simulation run."""
 
-    power_production: np.ndarray
-    battery_charge: np.ndarray
+    power_production: NDArray[np.float64]
+    battery_charge: NDArray[np.float64]
 
 
 class AggregatedSamples(NamedTuple):
     """Holds aggregated metrics and consumption profiles collected across all samples in a simulation."""
 
-    power_consumption: np.ndarray
-    hours_empty_results: np.ndarray
+    power_consumption: NDArray[np.int32]
+    hours_empty_results: NDArray[np.uint32]
 
 
 class SimulationResult(NamedTuple):

@@ -1,6 +1,7 @@
 from multiprocessing.pool import ThreadPool
 
 import numpy as np
+from numpy.typing import NDArray
 from numba import njit, objmode
 from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.structures import (
@@ -18,12 +19,12 @@ import timberborn_power_mix.simulation.helpers as sim_helpers
 def run_simulation_multithreaded(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-    all_seeds: np.ndarray,
+    all_seeds: NDArray[np.uint64],
 ) -> SimulationResult:
     total_hours = config.days * consts.HOURS_PER_DAY
 
     # Pre-calculate static profiles
-    time_hours = np.arange(total_hours)
+    time_hours = np.arange(total_hours, dtype=np.uint32)
     hour_of_day = time_hours % consts.HOURS_PER_DAY
     is_working_hour = hour_of_day < config.working_hours
 
@@ -37,9 +38,11 @@ def run_simulation_multithreaded(
         sim_consts.water_wheels,
     )
 
-    power_consumption = np.where(is_working_hour, sim_consts.total_consumption_rate, 0)
+    power_consumption = np.where(
+        is_working_hour, sim_consts.total_consumption_rate, 0
+    ).astype(np.int32)
 
-    with objmode(all_hours_empty="float64[:]"):
+    with objmode(all_hours_empty="uint32[:]"):
         pool = ThreadPool(processes=config.threads)
         seed_chunks = np.array_split(all_seeds, config.threads)
 
@@ -90,18 +93,18 @@ def run_simulation_multithreaded(
 
 @njit(nogil=True)
 def jit_batched_simulation(
-    base_power_production: np.ndarray,
-    power_consumption: np.ndarray,
+    base_power_production: NDArray[np.int32],
+    power_consumption: NDArray[np.int32],
     total_hours: int,
     sim_consts: JitSimulationCachedConsts,
-    seeds: np.ndarray,
+    seeds: NDArray[np.uint64],
 ) -> AggregatedSamples:
     """
     Executes the Monte Carlo simulation and aggregates metrics.
     Does NOT store full time-series for every sample to save memory.
     """
     n_samples = len(seeds)
-    hours_empty_results = np.zeros(n_samples, dtype=np.float64)
+    hours_empty_results = np.zeros(n_samples, dtype=np.uint32)
 
     for s in range(n_samples):
         res = jit_stochastic_simulation(
@@ -124,8 +127,8 @@ def jit_batched_simulation(
 
 @njit
 def jit_stochastic_simulation(
-    base_power_production: np.ndarray,
-    power_consumption: np.ndarray,
+    base_power_production: NDArray[np.int32],
+    power_consumption: NDArray[np.int32],
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
     total_battery_capacity: float,
@@ -141,7 +144,7 @@ def jit_stochastic_simulation(
         consts.WIND_DURATION_MIN_HOURS,
         consts.WIND_DURATION_MAX_HOURS,
         size=max_segments,
-    )
+    ).astype(np.int32)
     wind_strengths = np.random.random(size=max_segments)
 
     # Optimized Wind production using expansion
@@ -164,7 +167,7 @@ def jit_stochastic_simulation(
     power_production = base_power_production + wind_production
     power_surplus = power_production - power_consumption
 
-    battery_charge = np.zeros(total_hours)
+    battery_charge = np.zeros(total_hours, dtype=np.float64)
     current_charge = total_battery_capacity / 2.0
 
     for i in range(total_hours):

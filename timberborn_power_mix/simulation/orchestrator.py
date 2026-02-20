@@ -24,7 +24,7 @@ def run_simulation(config: SimulationConfig) -> None:
 
     # Generate seeds for all samples
     ss = np.random.SeedSequence(config.seed)
-    all_seeds = ss.generate_state(config.samples)
+    all_seeds = ss.generate_state(config.samples, dtype=np.uint64)
 
     res = run_simulation_multithreaded(
         jit_config,

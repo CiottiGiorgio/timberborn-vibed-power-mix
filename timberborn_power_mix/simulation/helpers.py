@@ -23,9 +23,9 @@ from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.structures import ConfigName
 
 
-def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> float:
+def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> int:
     """Calculates the total energy storage capacity of all batteries in the mix."""
-    heights = getattr(energy_mix, BatteryName.BATTERY_HEIGHTS)
+    heights: list[int] = getattr(energy_mix, BatteryName.BATTERY_HEIGHTS)
     return sum(battery_capacity(h) for h in heights)
 
 
@@ -107,7 +107,7 @@ def calculate_base_power_production(
     badtide_days: int,
     power_wheels: ProducerGroup,
     water_wheels: ProducerGroup,
-) -> NDArray[np.int32]:
+) -> NDArray[np.uint32]:
     """Calculates the deterministic base power production profile (water wheels and power wheels)."""
     hours_per_wet = wet_days * consts.HOURS_PER_DAY
     hours_per_dry = dry_days * consts.HOURS_PER_DAY
@@ -115,12 +115,12 @@ def calculate_base_power_production(
     cycle_length_hours = 2 * hours_per_wet + hours_per_dry + hours_per_badtide
 
     hour_of_cycle = time_hours % cycle_length_hours
-    is_dry = (hour_of_cycle >= hours_per_wet) & (
+    is_dry: NDArray[np.bool_] = (hour_of_cycle >= hours_per_wet) & (
         hour_of_cycle < (hours_per_wet + hours_per_dry)
     )
     is_water_active = ~is_dry
 
-    power_wheel_production_rate = np.where(
+    power_wheel_production_rate: NDArray[np.uint32] = np.where(
         is_working_hour, power_wheels.quantity * power_wheels.power, 0
     )
     water_wheel_production_rate = water_wheels.quantity * water_wheels.power
@@ -128,4 +128,4 @@ def calculate_base_power_production(
     return (
         np.where(is_water_active, water_wheel_production_rate, 0)
         + power_wheel_production_rate
-    ).astype(np.int32)
+    )

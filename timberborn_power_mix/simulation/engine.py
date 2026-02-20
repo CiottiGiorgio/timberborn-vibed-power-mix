@@ -24,7 +24,7 @@ def run_simulation_singlethread(
     total_hours = config.days * consts.HOURS_PER_DAY
 
     # Pre-calculate static profiles
-    time_hours = np.arange(total_hours, dtype=np.int32)
+    time_hours = np.arange(total_hours, dtype=np.uint32)
     hour_of_day = time_hours % consts.HOURS_PER_DAY
     is_working_hour = hour_of_day < config.working_hours
 
@@ -154,8 +154,8 @@ def run_simulation_multithread(
 
 @njit(nogil=True)
 def jit_batched_simulation(
-    base_power_production: NDArray[np.int32],
-    power_consumption: NDArray[np.int32],
+    base_power_production: NDArray[np.uint32],
+    power_consumption: NDArray[np.uint32],
     total_hours: int,
     sim_consts: JitSimulationCachedConsts,
     seeds: NDArray[np.uint64],
@@ -184,11 +184,11 @@ def jit_batched_simulation(
 
 @njit
 def jit_stochastic_simulation(
-    base_power_production: NDArray[np.int32],
-    power_consumption: NDArray[np.int32],
+    base_power_production: NDArray[np.uint32],
+    power_consumption: NDArray[np.uint32],
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
-    total_battery_capacity: float,
+    total_battery_capacity: int,
     total_hours: int,
     seed: int,
 ) -> SimulationSample:
@@ -224,12 +224,12 @@ def jit_stochastic_simulation(
     power_production = base_power_production + wind_production
     power_surplus = power_production - power_consumption
 
-    battery_charge = np.zeros(total_hours, dtype=np.float64)
-    current_charge = total_battery_capacity / 2.0
+    battery_charge = np.zeros(total_hours, dtype=np.uint32)
+    current_charge = total_battery_capacity // 2
 
     for i in range(total_hours):
         potential_charge = current_charge + power_surplus[i]
-        current_charge = max(0.0, min(potential_charge, total_battery_capacity))
+        current_charge = max(0, min(potential_charge, total_battery_capacity))
         battery_charge[i] = current_charge
 
     return SimulationSample(

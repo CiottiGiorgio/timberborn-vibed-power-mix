@@ -73,11 +73,11 @@ GRAVITY_BATTERY = BatterySpec(
 )
 
 
-def battery_capacity(height: float) -> float:
+def battery_capacity(height: int) -> int:
     return GRAVITY_BATTERY.base_capacity + (
         height * GRAVITY_BATTERY.capacity_per_height
     )
 
 
-def battery_cost(height: float) -> float:
+def battery_cost(height: int) -> int:
     return GRAVITY_BATTERY.base_cost + (height * GRAVITY_BATTERY.cost_per_height)

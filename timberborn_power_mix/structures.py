@@ -42,7 +42,7 @@ class JitSimulationCachedConsts(NamedTuple):
     """Constants for the jitted simulation that don't change between samples."""
 
     total_consumption_rate: int
-    total_battery_capacity: float
+    total_battery_capacity: int
     large_windmills: ProducerGroup
     windmills: ProducerGroup
     power_wheels: ProducerGroup
@@ -52,8 +52,8 @@ class JitSimulationCachedConsts(NamedTuple):
 class SimulationSample(NamedTuple):
     """Represents the time-series data for production and storage state from a single simulation run."""
 
-    power_production: NDArray[np.float64]
-    battery_charge: NDArray[np.float64]
+    power_production: NDArray[np.uint32]
+    battery_charge: NDArray[np.uint32]
 
 
 class AggregatedSamples(NamedTuple):

@@ -14,7 +14,7 @@ def test_simulate_no_options():
     # and opening a window during tests.
     with (
         patch(
-            "timberborn_power_mix.simulation.orchestrator.simulation_orchestrator"
+            "timberborn_power_mix.simulation.orchestrator.run_simulation"
         ) as mock_orchestrator,
         patch("matplotlib.pyplot.show"),
     ):

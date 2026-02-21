@@ -79,17 +79,15 @@ def jit_multithread_simulation(
         seed_chunks = np.array_split(all_seeds, threads)
 
         try:
-            results = list(
-                executor.map(
-                    jit_batched_simulation,
-                    seed_chunks,
-                    repeat(total_hours),
-                    repeat(base_power_production),
-                    repeat(power_consumption),
-                    repeat(sim_consts),
-                )
+            results = executor.map(
+                jit_batched_simulation,
+                seed_chunks,
+                repeat(total_hours),
+                repeat(base_power_production),
+                repeat(power_consumption),
+                repeat(sim_consts),
             )
-            all_hours_empty = np.concatenate(results)
+            all_hours_empty = np.concatenate([r for r in results])
         finally:
             executor.shutdown()
 

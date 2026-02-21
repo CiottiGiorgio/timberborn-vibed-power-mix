@@ -35,10 +35,6 @@ logger = logging.getLogger(__name__)
 # - write ci/cd for tests and linting (not packaging)
 # - the software should care about the WORKING time spent with empty batteries. I actually don't care if I have an empty battery while the factories are closed
 
-MAX_MACHINES = 50
-MAX_BATTERIES = 25
-MAX_HEIGHT = 15
-
 
 class PowerMixProblem(ElementwiseProblem):
     """
@@ -52,7 +48,7 @@ class PowerMixProblem(ElementwiseProblem):
     def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
         self.opt_config = opt_config
         self.sim_config_base = opt_config.model_dump()
-        self.sim_config_base.pop("iterations")
+        self.sim_config_base.pop("max_time")
         self.sim_config_base.pop("seed")
 
         self.producers = list(PRODUCER_DATABASE.keys())
@@ -145,7 +141,7 @@ def run_optimization(
         )
 
         # Stop after either the generation limit or a hardcoded time limit
-        termination = get_termination("time", opt_consts.MAX_TIME_SECONDS)
+        termination = get_termination("time", config.max_time)
 
         res = minimize(
             problem,

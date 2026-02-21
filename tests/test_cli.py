@@ -51,5 +51,5 @@ def test_optimize_no_options():
         assert mock_orchestrator.called
 
         config = mock_orchestrator.call_args[0][0]
-        assert config.iterations > 0
+        assert config.max_time > 0
         assert config.samples > 0

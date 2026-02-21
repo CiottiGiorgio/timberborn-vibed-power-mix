@@ -16,6 +16,7 @@ class ConfigName(StrEnum):
     FACTORIES = "factories"
     ENERGY_MIX = "energy_mix"
     ITERATIONS = "iterations"
+    MAX_TIME = "max_time"
 
 
 class JitSimulationConfig(NamedTuple):

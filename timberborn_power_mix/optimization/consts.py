@@ -1,5 +1,4 @@
 # Optimization Defaults
-DEFAULT_ITERATIONS = 100
 DEFAULT_OPTIMIZATION_SAMPLES = 5_000
 
 # Search Space Bounds
@@ -18,4 +17,4 @@ MUTATION_ETA = 20
 TARGET_UNRELIABILITY = 0.05  # 5% target for p95 selection
 
 # Termination
-MAX_TIME_SECONDS = 40
+DEFAULT_MAX_TIME_SECONDS = 40

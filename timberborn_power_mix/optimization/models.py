@@ -1,7 +1,6 @@
 from pydantic import create_model, BaseModel
 from timberborn_power_mix.models import CommonConfig
 from timberborn_power_mix.structures import ConfigName
-from timberborn_power_mix.optimization import consts
 
 """
 This module defines the configuration models for the power optimization.
@@ -24,12 +23,12 @@ class OptimizationConfig(BaseModel):
     dry_days: int
     badtide_days: int
     factories: FactoryConfig
-    iterations: int = 10
+    max_time: int
 """
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
-    **{ConfigName.ITERATIONS.value: (int, consts.DEFAULT_ITERATIONS)},
+    **{ConfigName.MAX_TIME.value: int},
     __base__=BaseModel,
 )
 

@@ -124,10 +124,10 @@ def simulate_cmd(**kwargs: Any) -> None:
 @cli.command(name="optimize")
 @add_common_params
 @click.option(
-    f"--{ConfigName.ITERATIONS.replace('_', '-')}",
+    f"--{ConfigName.MAX_TIME.replace('_', '-')}",
     type=int,
-    default=opt_consts.DEFAULT_ITERATIONS,
-    help="Number of optimization iterations",
+    default=opt_consts.DEFAULT_MAX_TIME_SECONDS,
+    help="Maximum optimization time in seconds",
 )
 @click.option(
     f"--{ConfigName.SAMPLES.replace('_', '-')}",
@@ -190,7 +190,7 @@ def parse_optimization_config(**kwargs: Any) -> OptimizationConfig:
     common_config = parse_common_config(**kwargs)
     return OptimizationConfig(
         **common_config.model_dump(),
-        iterations=kwargs[ConfigName.ITERATIONS],
+        max_time=kwargs[ConfigName.MAX_TIME],
     )
 
 

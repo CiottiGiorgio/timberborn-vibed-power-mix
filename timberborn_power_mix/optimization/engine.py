@@ -31,7 +31,6 @@ logger = logging.getLogger(__name__)
 # - check that we can make more tests on the simulation engine on a more modular level (unit tests, etc.)
 # - check that we can make tests for the optimization engine
 # - find a good strategy to run tests automatically
-# - write ci/cd for tests and linting (not packaging)
 
 
 class PowerMixProblem(ElementwiseProblem):

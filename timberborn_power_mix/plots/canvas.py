@@ -34,16 +34,19 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     battery_charge = data.battery_charge
 
     # Recompute derived values
-    power_surplus = power_production - power_consumption
+    # Cast to int64 to avoid uint32 overflow during subtraction
+    power_surplus = power_production.astype(np.int64) - power_consumption.astype(
+        np.int64
+    )
 
     total_battery_capacity = calculate_total_battery_capacity(config.energy_mix)
 
     # Effective balance is the surplus that couldn't be absorbed by the battery
     # or the deficit that couldn't be covered by the battery.
-    battery_charge_shifted = np.zeros_like(battery_charge)
+    battery_charge_shifted = np.zeros_like(battery_charge, dtype=np.int64)
     battery_charge_shifted[0] = total_battery_capacity / 2.0  # Initial charge
     battery_charge_shifted[1:] = battery_charge[:-1]
-    delta_charge = battery_charge - battery_charge_shifted
+    delta_charge = battery_charge.astype(np.int64) - battery_charge_shifted
     effective_balance = power_surplus - delta_charge
 
     # Recompute cumulative energy

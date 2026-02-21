@@ -1,16 +1,15 @@
 import matplotlib.ticker as ticker
 from matplotlib.axes import Axes
 import numpy as np
-from typing import List
+from typing import Sequence
 
 
 def plot_battery(
     ax: Axes,
     time_days: np.ndarray,
     battery_charge: np.ndarray,
-    total_battery_capacity: float,
-    num_batteries: int,
-    battery_heights: List[float],
+    total_battery_capacity: int,
+    battery_heights: Sequence[int],
 ) -> None:
     ax.plot(
         time_days,
@@ -27,6 +26,7 @@ def plot_battery(
     ax.set_ylabel("Stored Energy (hph)")
     ax.set_xlabel("Time (days)")
 
+    num_batteries = len(battery_heights)
     if num_batteries > 0:
         avg_height = sum(battery_heights) / num_batteries
         height_str = f"Avg {avg_height:.1f}"

@@ -44,7 +44,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     # Effective balance is the surplus that couldn't be absorbed by the battery
     # or the deficit that couldn't be covered by the battery.
     battery_charge_shifted = np.zeros_like(battery_charge, dtype=np.int64)
-    battery_charge_shifted[0] = total_battery_capacity / 2.0  # Initial charge
+    battery_charge_shifted[0] = total_battery_capacity // 2  # Initial charge
     battery_charge_shifted[1:] = battery_charge[:-1]
     delta_charge = battery_charge.astype(np.int64) - battery_charge_shifted
     effective_balance = power_surplus - delta_charge
@@ -200,7 +200,6 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
         time_days,
         battery_charge,
         total_battery_capacity,
-        num_batteries,
         battery_heights,
     )
 

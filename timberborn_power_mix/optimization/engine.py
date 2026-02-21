@@ -27,7 +27,6 @@ from timberborn_power_mix.optimization import consts as opt_consts
 logger = logging.getLogger(__name__)
 
 # TODO:
-# - check that battery height is used properly throughout the codebase (total capacity where needed, discrete heights where needed)
 # - check that we can better type the return types passed around in the optimization engine
 # - check that we can make more tests on the simulation engine on a more modular level (unit tests, etc.)
 # - check that we can make tests for the optimization engine

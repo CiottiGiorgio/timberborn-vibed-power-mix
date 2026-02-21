@@ -29,26 +29,24 @@ def jit_singlethread_simulation(
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
-    (
-        base_surplus,
-        base_power_production,
-        power_consumption,
-        is_working_hour,
-        total_hours,
-    ) = sim_helpers.jit_simulation_prelude(config, sim_consts)
+    prelude = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
     all_hours_empty = jit_batched_simulation(
-        all_seeds, total_hours, base_surplus, is_working_hour, sim_consts
+        all_seeds,
+        prelude.total_hours,
+        prelude.base_surplus,
+        prelude.is_working_hour,
+        sim_consts,
     )
 
     return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,
         all_seeds,
-        base_surplus,
-        base_power_production,
-        power_consumption,
+        prelude.base_surplus,
+        prelude.base_power_production,
+        prelude.power_consumption,
         sim_consts,
-        total_hours,
+        prelude.total_hours,
     )
 
 
@@ -66,12 +64,14 @@ def jit_singlethread_simulation_no_plots(
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
-    base_surplus, _, _, is_working_hour, total_hours = (
-        sim_helpers.jit_simulation_prelude(config, sim_consts)
-    )
+    prelude = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
     all_hours_empty = jit_batched_simulation(
-        all_seeds, total_hours, base_surplus, is_working_hour, sim_consts
+        all_seeds,
+        prelude.total_hours,
+        prelude.base_surplus,
+        prelude.is_working_hour,
+        sim_consts,
     )
 
     return np.percentile(all_hours_empty, 95)
@@ -89,13 +89,7 @@ def jit_multithread_simulation(
     Distributes the stochastic samples across a thread pool. Each thread
     executes a batch of simulations independently.
     """
-    (
-        base_surplus,
-        base_power_production,
-        power_consumption,
-        is_working_hour,
-        total_hours,
-    ) = sim_helpers.jit_simulation_prelude(config, sim_consts)
+    prelude = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
     with objmode(all_seeds="uint32[:]", all_hours_empty="uint32[:]"):
         executor = ThreadPoolExecutor(max_workers=threads)
@@ -109,9 +103,9 @@ def jit_multithread_simulation(
             results = executor.map(
                 jit_batched_simulation,
                 seed_chunks,
-                repeat(total_hours),
-                repeat(base_surplus),
-                repeat(is_working_hour),
+                repeat(prelude.total_hours),
+                repeat(prelude.base_surplus),
+                repeat(prelude.is_working_hour),
                 repeat(sim_consts),
             )
             all_hours_empty = np.concatenate([r for r in results])
@@ -121,11 +115,11 @@ def jit_multithread_simulation(
     return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,
         all_seeds,
-        base_surplus,
-        base_power_production,
-        power_consumption,
+        prelude.base_surplus,
+        prelude.base_power_production,
+        prelude.power_consumption,
         sim_consts,
-        total_hours,
+        prelude.total_hours,
     )
 
 

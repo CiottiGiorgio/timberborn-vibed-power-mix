@@ -68,3 +68,13 @@ class SimulationResult(NamedTuple):
 
     p95_sample: SimulationSample
     aggregated_samples: AggregatedSamples
+
+
+class JitSimulationPrelude(NamedTuple):
+    """Static time-series profiles calculated before the stochastic simulation runs."""
+
+    base_surplus: NDArray[np.int64]
+    base_power_production: NDArray[np.uint32]
+    power_consumption: NDArray[np.uint32]
+    is_working_hour: NDArray[np.bool_]
+    total_hours: int

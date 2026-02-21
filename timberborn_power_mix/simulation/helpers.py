@@ -23,6 +23,7 @@ from timberborn_power_mix.structures import (
     JitSimulationConfig,
     SimulationResult,
     AggregatedSamples,
+    JitSimulationPrelude,
 )
 from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.structures import ConfigName
@@ -116,9 +117,7 @@ def calculate_season_boundaries(
 def jit_simulation_prelude(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-) -> Tuple[
-    NDArray[np.int64], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.bool_], int
-]:
+) -> JitSimulationPrelude:
     """
     Pre-calculates static time-series profiles that are constant across all samples.
 
@@ -171,12 +170,12 @@ def jit_simulation_prelude(
         np.int64
     )
 
-    return (
-        base_surplus,
-        base_power_production,
-        power_consumption,
-        is_working_hour,
-        total_hours,
+    return JitSimulationPrelude(
+        base_surplus=base_surplus,
+        base_power_production=base_power_production,
+        power_consumption=power_consumption,
+        is_working_hour=is_working_hour,
+        total_hours=total_hours,
     )
 
 

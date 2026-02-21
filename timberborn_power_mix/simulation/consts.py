@@ -16,5 +16,10 @@ DEFAULT_OPTIMIZATION_ITERATIONS = 20
 # Wind Simulation
 WIND_DURATION_MIN_HOURS = 5
 WIND_DURATION_MAX_HOURS = 13  # Exclusive for randint (5-12 hours)
-LARGE_WINDMILL_THRESHOLD = 0.20
-WINDMILL_THRESHOLD = 0.30
+
+# Wind strength is simulated using integers (0-1000) for performance.
+# Integer math avoids floating-point overhead and ensures consistent
+# behavior across different CPU architectures.
+WIND_STRENGTH_MAX = 1000
+LARGE_WINDMILL_THRESHOLD = 200  # Equivalent to 0.20
+WINDMILL_THRESHOLD = 300  # Equivalent to 0.30

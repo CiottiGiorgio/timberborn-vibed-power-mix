@@ -15,13 +15,17 @@ def _calculate_wind_power(
     windmills: ProducerGroup,
 ) -> int:
     """Calculates total wind power for a given wind strength."""
-    strength = np.random.random()
-    l_prod = (
-        strength * large_windmills.power
-        if strength > consts.LARGE_WINDMILL_THRESHOLD
-        else 0
-    )
-    s_prod = strength * windmills.power if strength > consts.WINDMILL_THRESHOLD else 0
+    # Use integer math for wind strength (0-WIND_STRENGTH_MAX) for performance.
+    strength_int = np.random.randint(0, consts.WIND_STRENGTH_MAX + 1)
+
+    l_prod = 0
+    if strength_int > consts.LARGE_WINDMILL_THRESHOLD:
+        l_prod = (strength_int * large_windmills.power) // consts.WIND_STRENGTH_MAX
+
+    s_prod = 0
+    if strength_int > consts.WINDMILL_THRESHOLD:
+        s_prod = (strength_int * windmills.power) // consts.WIND_STRENGTH_MAX
+
     return (large_windmills.quantity * l_prod) + (windmills.quantity * s_prod)
 
 
@@ -51,7 +55,7 @@ def jit_stochastic_simulation_no_sample(
         for h in range(current_hour, end_hour):
             current_charge += base_surplus[h] + np.int64(wind_power)
             if current_charge < 0:
-                current_charge = 0
+                current_charge = np.int64(0)
                 empty_hours += 1
             elif current_charge > total_battery_capacity:
                 current_charge = np.int64(total_battery_capacity)
@@ -93,7 +97,7 @@ def jit_stochastic_simulation(
 
             current_charge += base_surplus[h] + np.int64(wind_power_int)
             if current_charge < 0:
-                current_charge = 0
+                current_charge = np.int64(0)
             elif current_charge > total_battery_capacity:
                 current_charge = np.int64(total_battery_capacity)
             battery_charge[h] = np.uint32(current_charge)

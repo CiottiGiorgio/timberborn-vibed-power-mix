@@ -27,10 +27,6 @@ from timberborn_power_mix.optimization.structures import OptimizationResult
 
 logger = logging.getLogger(__name__)
 
-# TODO:
-# - check that we can make more tests on the simulation engine on a more modular level (unit tests, etc.)
-# - check that we can make tests for the optimization engine
-
 
 class PowerMixProblem(ElementwiseProblem):
     """

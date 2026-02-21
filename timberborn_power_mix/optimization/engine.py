@@ -123,7 +123,7 @@ def run_optimization(
         )
 
         # Stop after either the generation limit or a hardcoded 60-second time limit
-        termination = get_termination("time", 60)
+        termination = get_termination("time", 40)
 
         res = minimize(
             problem,

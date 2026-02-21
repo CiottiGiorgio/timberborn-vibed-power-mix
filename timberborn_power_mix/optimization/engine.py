@@ -22,6 +22,7 @@ from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix import helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
+from timberborn_power_mix.optimization import consts as opt_consts
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,14 @@ MAX_HEIGHT = 15
 
 
 class PowerMixProblem(ElementwiseProblem):
+    """
+    Multi-objective optimization problem for finding the optimal power mix.
+
+    Objectives:
+    1. Minimize total wood cost.
+    2. Minimize unreliability (95th percentile of hours empty).
+    """
+
     def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
         self.opt_config = opt_config
         self.sim_config_base = opt_config.model_dump()
@@ -59,14 +68,14 @@ class PowerMixProblem(ElementwiseProblem):
         xu = np.zeros(n_var, dtype=int)
 
         # Producer bounds
-        xu[: self.n_producers] = MAX_MACHINES
+        xu[: self.n_producers] = opt_consts.MAX_MACHINES_PER_TYPE
 
         # Num batteries bounds
-        xu[self.n_producers] = MAX_BATTERIES
+        xu[self.n_producers] = opt_consts.MAX_BATTERIES
 
         # Uniform battery height bounds
         xl[self.n_producers + 1] = 1
-        xu[self.n_producers + 1] = MAX_HEIGHT
+        xu[self.n_producers + 1] = opt_consts.MAX_BATTERY_HEIGHT
 
         super().__init__(n_var=n_var, n_obj=2, xl=xl, xu=xu, **kwargs)
 
@@ -107,8 +116,13 @@ class PowerMixProblem(ElementwiseProblem):
 def run_optimization(
     config: OptimizationConfig,
 ) -> Tuple[Optional[EnergyMixConfig], float]:
-    """Main NSGA-II Loop using pymoo with parallel evaluation."""
-    pop_size = 40
+    """
+    Main NSGA-II Loop using pymoo with parallel evaluation.
+
+    Finds the Pareto front of cost vs. unreliability and selects the solution
+    closest to the target unreliability threshold.
+    """
+    pop_size = opt_consts.POPULATION_SIZE
     n_threads = helpers.calculate_optimal_threads(config.threads, pop_size)
 
     with ThreadPoolExecutor(max_workers=n_threads) as executor:
@@ -117,13 +131,21 @@ def run_optimization(
         algorithm = NSGA2(
             pop_size=pop_size,
             sampling=IntegerRandomSampling(),
-            crossover=SBX(prob=0.9, eta=15, vtype=float),
-            mutation=PM(prob=0.1, eta=20, vtype=float),
+            crossover=SBX(
+                prob=opt_consts.CROSSOVER_PROBABILITY,
+                eta=opt_consts.CROSSOVER_ETA,
+                vtype=float,
+            ),
+            mutation=PM(
+                prob=opt_consts.MUTATION_PROBABILITY,
+                eta=opt_consts.MUTATION_ETA,
+                vtype=float,
+            ),
             eliminate_duplicates=True,
         )
 
-        # Stop after either the generation limit or a hardcoded 60-second time limit
-        termination = get_termination("time", 40)
+        # Stop after either the generation limit or a hardcoded time limit
+        termination = get_termination("time", opt_consts.MAX_TIME_SECONDS)
 
         res = minimize(
             problem,
@@ -139,14 +161,16 @@ def run_optimization(
 
     # Selection Logic:
     # Find the solution closest to the target unreliability (e.g. 5%)
-    target = 0.05
-    best_sol = min(res.opt, key=lambda sol: abs(sol.F[1] - target))
+    best_sol = min(
+        res.opt, key=lambda sol: abs(sol.F[1] - opt_consts.TARGET_UNRELIABILITY)
+    )
 
     best_mix = best_sol.get("mix")
     best_cost = best_sol.F[0]
 
     logger.info(
-        f"Optimization complete. Selected solution with {best_sol.F[1]:.2%} unreliability at cost {best_cost}."
+        f"Optimization complete. Selected solution with {best_sol.F[1]:.2%} "
+        f"unreliability at cost {best_cost}."
     )
 
     return best_mix, best_cost

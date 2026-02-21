@@ -116,7 +116,9 @@ def calculate_season_boundaries(
 def jit_simulation_prelude(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-) -> Tuple[NDArray[np.int64], NDArray[np.uint32], NDArray[np.uint32], int]:
+) -> Tuple[
+    NDArray[np.int64], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.bool_], int
+]:
     """
     Pre-calculates static time-series profiles that are constant across all samples.
 
@@ -126,6 +128,7 @@ def jit_simulation_prelude(
     - Base power production (water wheels + power wheels)
     - Power consumption profile
     - Base surplus (production - consumption)
+    - Working hour mask
     """
     total_hours = config.days * consts.HOURS_PER_DAY
 
@@ -168,7 +171,13 @@ def jit_simulation_prelude(
         np.int64
     )
 
-    return base_surplus, base_power_production, power_consumption, total_hours
+    return (
+        base_surplus,
+        base_power_production,
+        power_consumption,
+        is_working_hour,
+        total_hours,
+    )
 
 
 @njit

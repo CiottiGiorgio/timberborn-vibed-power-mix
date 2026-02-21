@@ -19,7 +19,6 @@ from timberborn_power_mix.simulation.engine import (
     jit_singlethread_simulation_no_plots,
 )
 from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
-from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix import helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
 from timberborn_power_mix.optimization import consts as opt_consts
@@ -32,7 +31,6 @@ logger = logging.getLogger(__name__)
 # - check that we can make tests for the optimization engine
 # - find a good strategy to run tests automatically
 # - write ci/cd for tests and linting (not packaging)
-# - the software should care about the WORKING time spent with empty batteries. I actually don't care if I have an empty battery while the factories are closed
 
 
 class PowerMixProblem(ElementwiseProblem):
@@ -41,7 +39,7 @@ class PowerMixProblem(ElementwiseProblem):
 
     Objectives:
     1. Minimize total wood cost.
-    2. Minimize unreliability (95th percentile of hours empty).
+    2. Minimize unreliability (95th percentile of working hours empty).
     """
 
     def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
@@ -100,9 +98,11 @@ class PowerMixProblem(ElementwiseProblem):
         # 3. Calculate Objectives
         cost = float(opt_helpers.calculate_total_wood_cost(mix))
 
-        # Objective 2: Minimize Unreliability (95th percentile of hours empty)
-        total_hours = self.sim_config_base["days"] * sim_consts.HOURS_PER_DAY
-        hours_empty_pct = float(result / total_hours)
+        # Objective 2: Minimize Unreliability (95th percentile of working hours empty)
+        total_working_hours = (
+            self.sim_config_base["days"] * self.sim_config_base["working_hours"]
+        )
+        hours_empty_pct = float(result / total_working_hours)
 
         out["F"] = [cost, hours_empty_pct]
         out["mix"] = mix

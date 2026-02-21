@@ -125,7 +125,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     # Add Disclaimer about p95 Case
     disclaimer_text = (
         "Note: The time-series plots (1-4) show the 'p95' sample\n"
-        "(the one representing the 95th percentile of time spent with an empty battery)."
+        "(the one representing the 95th percentile of working time spent with an empty battery)."
     )
     fig.text(
         0.5,
@@ -204,11 +204,12 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     )
 
     # Plot 5: Empty Battery Duration Distribution (Percentage)
-    total_simulation_hours = days * sim_consts.HOURS_PER_DAY
+    working_hours_per_day = getattr(config, ConfigName.WORKING_HOURS)
+    total_working_hours = days * working_hours_per_day
     plot_empty_hours_percentage(
         ax5,
         run_empty_hours,
-        total_simulation_hours,
+        total_working_hours,
     )
 
     plt.tight_layout(rect=(0, 0.03, 1, 0.95))

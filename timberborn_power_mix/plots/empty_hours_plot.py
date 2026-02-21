@@ -7,12 +7,10 @@ import matplotlib.ticker as ticker
 def plot_empty_hours_percentage(
     ax: Axes,
     run_empty_hours: np.ndarray,
-    total_simulation_hours: int,
+    total_working_hours: int,
 ) -> None:
     # Calculate percentages
-    run_empty_percentages = [
-        (h / total_simulation_hours) * 100 for h in run_empty_hours
-    ]
+    run_empty_percentages = [(h / total_working_hours) * 100 for h in run_empty_hours]
 
     # Create bins of 1% width (default)
     if run_empty_percentages:
@@ -89,7 +87,7 @@ def plot_empty_hours_percentage(
             # Add explanatory text for 95th percentile
             explanation_text = (
                 f"In 95% of all cases, the system spends less\n"
-                f"than {p95:.1f}% of the time with an empty battery."
+                f"than {p95:.1f}% of working time with an empty battery."
             )
 
             # Place text below the legend (using relative coordinates)
@@ -107,8 +105,8 @@ def plot_empty_hours_percentage(
                 ),
             )
 
-    ax.set_title("Distribution of Time Spent with Empty Battery")
-    ax.set_xlabel("Percentage of Time with Empty Battery (%)")
+    ax.set_title("Distribution of working time spent with empty battery")
+    ax.set_xlabel("Percentage of working time with empty battery (%)")
     ax.set_ylabel("Number of Samples")
     ax.grid(True, linestyle="--", alpha=0.5)
 

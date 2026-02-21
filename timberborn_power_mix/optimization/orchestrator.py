@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 def optimization_orchestrator(config: OptimizationConfig) -> None:
     """Orchestrates the multi-objective NSGA-II optimization process."""
-    iterations = getattr(config, ConfigName.ITERATIONS)
+    max_time = getattr(config, ConfigName.MAX_TIME)
     logger.info(
-        f"Starting NSGA-II Multi-Objective Optimization for {iterations} generations..."
+        f"Starting NSGA-II Multi-Objective Optimization (Max Time: {max_time}s)..."
     )
     logger.info("Objectives: Minimize Cost & Minimize Battery Stress")
 
@@ -26,4 +26,4 @@ def optimization_orchestrator(config: OptimizationConfig) -> None:
             ):
                 logger.info(f"  {field}: {value}")
     else:
-        logger.warning("Could not find a valid solution within the given iterations.")
+        logger.warning("Could not find a valid solution within the given time limit.")

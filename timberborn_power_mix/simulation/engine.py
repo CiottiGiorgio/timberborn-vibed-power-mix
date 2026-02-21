@@ -29,12 +29,16 @@ def jit_singlethread_simulation(
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
-    base_surplus, base_power_production, power_consumption, total_hours = (
-        sim_helpers.jit_simulation_prelude(config, sim_consts)
-    )
+    (
+        base_surplus,
+        base_power_production,
+        power_consumption,
+        is_working_hour,
+        total_hours,
+    ) = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
     all_hours_empty = jit_batched_simulation(
-        all_seeds, total_hours, base_surplus, sim_consts
+        all_seeds, total_hours, base_surplus, is_working_hour, sim_consts
     )
 
     return sim_helpers.jit_simulation_epilogue(
@@ -62,12 +66,12 @@ def jit_singlethread_simulation_no_plots(
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
-    base_surplus, _, _, total_hours = sim_helpers.jit_simulation_prelude(
-        config, sim_consts
+    base_surplus, _, _, is_working_hour, total_hours = (
+        sim_helpers.jit_simulation_prelude(config, sim_consts)
     )
 
     all_hours_empty = jit_batched_simulation(
-        all_seeds, total_hours, base_surplus, sim_consts
+        all_seeds, total_hours, base_surplus, is_working_hour, sim_consts
     )
 
     return np.percentile(all_hours_empty, 95)
@@ -85,9 +89,13 @@ def jit_multithread_simulation(
     Distributes the stochastic samples across a thread pool. Each thread
     executes a batch of simulations independently.
     """
-    base_surplus, base_power_production, power_consumption, total_hours = (
-        sim_helpers.jit_simulation_prelude(config, sim_consts)
-    )
+    (
+        base_surplus,
+        base_power_production,
+        power_consumption,
+        is_working_hour,
+        total_hours,
+    ) = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
     with objmode(all_seeds="uint32[:]", all_hours_empty="uint32[:]"):
         executor = ThreadPoolExecutor(max_workers=threads)
@@ -103,6 +111,7 @@ def jit_multithread_simulation(
                 seed_chunks,
                 repeat(total_hours),
                 repeat(base_surplus),
+                repeat(is_working_hour),
                 repeat(sim_consts),
             )
             all_hours_empty = np.concatenate([r for r in results])
@@ -125,6 +134,7 @@ def jit_batched_simulation(
     seeds: NDArray[np.uint32],
     total_hours: int,
     base_surplus: NDArray[np.int64],
+    is_working_hour: NDArray[np.bool_],
     sim_consts: JitSimulationCachedConsts,
 ) -> NDArray[np.uint32]:
     """
@@ -141,6 +151,7 @@ def jit_batched_simulation(
             seeds[s],
             total_hours,
             base_surplus,
+            is_working_hour,
             sim_consts.total_battery_capacity,
             sim_consts.large_windmills,
             sim_consts.windmills,

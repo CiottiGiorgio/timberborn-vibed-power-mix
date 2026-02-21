@@ -39,6 +39,7 @@ def jit_stochastic_simulation_no_sample(
     seed: np.uint32,
     total_hours: int,
     base_surplus: NDArray[np.int64],
+    is_working_hour: NDArray[np.bool_],
     total_battery_capacity: int,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
@@ -53,7 +54,7 @@ def jit_stochastic_simulation_no_sample(
 
     current_hour = 0
     current_charge = np.int64(total_battery_capacity // 2)
-    empty_hours = 0
+    empty_working_hours = 0
 
     while current_hour < total_hours:
         duration = np.random.randint(
@@ -66,13 +67,14 @@ def jit_stochastic_simulation_no_sample(
             current_charge += base_surplus[h] + np.int64(wind_power)
             if current_charge < 0:
                 current_charge = np.int64(0)
-                empty_hours += 1
+                if is_working_hour[h]:
+                    empty_working_hours += 1
             elif current_charge > total_battery_capacity:
                 current_charge = np.int64(total_battery_capacity)
 
         current_hour = end_hour
 
-    return np.uint32(empty_hours)
+    return np.uint32(empty_working_hours)
 
 
 @njit

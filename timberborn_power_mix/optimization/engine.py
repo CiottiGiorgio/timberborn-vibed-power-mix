@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from typing import Tuple, Optional, Dict, Any
+from typing import Dict, Any
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from pymoo.core.problem import ElementwiseProblem
@@ -22,11 +22,12 @@ from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix import helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
 from timberborn_power_mix.optimization import consts as opt_consts
+from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.optimization.structures import OptimizationResult
 
 logger = logging.getLogger(__name__)
 
 # TODO:
-# - check that we can better type the return types passed around in the optimization engine
 # - check that we can make more tests on the simulation engine on a more modular level (unit tests, etc.)
 # - check that we can make tests for the optimization engine
 # - find a good strategy to run tests automatically
@@ -44,10 +45,6 @@ class PowerMixProblem(ElementwiseProblem):
 
     def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
         self.opt_config = opt_config
-        self.sim_config_base = opt_config.model_dump()
-        self.sim_config_base.pop("max_time")
-        self.sim_config_base.pop("seed")
-
         self.producers = list(PRODUCER_DATABASE.keys())
         self.n_producers = len(self.producers)
 
@@ -72,10 +69,8 @@ class PowerMixProblem(ElementwiseProblem):
 
         super().__init__(n_var=n_var, n_obj=2, xl=xl, xu=xu, **kwargs)
 
-    def _evaluate(
-        self, x: np.ndarray, out: Dict[str, Any], *args: Any, **kwargs: Any
-    ) -> None:
-        # 1. Reconstruct EnergyMixConfig
+    def _x_to_mix(self, x: np.ndarray) -> EnergyMixConfig:
+        """Converts a decision vector x into an EnergyMixConfig."""
         mix_data: Dict[str, Any] = {}
         for i, producer in enumerate(self.producers):
             mix_data[producer.value] = int(x[i])
@@ -84,13 +79,25 @@ class PowerMixProblem(ElementwiseProblem):
         uniform_height = int(x[self.n_producers + 1])
         mix_data[BatteryName.BATTERY_HEIGHTS.value] = [uniform_height] * num_batteries
 
-        mix = EnergyMixConfig(**mix_data)
+        return EnergyMixConfig(**mix_data)
+
+    def _evaluate(
+        self, x: np.ndarray, out: Dict[str, Any], *args: Any, **kwargs: Any
+    ) -> None:
+        # 1. Reconstruct EnergyMixConfig
+        mix = self._x_to_mix(x)
 
         # 2. Run Simulation
         eval_seed = hash(tuple(x)) % (2**32)
-        config = SimulationConfig(
-            **self.sim_config_base, energy_mix=mix, seed=eval_seed
-        )
+
+        # Create SimulationConfig by merging opt_config and mix
+        # We exclude max_time and seed from the base config
+        sim_base_data = self.opt_config.model_dump()
+        sim_base_data.pop(ConfigName.MAX_TIME)
+        sim_base_data.pop(ConfigName.SEED)
+
+        config = SimulationConfig(**sim_base_data, energy_mix=mix, seed=eval_seed)
+
         result = jit_singlethread_simulation_no_plots(
             config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
         )
@@ -99,8 +106,8 @@ class PowerMixProblem(ElementwiseProblem):
         cost = float(opt_helpers.calculate_total_wood_cost(mix))
 
         # Objective 2: Minimize Unreliability (95th percentile of working hours empty)
-        total_working_hours = (
-            self.sim_config_base["days"] * self.sim_config_base["working_hours"]
+        total_working_hours = getattr(self.opt_config, ConfigName.DAYS) * getattr(
+            self.opt_config, ConfigName.WORKING_HOURS
         )
         hours_empty_pct = float(result / total_working_hours)
 
@@ -110,7 +117,7 @@ class PowerMixProblem(ElementwiseProblem):
 
 def run_optimization(
     config: OptimizationConfig,
-) -> Tuple[Optional[EnergyMixConfig], float]:
+) -> OptimizationResult:
     """
     Main NSGA-II Loop using pymoo with parallel evaluation.
 
@@ -152,7 +159,7 @@ def run_optimization(
         )
 
     if res.opt is None:
-        return None, 0.0
+        return OptimizationResult(None, 0.0, 0.0)
 
     # Selection Logic:
     # Find the solution closest to the target unreliability (e.g. 5%)
@@ -162,10 +169,13 @@ def run_optimization(
 
     best_mix = best_sol.get("mix")
     best_cost = best_sol.F[0]
+    unreliability = best_sol.F[1]
 
     logger.info(
-        f"Optimization complete. Selected solution with {best_sol.F[1]:.2%} "
+        f"Optimization complete. Selected solution with {unreliability:.2%} "
         f"unreliability at cost {best_cost}."
     )
 
-    return best_mix, best_cost
+    return OptimizationResult(
+        best_mix=best_mix, best_cost=best_cost, unreliability=unreliability
+    )

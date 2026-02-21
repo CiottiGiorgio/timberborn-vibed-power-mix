@@ -107,7 +107,7 @@ def calculate_season_boundaries(
 def jit_simulation_prelude(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
-) -> Tuple[NDArray[np.uint32], NDArray[np.uint32], int]:
+) -> Tuple[NDArray[np.int64], NDArray[np.uint32], NDArray[np.uint32], int]:
     total_hours = config.days * consts.HOURS_PER_DAY
 
     # Pre-calculate static profiles
@@ -145,13 +145,18 @@ def jit_simulation_prelude(
         is_working_hour, sim_consts.total_consumption_rate, 0
     ).astype(np.uint32)
 
-    return base_power_production, power_consumption, total_hours
+    base_surplus = base_power_production.astype(np.int64) - power_consumption.astype(
+        np.int64
+    )
+
+    return base_surplus, base_power_production, power_consumption, total_hours
 
 
 @njit
 def jit_simulation_epilogue(
     all_hours_empty: NDArray[np.uint32],
     all_seeds: NDArray[np.uint32],
+    base_surplus: NDArray[np.int64],
     base_power_production: NDArray[np.uint32],
     power_consumption: NDArray[np.uint32],
     sim_consts: JitSimulationCachedConsts,
@@ -170,8 +175,8 @@ def jit_simulation_epilogue(
     p95_sample = jit_stochastic_simulation(
         p95_seed,
         total_hours,
+        base_surplus,
         base_power_production,
-        power_consumption,
         sim_consts.total_battery_capacity,
         sim_consts.large_windmills,
         sim_consts.windmills,

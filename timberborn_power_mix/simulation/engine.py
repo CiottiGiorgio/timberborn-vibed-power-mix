@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 from numba import njit, objmode
 
-from timberborn_power_mix.simulation.core import jit_stochastic_simulation
+from timberborn_power_mix.simulation.core import jit_stochastic_simulation_no_sample
 from timberborn_power_mix.structures import (
     JitSimulationConfig,
     JitSimulationCachedConsts,
@@ -23,17 +23,18 @@ def jit_singlethread_simulation(
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
-    base_power_production, power_consumption, total_hours = (
+    base_surplus, base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)
     )
 
     all_hours_empty = jit_batched_simulation(
-        all_seeds, total_hours, base_power_production, power_consumption, sim_consts
+        all_seeds, total_hours, base_surplus, sim_consts
     )
 
     return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,
         all_seeds,
+        base_surplus,
         base_power_production,
         power_consumption,
         sim_consts,
@@ -49,12 +50,12 @@ def jit_singlethread_simulation_no_plots(
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
 
-    base_power_production, power_consumption, total_hours = (
-        sim_helpers.jit_simulation_prelude(config, sim_consts)
+    base_surplus, _, _, total_hours = sim_helpers.jit_simulation_prelude(
+        config, sim_consts
     )
 
     all_hours_empty = jit_batched_simulation(
-        all_seeds, total_hours, base_power_production, power_consumption, sim_consts
+        all_seeds, total_hours, base_surplus, sim_consts
     )
 
     return np.percentile(all_hours_empty, 95)
@@ -66,7 +67,7 @@ def jit_multithread_simulation(
     threads: int,
     sim_consts: JitSimulationCachedConsts,
 ) -> SimulationResult:
-    base_power_production, power_consumption, total_hours = (
+    base_surplus, base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)
     )
 
@@ -83,8 +84,7 @@ def jit_multithread_simulation(
                 jit_batched_simulation,
                 seed_chunks,
                 repeat(total_hours),
-                repeat(base_power_production),
-                repeat(power_consumption),
+                repeat(base_surplus),
                 repeat(sim_consts),
             )
             all_hours_empty = np.concatenate([r for r in results])
@@ -94,6 +94,7 @@ def jit_multithread_simulation(
     return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,
         all_seeds,
+        base_surplus,
         base_power_production,
         power_consumption,
         sim_consts,
@@ -105,8 +106,7 @@ def jit_multithread_simulation(
 def jit_batched_simulation(
     seeds: NDArray[np.uint32],
     total_hours: int,
-    base_power_production: NDArray[np.uint32],
-    power_consumption: NDArray[np.uint32],
+    base_surplus: NDArray[np.int64],
     sim_consts: JitSimulationCachedConsts,
 ) -> NDArray[np.uint32]:
     """
@@ -117,15 +117,13 @@ def jit_batched_simulation(
     hours_empty_results = np.zeros(n_samples, dtype=np.uint32)
 
     for s in range(n_samples):
-        res = jit_stochastic_simulation(
+        hours_empty_results[s] = jit_stochastic_simulation_no_sample(
             seeds[s],
             total_hours,
-            base_power_production,
-            power_consumption,
+            base_surplus,
             sim_consts.total_battery_capacity,
             sim_consts.large_windmills,
             sim_consts.windmills,
         )
-        hours_empty_results[s] = np.sum(res.battery_charge <= 0)
 
     return hours_empty_results

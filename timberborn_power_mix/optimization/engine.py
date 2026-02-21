@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from typing import Tuple, Optional, Dict, Any
-from multiprocessing.pool import ThreadPool
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from pymoo.core.problem import ElementwiseProblem
 from pymoo.algorithms.moo.nsga2 import NSGA2
@@ -111,8 +111,8 @@ def run_optimization(
     pop_size = 40
     n_threads = helpers.calculate_optimal_threads(config.threads, pop_size)
 
-    with ThreadPool(n_threads) as pool:
-        problem = PowerMixProblem(config, elementwise_runner=pool.map)
+    with ThreadPoolExecutor(max_workers=n_threads) as executor:
+        problem = PowerMixProblem(config, elementwise_runner=executor.map)
 
         algorithm = NSGA2(
             pop_size=pop_size,

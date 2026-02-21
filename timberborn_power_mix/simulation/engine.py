@@ -1,4 +1,5 @@
-from multiprocessing.pool import ThreadPool
+from concurrent.futures.thread import ThreadPoolExecutor
+from itertools import repeat
 
 import numpy as np
 from numpy.typing import NDArray
@@ -70,7 +71,7 @@ def jit_multithread_simulation(
     )
 
     with objmode(all_seeds="uint32[:]", all_hours_empty="uint32[:]"):
-        pool = ThreadPool(processes=threads)
+        executor = ThreadPoolExecutor(max_workers=threads)
 
         # Generate seeds for all samples
         ss = np.random.SeedSequence(config.seed)
@@ -78,23 +79,19 @@ def jit_multithread_simulation(
         seed_chunks = np.array_split(all_seeds, threads)
 
         try:
-            results = pool.starmap(
-                jit_batched_simulation,
-                [
-                    (
-                        seeds,
-                        total_hours,
-                        base_power_production,
-                        power_consumption,
-                        sim_consts,
-                    )
-                    for seeds in seed_chunks
-                ],
+            results = list(
+                executor.map(
+                    jit_batched_simulation,
+                    seed_chunks,
+                    repeat(total_hours),
+                    repeat(base_power_production),
+                    repeat(power_consumption),
+                    repeat(sim_consts),
+                )
             )
             all_hours_empty = np.concatenate(results)
         finally:
-            pool.close()
-            pool.join()
+            executor.shutdown()
 
     return sim_helpers.jit_simulation_epilogue(
         all_hours_empty,

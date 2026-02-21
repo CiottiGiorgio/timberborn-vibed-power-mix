@@ -117,8 +117,8 @@ def test_seed_determinism(simulation_config):
     )
 
 
-@patch("timberborn_power_mix.simulation.engine.run_simulation_multithread")
-@patch("timberborn_power_mix.simulation.engine.run_simulation_singlethread")
+@patch("timberborn_power_mix.simulation.orchestrator.jit_multithread_simulation")
+@patch("timberborn_power_mix.simulation.orchestrator.jit_singlethread_simulation")
 @patch("timberborn_power_mix.simulation.orchestrator.create_simulation_figure")
 @patch("timberborn_power_mix.simulation.orchestrator.plt.show")
 def test_orchestrator_calls_correct_engine(

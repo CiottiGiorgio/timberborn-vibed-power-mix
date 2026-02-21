@@ -46,7 +46,12 @@ def calculate_total_consumption_rate(factories: FactoryConfig) -> int:
 def calculate_jit_cached_consts(
     config: SimulationConfig,
 ) -> JitSimulationCachedConsts:
-    """Pre-calculates static simulation constants from the full configuration."""
+    """
+    Pre-calculates static simulation constants from the full configuration.
+
+    This converts high-level Pydantic models into a JIT-friendly NamedTuple
+    containing only the raw numerical data needed by the simulation engine.
+    """
     # Consumption
     total_consumption_rate = calculate_total_consumption_rate(config.factories)
 
@@ -77,7 +82,11 @@ def calculate_jit_cached_consts(
 def calculate_season_boundaries(
     config: SimulationConfig,
 ) -> List[Tuple[int, str]]:
-    """Determines the start hour and name of each season in the simulation timeline."""
+    """
+    Determines the start hour and name of each season in the simulation timeline.
+
+    Used primarily for plotting and UI to show when seasons transition.
+    """
     season_boundaries = []
     curr_day = 0
     days = getattr(config, ConfigName.DAYS)
@@ -108,6 +117,16 @@ def jit_simulation_prelude(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
 ) -> Tuple[NDArray[np.int64], NDArray[np.uint32], NDArray[np.uint32], int]:
+    """
+    Pre-calculates static time-series profiles that are constant across all samples.
+
+    This includes:
+    - Working hour schedules
+    - Seasonal water wheel availability
+    - Base power production (water wheels + power wheels)
+    - Power consumption profile
+    - Base surplus (production - consumption)
+    """
     total_hours = config.days * consts.HOURS_PER_DAY
 
     # Pre-calculate static profiles
@@ -162,6 +181,14 @@ def jit_simulation_epilogue(
     sim_consts: JitSimulationCachedConsts,
     total_hours: int,
 ) -> SimulationResult:
+    """
+    Aggregates results from all samples and identifies the P95 worst-case scenario.
+
+    After all stochastic runs are complete, this function:
+    1. Packages the aggregated unreliability data.
+    2. Identifies the seed that produced the 95th percentile result.
+    3. Re-runs that specific seed to generate full time-series data for visualization.
+    """
     aggregated = AggregatedSamples(
         power_consumption=power_consumption,
         hours_empty_results=all_hours_empty,

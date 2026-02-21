@@ -19,6 +19,12 @@ def jit_singlethread_simulation(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
 ) -> SimulationResult:
+    """
+    Runs a full batched simulation on a single thread.
+
+    This function handles the entire simulation pipeline: prelude (static profiles),
+    batched stochastic runs, and epilogue (aggregation and P95 selection).
+    """
     with objmode(all_seeds="uint32[:]"):
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
@@ -46,6 +52,12 @@ def jit_singlethread_simulation(
 def jit_singlethread_simulation_no_plots(
     config: JitSimulationConfig, sim_consts: JitSimulationCachedConsts
 ) -> np.uint32:
+    """
+    Runs a batched simulation and returns only the P95 unreliability metric.
+
+    Optimized for use in the optimization engine where full results and
+    time-series data are not required.
+    """
     with objmode(all_seeds="uint32[:]"):
         ss = np.random.SeedSequence(config.seed)
         all_seeds = ss.generate_state(config.samples, dtype=np.uint32)
@@ -67,6 +79,12 @@ def jit_multithread_simulation(
     threads: int,
     sim_consts: JitSimulationCachedConsts,
 ) -> SimulationResult:
+    """
+    Runs a full batched simulation using multiple threads.
+
+    Distributes the stochastic samples across a thread pool. Each thread
+    executes a batch of simulations independently.
+    """
     base_surplus, base_power_production, power_consumption, total_hours = (
         sim_helpers.jit_simulation_prelude(config, sim_consts)
     )
@@ -110,8 +128,10 @@ def jit_batched_simulation(
     sim_consts: JitSimulationCachedConsts,
 ) -> NDArray[np.uint32]:
     """
-    Executes the Monte Carlo simulation and aggregates metrics.
+    Executes a batch of Monte Carlo simulations and aggregates metrics.
+
     Does NOT store full time-series for every sample to save memory.
+    Returns an array containing the number of empty-battery hours for each seed.
     """
     n_samples = len(seeds)
     hours_empty_results = np.zeros(n_samples, dtype=np.uint32)

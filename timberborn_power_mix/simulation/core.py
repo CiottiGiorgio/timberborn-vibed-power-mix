@@ -14,7 +14,12 @@ def _calculate_wind_power(
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
 ) -> int:
-    """Calculates total wind power for a given wind strength."""
+    """
+    Calculates total wind power for a single wind event.
+
+    Wind strength is sampled from a uniform distribution and applied to
+    windmill groups if they exceed their respective activation thresholds.
+    """
     # Use integer math for wind strength (0-WIND_STRENGTH_MAX) for performance.
     strength_int = np.random.randint(0, consts.WIND_STRENGTH_MAX + 1)
 
@@ -38,7 +43,12 @@ def jit_stochastic_simulation_no_sample(
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
 ) -> np.uint32:
-    """Variant that only returns the number of hours the battery was empty."""
+    """
+    Executes a single Monte Carlo simulation run and returns the number of hours
+    where the battery charge was zero. This optimized variant avoids allocating
+    large arrays for time-series data, making it suitable for high-iteration
+    optimization loops.
+    """
     np.random.seed(seed)
 
     current_hour = 0
@@ -75,7 +85,11 @@ def jit_stochastic_simulation(
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
 ) -> SimulationSample:
-    """Variant that returns the full time-series data."""
+    """
+    Executes a single Monte Carlo simulation run and returns full time-series data
+    for hourly power production and battery charge levels. Used primarily for
+    visualization and detailed analysis of a specific scenario.
+    """
     np.random.seed(seed)
 
     power_production = np.empty(total_hours, dtype=np.uint32)

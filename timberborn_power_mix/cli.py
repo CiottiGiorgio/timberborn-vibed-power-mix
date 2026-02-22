@@ -109,14 +109,14 @@ def cli() -> None:
 
 
 @cli.command(name="simulate")
-@add_common_params
-@add_energy_mix_params
 @click.option(
     f"--{CommonConfigName.SAMPLES.replace('_', '-')}",
     type=int,
     default=sim_consts.DEFAULT_SIMULATION_SAMPLES,
     help="Number of samples per simulation",
 )
+@add_energy_mix_params
+@add_common_params
 def simulate_cmd(**kwargs: Any) -> None:
     """Simulate a configuration with the specified parameters."""
     from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
@@ -126,7 +126,6 @@ def simulate_cmd(**kwargs: Any) -> None:
 
 
 @cli.command(name="optimize")
-@add_common_params
 @click.option(
     f"--{OptimizeConfigName.MAX_TIME.replace('_', '-')}",
     type=int,
@@ -151,6 +150,7 @@ def simulate_cmd(**kwargs: Any) -> None:
     default="p95",
     help="Percentile for unreliability calculation during optimization",
 )
+@add_common_params
 def optimize_cmd(**kwargs: Any) -> None:
     """Optimize the energy mix for a given factory configuration."""
     from timberborn_power_mix.optimization.orchestrator import optimization_orchestrator

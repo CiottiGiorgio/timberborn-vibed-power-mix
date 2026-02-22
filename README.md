@@ -36,14 +36,16 @@ Find the most efficient power mix for a given set of factories. The optimizer us
 ```bash
 poetry run tb-power-mix optimize \
     --lumber-mills 5 \
-    --steel-factories 2
+    --steel-factories 2 \
+    --max-time 60
 ```
 
-The optimizer searches for a **Pareto Frontier** of solutions that minimize both material cost and battery stress, eventually selecting the configuration that hits a target reliability of ~95%.
+The optimizer searches for a **Pareto Frontier** of solutions that minimize both material cost and **working hours lost** due to empty batteries. It selects the configuration that achieves a target reliability of ~95% in the 95th percentile of worst-case scenarios (P95).
 
 **Key Parameters:**
 - `--[factory-name] [count]`: Specify the factories you need to power.
 - `--days [count]`: Duration of the simulation cycle.
+- `--max-time [seconds]`: Maximum time to run the optimization (default: 40s).
 
 ## Data Insights
 
@@ -55,10 +57,11 @@ The simulation accounts for:
   - **Badtide**: Water wheels continue to function (assuming contaminated water still flows).
 - **Working Hours**: Factories only consume power during specified working hours (default: 16h/day).
 - **Battery Physics**: Gravity battery capacity scales with height.
-- **Battery Stress Index**: A non-linear metric that penalizes configurations that frequently run low on power, used to guide the optimizer toward stable grids.
+- **Unreliability Metric**: We track the percentage of **working hours** where the battery is empty. This ensures the optimizer focuses on productivity rather than just keeping batteries full at night.
 
 ### Visualizing Performance
 The generated plots help you understand the dynamics of your power grid:
 - **Sufficiency & Timing**: Verify if you produce enough power and, crucially, if you produce it *at the right time* relative to your working hours.
 - **Battery Reaction**: Observe how your battery system reacts to the generation of power over time, smoothing out intermittent production.
 - **Surplus & Deficits**: Check if your setup correctly captures energy surplus during high-production windows and if it has enough depth to cover deficits.
+- **P95 Worst-Case**: The time-series plots show the 95th percentile worst-case scenario, giving you confidence that your grid will hold up even during unlucky wind streaks.

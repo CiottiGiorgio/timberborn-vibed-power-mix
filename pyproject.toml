@@ -30,6 +30,7 @@ mypy = "*"
 scalene = "^2"
 pre-commit = "^4.5.1"
 poethepoet = "^0.32.2"
+pip-audit = "^2.10.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -73,6 +74,7 @@ format = "ruff format ."
 lint = "ruff check . --fix"
 typecheck = "mypy --package timberborn_power_mix"
 test = "pytest"
+audit = "pip-audit"
 
 # Internal tasks for profiling
 _run-profile-sim = "scalene run -o profiling/profile_sim.json scripts/profile_sim.py"

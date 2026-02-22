@@ -23,7 +23,7 @@ class SimulateConfigName(StrEnum):
 class OptimizeConfigName(StrEnum):
     MAX_TIME = "max_time"
     PERCENTILE = "percentile"
-    TARGET_RELIABILITY = "target_reliability"
+    TARGET_UNRELIABILITY = "target_unreliability"
 
 
 class Percentile(IntEnum):

@@ -25,13 +25,13 @@ class OptimizationConfig(BaseModel):
     factories: FactoryConfig
     max_time: int
     percentile: Percentile
-    target_reliability: float
+    target_unreliability: float
 """
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
     **{OptimizeConfigName.MAX_TIME.value: int},
-    **{OptimizeConfigName.TARGET_RELIABILITY.value: float},
+    **{OptimizeConfigName.TARGET_UNRELIABILITY.value: float},
     **{OptimizeConfigName.PERCENTILE.value: Percentile},
     __base__=BaseModel,
 )

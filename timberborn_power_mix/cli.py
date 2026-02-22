@@ -140,10 +140,10 @@ def simulate_cmd(**kwargs: Any) -> None:
     help="Number of samples per simulation during optimization",
 )
 @click.option(
-    f"--{OptimizeConfigName.TARGET_RELIABILITY.replace('_', '-')}",
+    f"--{OptimizeConfigName.TARGET_UNRELIABILITY.replace('_', '-')}",
     type=float,
-    default=1.0 - opt_consts.TARGET_UNRELIABILITY,
-    help="Target reliability for the optimization",
+    default=opt_consts.DEFAULT_TARGET_UNRELIABILITY,
+    help="Target unreliability for the optimization",
 )
 @click.option(
     f"--{OptimizeConfigName.PERCENTILE}",
@@ -210,7 +210,7 @@ def parse_optimization_config(**kwargs: Any) -> OptimizationConfig:
     return OptimizationConfig(
         **common_config.model_dump(),
         max_time=kwargs[OptimizeConfigName.MAX_TIME],
-        target_reliability=kwargs[OptimizeConfigName.TARGET_RELIABILITY],
+        target_unreliability=kwargs[OptimizeConfigName.TARGET_UNRELIABILITY],
         percentile=percentile,
     )
 

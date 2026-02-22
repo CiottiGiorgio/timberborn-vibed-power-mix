@@ -92,7 +92,7 @@ class PowerMixProblem(ElementwiseProblem):
         # We exclude max_time and seed from the base config
         sim_base_data = self.opt_config.model_dump()
         sim_base_data.pop(OptimizeConfigName.MAX_TIME)
-        sim_base_data.pop(OptimizeConfigName.TARGET_RELIABILITY)
+        sim_base_data.pop(OptimizeConfigName.TARGET_UNRELIABILITY)
         sim_base_data.pop(OptimizeConfigName.PERCENTILE)
 
         config = SimulationConfig(**sim_base_data, energy_mix=mix)
@@ -163,8 +163,7 @@ def run_optimization(
 
     # Selection Logic:
     # Find the solution closest to the target unreliability
-    target_unreliability = 1.0 - config.target_reliability
-    best_sol = min(res.opt, key=lambda sol: abs(sol.F[1] - target_unreliability))
+    best_sol = min(res.opt, key=lambda sol: abs(sol.F[1] - config.target_unreliability))
 
     best_mix = best_sol.get("mix")
     best_cost = best_sol.F[0]

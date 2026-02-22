@@ -1,14 +1,14 @@
 import logging
 from timberborn_power_mix.optimization.engine import run_optimization
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import OptimizeConfigName
 
 logger = logging.getLogger(__name__)
 
 
 def optimization_orchestrator(config: OptimizationConfig) -> None:
     """Orchestrates the multi-objective NSGA-II optimization process."""
-    max_time = getattr(config, ConfigName.MAX_TIME)
+    max_time = getattr(config, OptimizeConfigName.MAX_TIME)
     logger.info(
         f"Starting NSGA-II Multi-Objective Optimization (Max Time: {max_time}s)..."
     )

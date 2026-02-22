@@ -15,7 +15,7 @@ from timberborn_power_mix.simulation.helpers import (
     calculate_season_boundaries,
 )
 from timberborn_power_mix.machines import ProducerName, BatteryName
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import CommonConfigName
 
 
 def create_simulation_figure(config: SimulationConfig, res: SimulationResult) -> Figure:
@@ -24,7 +24,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     run_empty_hours = res.aggregated_samples.hours_empty_results
     power_consumption = res.aggregated_samples.power_consumption
 
-    days = getattr(config, ConfigName.DAYS)
+    days = getattr(config, CommonConfigName.DAYS)
     total_hours = days * sim_consts.HOURS_PER_DAY
 
     time_hours = np.arange(total_hours)
@@ -104,11 +104,11 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     sim_info = (
         f"Simulation Info:\n"
         f"  Days: {days}\n"
-        f"  Working Hours: {getattr(config, ConfigName.WORKING_HOURS)}\n"
-        f"  Wet Season: {getattr(config, ConfigName.WET_DAYS)} days\n"
-        f"  Dry Season: {getattr(config, ConfigName.DRY_DAYS)} days\n"
-        f"  Badtide Season: {getattr(config, ConfigName.BADTIDE_DAYS)} days\n"
-        f"  Samples: {getattr(config, ConfigName.SAMPLES)}"
+        f"  Working Hours: {getattr(config, CommonConfigName.WORKING_HOURS)}\n"
+        f"  Wet Season: {getattr(config, CommonConfigName.WET_DAYS)} days\n"
+        f"  Dry Season: {getattr(config, CommonConfigName.DRY_DAYS)} days\n"
+        f"  Badtide Season: {getattr(config, CommonConfigName.BADTIDE_DAYS)} days\n"
+        f"  Samples: {getattr(config, CommonConfigName.SAMPLES)}"
     )
 
     # Place text box in top right corner
@@ -204,7 +204,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     )
 
     # Plot 5: Empty Battery Duration Distribution (Percentage)
-    working_hours_per_day = getattr(config, ConfigName.WORKING_HOURS)
+    working_hours_per_day = getattr(config, CommonConfigName.WORKING_HOURS)
     total_working_hours = days * working_hours_per_day
     plot_empty_hours_percentage(
         ax5,

@@ -22,7 +22,7 @@ from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
 from timberborn_power_mix import helpers
 import timberborn_power_mix.optimization.helpers as opt_helpers
 from timberborn_power_mix.optimization import consts as opt_consts
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import CommonConfigName, OptimizeConfigName
 from timberborn_power_mix.optimization.structures import OptimizationResult
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class PowerMixProblem(ElementwiseProblem):
 
     Objectives:
     1. Minimize total wood cost.
-    2. Minimize unreliability (95th percentile of working hours empty).
+    2. Minimize unreliability (percentile of working hours empty).
     """
 
     def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
@@ -91,20 +91,24 @@ class PowerMixProblem(ElementwiseProblem):
         # Create SimulationConfig by merging opt_config and mix
         # We exclude max_time and seed from the base config
         sim_base_data = self.opt_config.model_dump()
-        sim_base_data.pop(ConfigName.MAX_TIME)
+        sim_base_data.pop(OptimizeConfigName.MAX_TIME)
+        sim_base_data.pop(OptimizeConfigName.TARGET_RELIABILITY)
+        sim_base_data.pop(OptimizeConfigName.PERCENTILE)
 
         config = SimulationConfig(**sim_base_data, energy_mix=mix)
 
         result = jit_singlethread_simulation_no_plots(
-            config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
+            config.to_jit_config(),
+            sim_helpers.calculate_jit_cached_consts(config),
+            percentile=self.opt_config.percentile.value,
         )
 
         # 3. Calculate Objectives
         cost = opt_helpers.calculate_total_wood_cost(mix)
 
-        # Objective 2: Minimize Unreliability (95th percentile of working hours empty)
-        total_working_hours = getattr(self.opt_config, ConfigName.DAYS) * getattr(
-            self.opt_config, ConfigName.WORKING_HOURS
+        # Objective 2: Minimize Unreliability (percentile of working hours empty)
+        total_working_hours = getattr(self.opt_config, CommonConfigName.DAYS) * getattr(
+            self.opt_config, CommonConfigName.WORKING_HOURS
         )
         hours_empty_pct = float(result / total_working_hours)
 
@@ -158,10 +162,9 @@ def run_optimization(
         return OptimizationResult(best_mix=None, best_cost=0, unreliability=0.0)
 
     # Selection Logic:
-    # Find the solution closest to the target unreliability (e.g. 5%)
-    best_sol = min(
-        res.opt, key=lambda sol: abs(sol.F[1] - opt_consts.TARGET_UNRELIABILITY)
-    )
+    # Find the solution closest to the target unreliability
+    target_unreliability = 1.0 - config.target_reliability
+    best_sol = min(res.opt, key=lambda sol: abs(sol.F[1] - target_unreliability))
 
     best_mix = best_sol.get("mix")
     best_cost = best_sol.F[0]

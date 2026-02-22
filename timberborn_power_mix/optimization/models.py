@@ -1,6 +1,6 @@
 from pydantic import create_model, BaseModel
 from timberborn_power_mix.models import CommonConfig
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import OptimizeConfigName, Percentile
 
 """
 This module defines the configuration models for the power optimization.
@@ -24,11 +24,15 @@ class OptimizationConfig(BaseModel):
     badtide_days: int
     factories: FactoryConfig
     max_time: int
+    percentile: Percentile
+    target_reliability: float
 """
 
 OptimizationConfig = create_model(
     "OptimizationConfig",
-    **{ConfigName.MAX_TIME.value: int},
+    **{OptimizeConfigName.MAX_TIME.value: int},
+    **{OptimizeConfigName.TARGET_RELIABILITY.value: float},
+    **{OptimizeConfigName.PERCENTILE.value: Percentile},
     __base__=BaseModel,
 )
 

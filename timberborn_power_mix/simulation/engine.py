@@ -52,10 +52,12 @@ def jit_singlethread_simulation(
 
 @njit(nogil=True)
 def jit_singlethread_simulation_no_plots(
-    config: JitSimulationConfig, sim_consts: JitSimulationCachedConsts
+    config: JitSimulationConfig,
+    sim_consts: JitSimulationCachedConsts,
+    percentile: int,
 ) -> np.uint32:
     """
-    Runs a batched simulation and returns only the P95 unreliability metric.
+    Runs a batched simulation and returns only the unreliability metric for a given percentile.
 
     Optimized for use in the optimization engine where full results and
     time-series data are not required.
@@ -74,7 +76,7 @@ def jit_singlethread_simulation_no_plots(
         sim_consts,
     )
 
-    return np.percentile(all_hours_empty, 95)
+    return np.percentile(all_hours_empty, percentile)
 
 
 @njit(cache=True)

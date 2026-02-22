@@ -26,7 +26,7 @@ from timberborn_power_mix.structures import (
     JitSimulationPrelude,
 )
 from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import CommonConfigName
 
 
 def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> int:
@@ -90,10 +90,10 @@ def calculate_season_boundaries(
     """
     season_boundaries = []
     curr_day = 0
-    days = getattr(config, ConfigName.DAYS)
-    wet_days = getattr(config, ConfigName.WET_DAYS)
-    dry_days = getattr(config, ConfigName.DRY_DAYS)
-    badtide_days = getattr(config, ConfigName.BADTIDE_DAYS)
+    days = getattr(config, CommonConfigName.DAYS)
+    wet_days = getattr(config, CommonConfigName.WET_DAYS)
+    dry_days = getattr(config, CommonConfigName.DRY_DAYS)
+    badtide_days = getattr(config, CommonConfigName.BADTIDE_DAYS)
 
     while curr_day < days:
         season_boundaries.append((curr_day * consts.HOURS_PER_DAY, "Wet"))

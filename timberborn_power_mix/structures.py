@@ -1,10 +1,10 @@
-from enum import StrEnum
+from enum import StrEnum, IntEnum
 from typing import NamedTuple
 import numpy as np
 from numpy.typing import NDArray
 
 
-class ConfigName(StrEnum):
+class CommonConfigName(StrEnum):
     SEED = "seed"
     THREADS = "threads"
     SAMPLES = "samples"
@@ -14,9 +14,22 @@ class ConfigName(StrEnum):
     DRY_DAYS = "dry_days"
     BADTIDE_DAYS = "badtide_days"
     FACTORIES = "factories"
+
+
+class SimulateConfigName(StrEnum):
     ENERGY_MIX = "energy_mix"
-    ITERATIONS = "iterations"
+
+
+class OptimizeConfigName(StrEnum):
     MAX_TIME = "max_time"
+    PERCENTILE = "percentile"
+    TARGET_RELIABILITY = "target_reliability"
+
+
+class Percentile(IntEnum):
+    P5 = 5
+    P50 = 50
+    P95 = 95
 
 
 class JitSimulationConfig(NamedTuple):

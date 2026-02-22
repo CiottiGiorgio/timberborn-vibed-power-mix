@@ -5,6 +5,7 @@ from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.machines import FACTORY_DATABASE, BatteryName
 from timberborn_power_mix.simulation.models import EnergyMixConfig
+from timberborn_power_mix.structures import Percentile
 
 
 @pytest.fixture
@@ -23,6 +24,8 @@ def opt_config():
         badtide_days=1,
         factories=factories,
         max_time=5,
+        percentile=Percentile.P95,
+        target_reliability=0.95,
     )
 
 

@@ -10,7 +10,11 @@ from timberborn_power_mix.simulation.models import (
 )
 from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.models import CommonConfig, FactoryConfig
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import (
+    CommonConfigName,
+    OptimizeConfigName,
+    Percentile,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -28,43 +32,43 @@ def add_common_params(func: F) -> F:
         )(func)
 
     func = click.option(
-        f"--{ConfigName.BADTIDE_DAYS.replace('_', '-')}",
+        f"--{CommonConfigName.BADTIDE_DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS,
         help="Duration of badtide season in days",
     )(func)
     func = click.option(
-        f"--{ConfigName.DRY_DAYS.replace('_', '-')}",
+        f"--{CommonConfigName.DRY_DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_DRY_SEASON_DAYS,
         help="Duration of dry season in days",
     )(func)
     func = click.option(
-        f"--{ConfigName.WET_DAYS.replace('_', '-')}",
+        f"--{CommonConfigName.WET_DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_WET_SEASON_DAYS,
         help="Duration of wet season in days",
     )(func)
     func = click.option(
-        f"--{ConfigName.WORKING_HOURS.replace('_', '-')}",
+        f"--{CommonConfigName.WORKING_HOURS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_WORKING_HOURS,
         help="Number of working hours per day",
     )(func)
     func = click.option(
-        f"--{ConfigName.DAYS.replace('_', '-')}",
+        f"--{CommonConfigName.DAYS.replace('_', '-')}",
         type=int,
         default=sim_consts.DEFAULT_DAYS,
         help="Number of days for the simulation",
     )(func)
     func = click.option(
-        f"--{ConfigName.THREADS}",
+        f"--{CommonConfigName.THREADS}",
         type=int,
         default=None,
         help="Number of threads to use for parallelism",
     )(func)
     func = click.option(
-        f"--{ConfigName.SEED}",
+        f"--{CommonConfigName.SEED}",
         type=int,
         default=None,
         help="Seed for the random number generator",
@@ -108,7 +112,7 @@ def cli() -> None:
 @add_common_params
 @add_energy_mix_params
 @click.option(
-    f"--{ConfigName.SAMPLES.replace('_', '-')}",
+    f"--{CommonConfigName.SAMPLES.replace('_', '-')}",
     type=int,
     default=sim_consts.DEFAULT_SIMULATION_SAMPLES,
     help="Number of samples per simulation",
@@ -124,16 +128,28 @@ def simulate_cmd(**kwargs: Any) -> None:
 @cli.command(name="optimize")
 @add_common_params
 @click.option(
-    f"--{ConfigName.MAX_TIME.replace('_', '-')}",
+    f"--{OptimizeConfigName.MAX_TIME.replace('_', '-')}",
     type=int,
     default=opt_consts.DEFAULT_MAX_TIME_SECONDS,
     help="Maximum optimization time in seconds",
 )
 @click.option(
-    f"--{ConfigName.SAMPLES.replace('_', '-')}",
+    f"--{CommonConfigName.SAMPLES.replace('_', '-')}",
     type=int,
     default=opt_consts.DEFAULT_OPTIMIZATION_SAMPLES,
     help="Number of samples per simulation during optimization",
+)
+@click.option(
+    f"--{OptimizeConfigName.TARGET_RELIABILITY.replace('_', '-')}",
+    type=float,
+    default=1.0 - opt_consts.TARGET_UNRELIABILITY,
+    help="Target reliability for the optimization",
+)
+@click.option(
+    f"--{OptimizeConfigName.PERCENTILE}",
+    type=click.Choice([p.name.lower() for p in Percentile], case_sensitive=False),
+    default="p95",
+    help="Percentile for unreliability calculation during optimization",
 )
 def optimize_cmd(**kwargs: Any) -> None:
     """Optimize the energy mix for a given factory configuration."""
@@ -158,7 +174,7 @@ def parse_common_config(**kwargs: Any) -> CommonConfig:
         **{
             key: value
             for key, value in kwargs.items()
-            if key in CommonConfig.model_fields and key != ConfigName.FACTORIES
+            if key in CommonConfig.model_fields and key != CommonConfigName.FACTORIES
         },
     )
 
@@ -188,9 +204,14 @@ def parse_simulation_config(**kwargs: Any) -> SimulationConfig:
 def parse_optimization_config(**kwargs: Any) -> OptimizationConfig:
     """Parses optimization configuration from kwargs."""
     common_config = parse_common_config(**kwargs)
+    percentile_str = kwargs[OptimizeConfigName.PERCENTILE].upper()
+    percentile = Percentile[percentile_str]
+
     return OptimizationConfig(
         **common_config.model_dump(),
-        max_time=kwargs[ConfigName.MAX_TIME],
+        max_time=kwargs[OptimizeConfigName.MAX_TIME],
+        target_reliability=kwargs[OptimizeConfigName.TARGET_RELIABILITY],
+        percentile=percentile,
     )
 
 

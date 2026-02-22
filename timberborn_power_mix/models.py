@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import create_model
 from timberborn_power_mix.machines import FACTORY_DATABASE
-from timberborn_power_mix.structures import ConfigName
+from timberborn_power_mix.structures import CommonConfigName
 
 """
 This module defines the base configuration models for the power simulation.
@@ -35,13 +35,13 @@ FactoryConfig = create_model(
 
 CommonConfig = create_model(
     "CommonConfig",
-    **{ConfigName.SEED.value: (Optional[int], None)},
-    **{ConfigName.THREADS.value: (Optional[int], None)},
-    **{ConfigName.SAMPLES.value: int},
-    **{ConfigName.DAYS.value: int},
-    **{ConfigName.WORKING_HOURS.value: int},
-    **{ConfigName.WET_DAYS.value: int},
-    **{ConfigName.DRY_DAYS.value: int},
-    **{ConfigName.BADTIDE_DAYS.value: int},
-    **{ConfigName.FACTORIES.value: FactoryConfig},
+    **{CommonConfigName.SEED.value: (Optional[int], None)},
+    **{CommonConfigName.THREADS.value: (Optional[int], None)},
+    **{CommonConfigName.SAMPLES.value: int},
+    **{CommonConfigName.DAYS.value: int},
+    **{CommonConfigName.WORKING_HOURS.value: int},
+    **{CommonConfigName.WET_DAYS.value: int},
+    **{CommonConfigName.DRY_DAYS.value: int},
+    **{CommonConfigName.BADTIDE_DAYS.value: int},
+    **{CommonConfigName.FACTORIES.value: FactoryConfig},
 )

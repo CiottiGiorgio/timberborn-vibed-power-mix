@@ -7,7 +7,8 @@ from timberborn_power_mix.machines import (
 )
 from timberborn_power_mix.models import CommonConfig
 from timberborn_power_mix.structures import (
-    ConfigName,
+    CommonConfigName,
+    SimulateConfigName,
     JitSimulationConfig,
 )
 
@@ -50,19 +51,19 @@ class SimulationConfigBase(BaseModel):
     def to_jit_config(self) -> JitSimulationConfig:
         """Converts the Pydantic model to a JIT-compatible NamedTuple."""
         return JitSimulationConfig(
-            seed=getattr(self, ConfigName.SEED),
-            samples=getattr(self, ConfigName.SAMPLES),
-            days=getattr(self, ConfigName.DAYS),
-            working_hours=getattr(self, ConfigName.WORKING_HOURS),
-            wet_days=getattr(self, ConfigName.WET_DAYS),
-            dry_days=getattr(self, ConfigName.DRY_DAYS),
-            badtide_days=getattr(self, ConfigName.BADTIDE_DAYS),
+            seed=getattr(self, CommonConfigName.SEED),
+            samples=getattr(self, CommonConfigName.SAMPLES),
+            days=getattr(self, CommonConfigName.DAYS),
+            working_hours=getattr(self, CommonConfigName.WORKING_HOURS),
+            wet_days=getattr(self, CommonConfigName.WET_DAYS),
+            dry_days=getattr(self, CommonConfigName.DRY_DAYS),
+            badtide_days=getattr(self, CommonConfigName.BADTIDE_DAYS),
         )
 
 
 SimulationConfig = create_model(
     "SimulationConfig",
-    **{ConfigName.ENERGY_MIX: EnergyMixConfig},
+    **{SimulateConfigName.ENERGY_MIX: EnergyMixConfig},
     __base__=SimulationConfigBase,
 )
 

@@ -126,7 +126,11 @@ def test_jit_batched_simulation_reproducibility(sample_jit_inputs):
 def test_jit_singlethread_simulation_no_plots_reproducibility(sample_jit_inputs):
     config, sim_consts = sample_jit_inputs
 
-    res1 = engine.jit_singlethread_simulation_no_plots(config, sim_consts)
-    res2 = engine.jit_singlethread_simulation_no_plots(config, sim_consts)
+    res1 = engine.jit_singlethread_simulation_no_plots(
+        config, sim_consts, percentile=95
+    )
+    res2 = engine.jit_singlethread_simulation_no_plots(
+        config, sim_consts, percentile=95
+    )
 
     assert res1 == res2

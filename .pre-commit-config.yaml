@@ -7,6 +7,13 @@ repos:
       - id: ruff-format
         stages: [pre-commit]
 
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.31.2
+    hooks:
+      - id: check-github-workflows
+      - id: check-github-actions
+      - id: check-dependabot
+
   - repo: local
     hooks:
       - id: ruff-check-all

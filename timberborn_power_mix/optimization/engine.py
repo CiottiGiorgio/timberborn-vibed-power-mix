@@ -88,15 +88,12 @@ class PowerMixProblem(ElementwiseProblem):
         mix = self._decision_vector_to_mix(decision_vector)
 
         # 2. Run Simulation
-        eval_seed = hash(tuple(decision_vector)) % (2**32)
-
         # Create SimulationConfig by merging opt_config and mix
         # We exclude max_time and seed from the base config
         sim_base_data = self.opt_config.model_dump()
         sim_base_data.pop(ConfigName.MAX_TIME)
-        sim_base_data.pop(ConfigName.SEED)
 
-        config = SimulationConfig(**sim_base_data, energy_mix=mix, seed=eval_seed)
+        config = SimulationConfig(**sim_base_data, energy_mix=mix)
 
         result = jit_singlethread_simulation_no_plots(
             config.to_jit_config(), sim_helpers.calculate_jit_cached_consts(config)
@@ -153,7 +150,6 @@ def run_optimization(
             problem,
             algorithm,
             termination,
-            seed=config.seed,
             save_history=False,
             verbose=True,
         )

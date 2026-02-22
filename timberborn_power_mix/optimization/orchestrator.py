@@ -14,16 +14,17 @@ def optimization_orchestrator(config: OptimizationConfig) -> None:
     )
     logger.info("Objectives: Minimize Cost & Minimize Battery Stress")
 
-    res = run_optimization(config)
+    try:
+        res = run_optimization(config)
+    except RuntimeError as e:
+        logger.error(f"Optimization failed: {e}")
+        return
 
-    if res.best_mix:
-        logger.info("Optimization finished!")
-        logger.info(f"Selected Energy Mix (Total Wood Cost: {res.best_cost}):")
-        for field, value in res.best_mix.model_dump().items():
-            # Handle both numeric counts and lists (like battery_height)
-            if (isinstance(value, (int, float)) and value > 0) or (
-                isinstance(value, list) and len(value) > 0
-            ):
-                logger.info(f"  {field}: {value}")
-    else:
-        logger.warning("Could not find a valid solution within the given time limit.")
+    logger.info("Optimization finished!")
+    logger.info(f"Selected Energy Mix (Total Wood Cost: {res.best_cost}):")
+    for field, value in res.best_mix.model_dump().items():
+        # Handle both numeric counts and lists (like battery_height)
+        if (isinstance(value, (int, float)) and value > 0) or (
+            isinstance(value, list) and len(value) > 0
+        ):
+            logger.info(f"  {field}: {value}")

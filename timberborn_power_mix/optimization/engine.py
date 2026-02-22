@@ -159,7 +159,7 @@ def run_optimization(
         )
 
     if res.opt is None:
-        return OptimizationResult(best_mix=None, best_cost=0, unreliability=0.0)
+        raise RuntimeError("Optimization failed to find any solutions.")
 
     # Selection Logic:
     # Find the solution closest to the target unreliability

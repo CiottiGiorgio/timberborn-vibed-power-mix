@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from timberborn_power_mix.simulation.models import EnergyMixConfig
 
@@ -6,6 +6,6 @@ from timberborn_power_mix.simulation.models import EnergyMixConfig
 class OptimizationResult(NamedTuple):
     """Result of the multi-objective optimization process."""
 
-    best_mix: Optional[EnergyMixConfig]
+    best_mix: EnergyMixConfig
     best_cost: int
     unreliability: float

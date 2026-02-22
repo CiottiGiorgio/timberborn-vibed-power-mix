@@ -100,7 +100,7 @@ class PowerMixProblem(ElementwiseProblem):
         )
 
         # 3. Calculate Objectives
-        cost = float(opt_helpers.calculate_total_wood_cost(mix))
+        cost = opt_helpers.calculate_total_wood_cost(mix)
 
         # Objective 2: Minimize Unreliability (95th percentile of working hours empty)
         total_working_hours = getattr(self.opt_config, ConfigName.DAYS) * getattr(
@@ -155,7 +155,7 @@ def run_optimization(
         )
 
     if res.opt is None:
-        return OptimizationResult(None, 0.0, 0.0)
+        return OptimizationResult(best_mix=None, best_cost=0, unreliability=0.0)
 
     # Selection Logic:
     # Find the solution closest to the target unreliability (e.g. 5%)

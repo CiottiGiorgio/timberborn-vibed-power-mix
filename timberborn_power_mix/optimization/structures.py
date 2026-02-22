@@ -7,5 +7,5 @@ class OptimizationResult(NamedTuple):
     """Result of the multi-objective optimization process."""
 
     best_mix: Optional[EnergyMixConfig]
-    best_cost: float
+    best_cost: int
     unreliability: float

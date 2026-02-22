@@ -6,7 +6,7 @@ from timberborn_power_mix.machines import (
 from timberborn_power_mix.simulation.models import EnergyMixConfig
 
 
-def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> float:
+def calculate_total_wood_cost(energy_mix: EnergyMixConfig) -> int:
     """Calculates total cost by iterating over the mix fields."""
     mix_dict = energy_mix.model_dump()
 

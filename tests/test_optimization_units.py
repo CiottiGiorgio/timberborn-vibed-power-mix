@@ -34,17 +34,17 @@ def test_power_mix_problem_initialization(opt_config):
     assert problem.xu is not None
 
 
-def test_x_to_mix_conversion(opt_config):
+def test_decision_vector_to_mix_conversion(opt_config):
     problem = engine.PowerMixProblem(opt_config)
     n_producers = len(problem.producers)
 
-    # Create a dummy decision vector x
-    x = np.zeros(problem.n_var, dtype=int)
-    x[0] = 5  # First producer
-    x[n_producers] = 3  # Num batteries
-    x[n_producers + 1] = 10  # Battery height
+    # Create a dummy decision vector
+    decision_vector = np.zeros(problem.n_var, dtype=int)
+    decision_vector[0] = 5  # First producer
+    decision_vector[n_producers] = 3  # Num batteries
+    decision_vector[n_producers + 1] = 10  # Battery height
 
-    mix = problem._x_to_mix(x)
+    mix = problem._decision_vector_to_mix(decision_vector)
 
     assert isinstance(mix, EnergyMixConfig)
     # Check first producer count
@@ -59,16 +59,16 @@ def test_x_to_mix_conversion(opt_config):
 
 def test_evaluate_reproducibility(opt_config):
     problem = engine.PowerMixProblem(opt_config)
-    x = np.zeros(problem.n_var, dtype=int)
-    x[0] = 2
-    x[len(problem.producers)] = 1
-    x[len(problem.producers) + 1] = 5
+    decision_vector = np.zeros(problem.n_var, dtype=int)
+    decision_vector[0] = 2
+    decision_vector[len(problem.producers)] = 1
+    decision_vector[len(problem.producers) + 1] = 5
 
     out1 = {}
-    problem._evaluate(x, out1)
+    problem._evaluate(decision_vector, out1)
 
     out2 = {}
-    problem._evaluate(x, out2)
+    problem._evaluate(decision_vector, out2)
 
     assert out1["F"] == out2["F"]
     assert out1["mix"] == out2["mix"]

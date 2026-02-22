@@ -42,47 +42,53 @@ class PowerMixProblem(ElementwiseProblem):
         self.producers = list(PRODUCER_DATABASE.keys())
         self.n_producers = len(self.producers)
 
-        # Variables:
+        # Decision Variables:
         # [0...n_producers-1]: Producer counts
         # [n_producers]: Number of batteries
         # [n_producers+1]: Uniform battery height
-        n_var = self.n_producers + 2
+        num_variables = self.n_producers + 2
 
-        xl = np.zeros(n_var, dtype=int)
-        xu = np.zeros(n_var, dtype=int)
+        lower_bounds = np.zeros(num_variables, dtype=int)
+        upper_bounds = np.zeros(num_variables, dtype=int)
 
         # Producer bounds
-        xu[: self.n_producers] = opt_consts.MAX_MACHINES_PER_TYPE
+        upper_bounds[: self.n_producers] = opt_consts.MAX_MACHINES_PER_TYPE
 
         # Num batteries bounds
-        xu[self.n_producers] = opt_consts.MAX_BATTERIES
+        upper_bounds[self.n_producers] = opt_consts.MAX_BATTERIES
 
         # Uniform battery height bounds
-        xl[self.n_producers + 1] = 1
-        xu[self.n_producers + 1] = opt_consts.MAX_BATTERY_HEIGHT
+        lower_bounds[self.n_producers + 1] = 1
+        upper_bounds[self.n_producers + 1] = opt_consts.MAX_BATTERY_HEIGHT
 
-        super().__init__(n_var=n_var, n_obj=2, xl=xl, xu=xu, **kwargs)
+        super().__init__(
+            n_var=num_variables, n_obj=2, xl=lower_bounds, xu=upper_bounds, **kwargs
+        )
 
-    def _x_to_mix(self, x: np.ndarray) -> EnergyMixConfig:
-        """Converts a decision vector x into an EnergyMixConfig."""
+    def _decision_vector_to_mix(self, decision_vector: np.ndarray) -> EnergyMixConfig:
+        """Converts a decision vector into an EnergyMixConfig."""
         mix_data: Dict[str, Any] = {}
         for i, producer in enumerate(self.producers):
-            mix_data[producer.value] = int(x[i])
+            mix_data[producer.value] = int(decision_vector[i])
 
-        num_batteries = int(x[self.n_producers])
-        uniform_height = int(x[self.n_producers + 1])
+        num_batteries = int(decision_vector[self.n_producers])
+        uniform_height = int(decision_vector[self.n_producers + 1])
         mix_data[BatteryName.BATTERY_HEIGHTS.value] = [uniform_height] * num_batteries
 
         return EnergyMixConfig(**mix_data)
 
     def _evaluate(
-        self, x: np.ndarray, out: Dict[str, Any], *args: Any, **kwargs: Any
+        self,
+        decision_vector: np.ndarray,
+        out: Dict[str, Any],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         # 1. Reconstruct EnergyMixConfig
-        mix = self._x_to_mix(x)
+        mix = self._decision_vector_to_mix(decision_vector)
 
         # 2. Run Simulation
-        eval_seed = hash(tuple(x)) % (2**32)
+        eval_seed = hash(tuple(decision_vector)) % (2**32)
 
         # Create SimulationConfig by merging opt_config and mix
         # We exclude max_time and seed from the base config

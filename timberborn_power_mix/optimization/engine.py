@@ -166,7 +166,7 @@ def run_optimization(
     best_sol = min(res.opt, key=lambda sol: abs(sol.F[1] - config.target_unreliability))
 
     best_mix = best_sol.get("mix")
-    best_cost = best_sol.F[0]
+    best_cost = int(best_sol.F[0])
     unreliability = best_sol.F[1]
 
     logger.info(

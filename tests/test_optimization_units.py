@@ -25,7 +25,7 @@ def opt_config():
         factories=factories,
         max_time=5,
         percentile=Percentile.P95,
-        target_reliability=0.95,
+        target_unreliability=0.05,
     )
 
 
@@ -82,6 +82,6 @@ def test_run_optimization_smoke(opt_config):
     opt_config.max_time = 1
     res = engine.run_optimization(opt_config)
 
-    assert res.best_mix is not None or res.best_cost == 0.0
-    assert isinstance(res.best_cost, float)
+    assert res.best_mix is not None
+    assert isinstance(res.best_cost, int)
     assert isinstance(res.unreliability, float)

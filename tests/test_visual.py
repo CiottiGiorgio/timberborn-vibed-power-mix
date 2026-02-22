@@ -35,7 +35,7 @@ def test_visual_output(tmp_path):
     # Windmills: 4 * 40 = 160
     # Batteries: 1 * (84 + 1*6) = 90
     # Total: 250
-    assert calculate_total_wood_cost(config.energy_mix) == 250.0
+    assert calculate_total_wood_cost(config.energy_mix) == 250
     assert max_hours_empty >= 0
 
     # 3. Compare with reference image

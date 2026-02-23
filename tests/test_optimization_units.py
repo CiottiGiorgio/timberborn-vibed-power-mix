@@ -60,6 +60,9 @@ def test_decision_vector_to_mix_conversion(opt_config):
     assert all(h == 10 for h in heights)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:.*Code running in object mode won't allow parallel execution.*"
+)
 def test_evaluate_reproducibility(opt_config):
     problem = engine.PowerMixProblem(opt_config)
     decision_vector = np.zeros(problem.n_var, dtype=int)

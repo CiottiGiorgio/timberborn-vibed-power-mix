@@ -19,7 +19,7 @@ from timberborn_power_mix.optimization.engine import run_optimization
 
 from timberborn_power_mix_gui.state import init_session_state, update_inputs_from_state
 from timberborn_power_mix_gui.components.sidebar import render_sidebar
-from timberborn_power_mix_gui.components.templates import render_templates
+from timberborn_power_mix_gui.components.templates import render_template_button
 from timberborn_power_mix_gui.components.results import render_results
 
 
@@ -34,6 +34,7 @@ def main():
     1. **Configure Seasons**: Set the duration of Wet, Dry, and Badtide seasons in the sidebar.
     2. **Add Factories**: Specify how many of each factory type you want to power.
     3. **Choose an Action**:
+        - **📋 Load Example**: Load a pre-configured example to get started quickly.
         - **🚀 Run Simulation**: Test a specific mix of power producers (Windmills, Water Wheels, etc.) and batteries to see how they perform.
         - **🎯 Run Optimization**: Let the AI find the most efficient (cheapest) mix of power sources and batteries to keep your factories running reliably.
     
@@ -53,16 +54,20 @@ def main():
         render_sidebar()
     )
 
-    # Render Templates
-    render_templates()
-
     st.markdown("---")
     st.markdown("### ⚙️ Actions")
 
-    col1, col2 = st.columns(2)
+    # Create 3 columns for actions
+    col1, col2, col3 = st.columns(3)
 
-    run_sim = col1.button("🚀 Run Simulation", use_container_width=True)
-    run_opt = col2.button("🎯 Run Optimization", use_container_width=True)
+    # 1. Load Template
+    render_template_button(col1)
+
+    # 2. Run Simulation
+    run_sim = col2.button("🚀 Run Simulation", use_container_width=True)
+
+    # 3. Run Optimization
+    run_opt = col3.button("🎯 Run Optimization", use_container_width=True)
 
     # Hidden/Fixed parameters
     samples = sim_consts.DEFAULT_SIMULATION_SAMPLES

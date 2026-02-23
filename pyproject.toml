@@ -9,7 +9,10 @@ license = {text = "MIT"}
 readme = "README.md"
 
 [tool.poetry]
-packages = [{include = "timberborn_power_mix"}]
+packages = [
+    {include = "timberborn_power_mix"},
+    {include = "timberborn_power_mix_gui"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.13"
@@ -19,9 +22,11 @@ pydantic = "^2.12.5"
 click = "^8.3.1"
 numba = "^0.64.0"
 pymoo = "^0.6.1"
+streamlit = "^1.42.0"
 
 [project.scripts]
 tb-power-mix = "timberborn_power_mix.cli:cli"
+tb-power-gui = "timberborn_power_mix_gui.gui:main"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15"

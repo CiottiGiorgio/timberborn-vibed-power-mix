@@ -46,7 +46,11 @@ def main():
         st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
         st.session_state.energy_mix_state["battery_str"] = ""
 
-    # Check if we need to update inputs from a previous optimization run
+    # Initialize session state for factory counts if not present
+    if "factory_counts_state" not in st.session_state:
+        st.session_state.factory_counts_state = {name.value: 0 for name in FactoryName}
+
+    # Check if we need to update inputs from a previous optimization run or template load
     if st.session_state.get("update_inputs"):
         for name in ProducerName:
             st.session_state[f"input_{name.value}"] = st.session_state.energy_mix_state[
@@ -55,6 +59,13 @@ def main():
         st.session_state["input_battery_str"] = st.session_state.energy_mix_state[
             "battery_str"
         ]
+
+        # Also update factory inputs
+        for name in FactoryName:
+            st.session_state[f"input_factory_{name.value}"] = (
+                st.session_state.factory_counts_state[name.value]
+            )
+
         st.session_state.update_inputs = False
 
     # --- Sidebar: Configuration ---
@@ -96,9 +107,17 @@ def main():
     with st.sidebar.expander("Factories", expanded=False):
         for name in FactoryName:
             display_name = name.replace("_", " ").title()
-            factory_counts[name.value] = st.number_input(
-                display_name, value=0, min_value=0, max_value=1000
-            )
+            key = f"input_factory_{name.value}"
+
+            # Ensure key exists
+            if key not in st.session_state:
+                st.session_state[key] = st.session_state.factory_counts_state[
+                    name.value
+                ]
+
+            val = st.number_input(display_name, min_value=0, max_value=1000, key=key)
+            st.session_state.factory_counts_state[name.value] = val
+            factory_counts[name.value] = val
 
     producer_counts = {}
     with st.sidebar.expander("Energy Mix (Simulation)", expanded=False):
@@ -138,6 +157,60 @@ def main():
     ]
 
     # --- Main Area: Actions and Results ---
+
+    # Templates Section
+    st.markdown("### 📋 Load Template")
+    col_t1, col_t2, col_t3 = st.columns(3)
+
+    if col_t1.button("Simple", use_container_width=True):
+        # simulate-simple: --lumber-mills 1 --wood-workshops 1 --large-windmills 1 --windmills 1 --battery 5
+        st.session_state.factory_counts_state = {name.value: 0 for name in FactoryName}
+        st.session_state.factory_counts_state[FactoryName.LUMBER_MILLS.value] = 1
+        st.session_state.factory_counts_state[FactoryName.WOOD_WORKSHOPS.value] = 1
+
+        st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
+        st.session_state.energy_mix_state[ProducerName.LARGE_WINDMILLS.value] = 1
+        st.session_state.energy_mix_state[ProducerName.WINDMILLS.value] = 1
+        st.session_state.energy_mix_state["battery_str"] = "5"
+
+        st.session_state.update_inputs = True
+        st.rerun()
+
+    if col_t2.button("Bot", use_container_width=True):
+        # simulate-bot: --working-hours 24 --bot-part-factories 3 --bot-assemblers 1 --water-wheels 1 --large-windmills 5 --battery 13
+        st.session_state.factory_counts_state = {name.value: 0 for name in FactoryName}
+        st.session_state.factory_counts_state[FactoryName.BOT_PART_FACTORIES.value] = 3
+        st.session_state.factory_counts_state[FactoryName.BOT_ASSEMBLERS.value] = 1
+
+        st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
+        st.session_state.energy_mix_state[ProducerName.WATER_WHEELS.value] = 1
+        st.session_state.energy_mix_state[ProducerName.LARGE_WINDMILLS.value] = 5
+        st.session_state.energy_mix_state["battery_str"] = "13"
+
+        st.session_state.update_inputs = True
+        st.rerun()
+
+    if col_t3.button("Complex", use_container_width=True):
+        # simulate-complex: --working-hours 24 --lumber-mills 2 --gear-workshops 1 --steel-factories 2 --printing-presses 2 --wood-workshops 1 --grillmists 1 --centrifuges 1 --large-windmills 12 --battery 22
+        st.session_state.factory_counts_state = {name.value: 0 for name in FactoryName}
+        st.session_state.factory_counts_state[FactoryName.LUMBER_MILLS.value] = 2
+        st.session_state.factory_counts_state[FactoryName.GEAR_WORKSHOPS.value] = 1
+        st.session_state.factory_counts_state[FactoryName.STEEL_FACTORIES.value] = 2
+        st.session_state.factory_counts_state[FactoryName.PRINTING_PRESSES.value] = 2
+        st.session_state.factory_counts_state[FactoryName.WOOD_WORKSHOPS.value] = 1
+        st.session_state.factory_counts_state[FactoryName.GRILLMISTS.value] = 1
+        st.session_state.factory_counts_state[FactoryName.CENTRIFUGES.value] = 1
+
+        st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
+        st.session_state.energy_mix_state[ProducerName.LARGE_WINDMILLS.value] = 12
+        st.session_state.energy_mix_state["battery_str"] = "22"
+
+        st.session_state.update_inputs = True
+        st.rerun()
+
+    st.markdown("---")
+    st.markdown("### ⚙️ Actions")
+
     col1, col2 = st.columns(2)
 
     run_sim = col1.button("🚀 Run Simulation", use_container_width=True)

@@ -124,7 +124,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
 
     # Add Disclaimer about p95 Case
     disclaimer_text = (
-        "Note: The time-series plots (1-4) show the 'p95' sample\n"
+        "Note: The time-series plots (2-5) show the 'p95' sample\n"
         "(the one representing the 95th percentile of working time spent with an empty battery)."
     )
     fig.text(
@@ -140,18 +140,27 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
 
     ax1, ax2, ax3, ax4, ax5 = axes
 
-    # Link x-axes for the first 4 plots
-    ax2.sharex(ax1)
-    ax3.sharex(ax1)
-    ax4.sharex(ax1)
+    # Plot 1: Empty Battery Duration Distribution (Percentage)
+    working_hours_per_day = getattr(config, CommonConfigName.WORKING_HOURS)
+    total_working_hours = days * working_hours_per_day
+    plot_empty_hours_percentage(
+        ax1,
+        run_empty_hours,
+        total_working_hours,
+    )
 
-    # Hide tick labels for 1, 2, 3
-    plt.setp(ax1.get_xticklabels(), visible=False)
+    # Link x-axes for the remaining 4 plots
+    ax3.sharex(ax2)
+    ax4.sharex(ax2)
+    ax5.sharex(ax2)
+
+    # Hide tick labels for 2, 3, 4
     plt.setp(ax2.get_xticklabels(), visible=False)
     plt.setp(ax3.get_xticklabels(), visible=False)
+    plt.setp(ax4.get_xticklabels(), visible=False)
 
     # Add vertical lines for season boundaries to all time-series plots
-    for ax in [ax1, ax2, ax3, ax4]:
+    for ax in [ax2, ax3, ax4, ax5]:
         for i, (start_hour, label) in enumerate(season_boundaries):
             start_day = start_hour / sim_consts.HOURS_PER_DAY
             # Vertical line
@@ -180,36 +189,27 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
                     alpha=0.6,
                 )
 
-    # Plot 1: Power
+    # Plot 2: Power
     plot_power(
-        ax1,
+        ax2,
         time_days,
         power_production,
         power_consumption,
     )
 
-    # Plot 2: Energy
-    plot_energy(ax2, time_days, energy_production, energy_consumption, days)
+    # Plot 3: Energy
+    plot_energy(ax3, time_days, energy_production, energy_consumption, days)
 
-    # Plot 3: Surplus Power (Effective)
-    plot_surplus(ax3, time_days, power_surplus, effective_balance)
+    # Plot 4: Surplus Power (Effective)
+    plot_surplus(ax4, time_days, power_surplus, effective_balance)
 
-    # Plot 4: Battery Charge
+    # Plot 5: Battery Charge
     plot_battery(
-        ax4,
+        ax5,
         time_days,
         battery_charge,
         total_battery_capacity,
         battery_heights,
-    )
-
-    # Plot 5: Empty Battery Duration Distribution (Percentage)
-    working_hours_per_day = getattr(config, CommonConfigName.WORKING_HOURS)
-    total_working_hours = days * working_hours_per_day
-    plot_empty_hours_percentage(
-        ax5,
-        run_empty_hours,
-        total_working_hours,
     )
 
     plt.tight_layout(rect=(0, 0.03, 1, 0.95))

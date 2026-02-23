@@ -152,6 +152,7 @@ def main():
 
             # Flag to update inputs on next run
             st.session_state.update_inputs = True
+            st.session_state.show_opt_toast = True
 
             # Force a rerun to update the sidebar inputs
             st.rerun()

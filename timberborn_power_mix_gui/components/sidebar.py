@@ -37,8 +37,22 @@ def render_sidebar():
             max_value=100,
         )
 
+    # Determine if we should expand the sections (e.g. if inputs were just updated)
+    # We can use a session state flag for this, or just check if values are non-zero.
+    # However, since we want to show the user what happened *after* clicking load template,
+    # we can check if 'template_loaded' is in session state.
+
+    expand_factories = False
+    expand_energy_mix = False
+
+    if st.session_state.get("template_loaded"):
+        expand_factories = True
+        expand_energy_mix = True
+        # Reset the flag so they don't stay permanently expanded if the user collapses them
+        st.session_state.template_loaded = False
+
     factory_counts = {}
-    with st.sidebar.expander("Factories", expanded=False):
+    with st.sidebar.expander("Factories", expanded=expand_factories):
         for name in FactoryName:
             display_name = name.replace("_", " ").title()
             key = f"input_factory_{name.value}"
@@ -54,7 +68,7 @@ def render_sidebar():
             factory_counts[name.value] = val
 
     producer_counts = {}
-    with st.sidebar.expander("Energy Mix (Simulation)", expanded=False):
+    with st.sidebar.expander("Energy Mix (Simulation)", expanded=expand_energy_mix):
         for name in ProducerName:
             display_name = name.replace("_", " ").title()
             key = f"input_{name.value}"

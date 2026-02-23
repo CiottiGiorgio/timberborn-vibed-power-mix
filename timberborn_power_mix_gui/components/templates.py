@@ -5,6 +5,11 @@ from timberborn_power_mix.machines import FactoryName, ProducerName
 def render_template_button(parent):
     """Renders the template button in the given parent container and updates state if clicked."""
 
+    # Show toast if flag is set (from previous run)
+    if st.session_state.get("show_template_toast"):
+        st.toast("Example template loaded!", icon="✅")
+        st.session_state.show_template_toast = False
+
     if parent.button("📋 Load Example", use_container_width=True):
         st.session_state.factory_counts_state = {name.value: 0 for name in FactoryName}
         st.session_state.factory_counts_state[FactoryName.LUMBER_MILLS.value] = 3
@@ -27,4 +32,6 @@ def render_template_button(parent):
         st.session_state.energy_mix_state["battery_str"] = "45"
 
         st.session_state.update_inputs = True
+        st.session_state.template_loaded = True
+        st.session_state.show_template_toast = True
         st.rerun()

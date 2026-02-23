@@ -38,7 +38,24 @@ def main():
     - **Faction**: This tool assumes you are playing as the **Folktails** faction.
     - **Costs**: All building costs (planks, gears, metal blocks, etc.) are converted into an equivalent **raw wood cost** for comparison.
     - **Optimization**: The optimization process runs for **{opt_consts.DEFAULT_MAX_TIME_SECONDS} seconds** and returns the best solution found within that time limit.
+    - **Overwrite**: Running an optimization will overwrite your current Energy Mix configuration with the optimal result found.
     """)
+
+    # Initialize session state for energy mix if not present
+    if "energy_mix_state" not in st.session_state:
+        st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
+        st.session_state.energy_mix_state["battery_str"] = ""
+
+    # Check if we need to update inputs from a previous optimization run
+    if st.session_state.get("update_inputs"):
+        for name in ProducerName:
+            st.session_state[f"input_{name.value}"] = st.session_state.energy_mix_state[
+                name.value
+            ]
+        st.session_state["input_battery_str"] = st.session_state.energy_mix_state[
+            "battery_str"
+        ]
+        st.session_state.update_inputs = False
 
     # --- Sidebar: Configuration ---
     with st.sidebar.expander("Common Configuration", expanded=True):
@@ -83,31 +100,36 @@ def main():
                 display_name, value=0, min_value=0, max_value=1000
             )
 
-    # Initialize session state for energy mix if not present
-    if "energy_mix_state" not in st.session_state:
-        st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
-        st.session_state.energy_mix_state["battery_str"] = ""
-
     producer_counts = {}
     with st.sidebar.expander("Energy Mix (Simulation)", expanded=False):
         for name in ProducerName:
             display_name = name.replace("_", " ").title()
+            key = f"input_{name.value}"
+
+            # Ensure the key is in session state (for first run)
+            if key not in st.session_state:
+                st.session_state[key] = st.session_state.energy_mix_state[name.value]
+
             # Use session state to control the value
             val = st.number_input(
                 display_name,
-                value=st.session_state.energy_mix_state[name.value],
                 min_value=0,
                 max_value=1000,
-                key=f"input_{name.value}",
+                key=key,
             )
             # Update session state when user changes input
             st.session_state.energy_mix_state[name.value] = val
             producer_counts[name.value] = val
 
+        key_batt = "input_battery_str"
+        if key_batt not in st.session_state:
+            st.session_state[key_batt] = st.session_state.energy_mix_state[
+                "battery_str"
+            ]
+
         battery_str = st.text_input(
             "Battery Heights (comma separated)",
-            value=st.session_state.energy_mix_state["battery_str"],
-            key="input_battery_str",
+            key=key_batt,
         )
         st.session_state.energy_mix_state["battery_str"] = battery_str
 
@@ -178,9 +200,8 @@ def main():
 
             # Update battery string
             heights = getattr(opt_res.best_mix, BatteryName.BATTERY_HEIGHTS.value)
-            st.session_state.energy_mix_state["battery_str"] = ", ".join(
-                map(str, heights)
-            )
+            battery_str = ", ".join(map(str, heights))
+            st.session_state.energy_mix_state["battery_str"] = battery_str
 
             # Simulate the best result
             sim_data = opt_config.model_dump()
@@ -200,6 +221,9 @@ def main():
                 "cost": opt_res.best_cost,
                 "mix": opt_res.best_mix,
             }
+
+            # Flag to update inputs on next run
+            st.session_state.update_inputs = True
 
             # Force a rerun to update the sidebar inputs
             st.rerun()

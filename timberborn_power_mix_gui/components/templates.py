@@ -27,9 +27,8 @@ def render_template_button(parent):
         st.session_state.factory_counts_state[FactoryName.BOT_ASSEMBLERS.value] = 1
 
         st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
-        st.session_state.energy_mix_state[ProducerName.WINDMILLS.value] = 3
-        st.session_state.energy_mix_state[ProducerName.LARGE_WINDMILLS.value] = 15
-        st.session_state.energy_mix_state["battery_str"] = "45"
+        st.session_state.energy_mix_state[ProducerName.LARGE_WINDMILLS.value] = 10
+        st.session_state.energy_mix_state["battery_str"] = "15, 15"
 
         st.session_state.update_inputs = True
         st.session_state.template_loaded = True

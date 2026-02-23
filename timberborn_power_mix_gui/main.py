@@ -3,6 +3,7 @@ import streamlit as st
 from timberborn_power_mix.machines import (
     FactoryName,
     ProducerName,
+    BatteryName,
 )
 from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.optimization import consts as opt_consts
@@ -23,7 +24,7 @@ def main():
     st.set_page_config(page_title="Timberborn Vibed Power Mix", layout="wide")
     st.title("🦫 Timberborn Vibed Power Mix")
 
-    st.markdown("""
+    st.markdown(f"""
     Welcome to the **Timberborn Vibed Power Mix** tool! This application helps you design the perfect power grid for your beaver colony.
     
     ### How to use:
@@ -32,6 +33,11 @@ def main():
     3. **Choose an Action**:
         - **🚀 Run Simulation**: Test a specific mix of power producers (Windmills, Water Wheels, etc.) and batteries to see how they perform.
         - **🎯 Run Optimization**: Let the AI find the most efficient (cheapest) mix of power sources and batteries to keep your factories running reliably.
+    
+    ### Disclaimers:
+    - **Faction**: This tool assumes you are playing as the **Folktails** faction.
+    - **Costs**: All building costs (planks, gears, metal blocks, etc.) are converted into an equivalent **raw wood cost** for comparison.
+    - **Optimization**: The optimization process runs for **{opt_consts.DEFAULT_MAX_TIME_SECONDS} seconds** and returns the best solution found within that time limit.
     """)
 
     # --- Sidebar: Configuration ---
@@ -78,14 +84,34 @@ def main():
         )
 
     st.sidebar.header("Energy Mix (Simulation)")
+
+    # Initialize session state for energy mix if not present
+    if "energy_mix_state" not in st.session_state:
+        st.session_state.energy_mix_state = {name.value: 0 for name in ProducerName}
+        st.session_state.energy_mix_state["battery_str"] = ""
+
     producer_counts = {}
     for name in ProducerName:
         display_name = name.replace("_", " ").title()
-        producer_counts[name.value] = st.sidebar.number_input(
-            display_name, value=0, min_value=0, max_value=1000
+        # Use session state to control the value
+        val = st.sidebar.number_input(
+            display_name,
+            value=st.session_state.energy_mix_state[name.value],
+            min_value=0,
+            max_value=1000,
+            key=f"input_{name.value}",
         )
+        # Update session state when user changes input
+        st.session_state.energy_mix_state[name.value] = val
+        producer_counts[name.value] = val
 
-    battery_str = st.sidebar.text_input("Battery Heights (comma separated)", value="")
+    battery_str = st.sidebar.text_input(
+        "Battery Heights (comma separated)",
+        value=st.session_state.energy_mix_state["battery_str"],
+        key="input_battery_str",
+    )
+    st.session_state.energy_mix_state["battery_str"] = battery_str
+
     battery_heights = [
         int(h.strip()) for h in battery_str.split(",") if h.strip().isdigit()
     ]
@@ -101,6 +127,8 @@ def main():
         st.session_state.sim_result = None
     if "sim_config" not in st.session_state:
         st.session_state.sim_config = None
+    if "optimization_success" not in st.session_state:
+        st.session_state.optimization_success = None
 
     common_params = {
         CommonConfigName.DAYS: days,
@@ -125,6 +153,7 @@ def main():
             res = run_simulation(config)
             st.session_state.sim_result = res
             st.session_state.sim_config = config
+            st.session_state.optimization_success = None  # Clear previous opt message
 
     if run_opt:
         with st.spinner("Running optimization..."):
@@ -143,6 +172,17 @@ def main():
 
             opt_res = run_optimization(opt_config)
 
+            # Update session state with optimized values
+            for name in ProducerName:
+                val = getattr(opt_res.best_mix, name.value)
+                st.session_state.energy_mix_state[name.value] = val
+
+            # Update battery string
+            heights = getattr(opt_res.best_mix, BatteryName.BATTERY_HEIGHTS.value)
+            st.session_state.energy_mix_state["battery_str"] = ", ".join(
+                map(str, heights)
+            )
+
             # Simulate the best result
             sim_data = opt_config.model_dump()
             sim_data.pop(OptimizeConfigName.MAX_TIME)
@@ -156,8 +196,21 @@ def main():
             st.session_state.sim_result = sim_res
             st.session_state.sim_config = sim_config
 
-            st.success(f"Optimization Finished! Best wood cost: {opt_res.best_cost}")
-            st.info(f"Optimized Mix: {opt_res.best_mix}")
+            # Store success message in session state to persist after rerun
+            st.session_state.optimization_success = {
+                "cost": opt_res.best_cost,
+                "mix": opt_res.best_mix,
+            }
+
+            # Force a rerun to update the sidebar inputs
+            st.rerun()
+
+    # Display success message if it exists in session state
+    if st.session_state.optimization_success:
+        cost = st.session_state.optimization_success["cost"]
+        mix = st.session_state.optimization_success["mix"]
+        st.success(f"Optimization Finished! Best wood cost: {cost}")
+        st.info(f"Optimized Mix: {mix}")
 
     if st.session_state.sim_result and st.session_state.sim_config:
         fig = create_simulation_figure(

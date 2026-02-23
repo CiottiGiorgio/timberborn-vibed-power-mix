@@ -36,18 +36,32 @@ def main():
 
     # --- Sidebar: Configuration ---
     st.sidebar.header("Common Configuration")
-    days = st.sidebar.number_input("Simulation Days", value=sim_consts.DEFAULT_DAYS)
+    days = st.sidebar.number_input(
+        "Simulation Days", value=sim_consts.DEFAULT_DAYS, min_value=1, max_value=365
+    )
     working_hours = st.sidebar.number_input(
-        "Working Hours", value=sim_consts.DEFAULT_WORKING_HOURS
+        "Working Hours",
+        value=sim_consts.DEFAULT_WORKING_HOURS,
+        min_value=0,
+        max_value=24,
     )
     wet_days = st.sidebar.number_input(
-        "Wet Season Days", value=sim_consts.DEFAULT_WET_SEASON_DAYS
+        "Wet Season Days",
+        value=sim_consts.DEFAULT_WET_SEASON_DAYS,
+        min_value=1,
+        max_value=100,
     )
     dry_days = st.sidebar.number_input(
-        "Dry Season Days", value=sim_consts.DEFAULT_DRY_SEASON_DAYS
+        "Dry Season Days",
+        value=sim_consts.DEFAULT_DRY_SEASON_DAYS,
+        min_value=1,
+        max_value=100,
     )
     badtide_days = st.sidebar.number_input(
-        "Badtide Season Days", value=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS
+        "Badtide Season Days",
+        value=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS,
+        min_value=1,
+        max_value=100,
     )
 
     # Hidden/Fixed parameters
@@ -60,7 +74,7 @@ def main():
     for name in FactoryName:
         display_name = name.replace("_", " ").title()
         factory_counts[name.value] = st.sidebar.number_input(
-            display_name, value=0, min_value=0
+            display_name, value=0, min_value=0, max_value=1000
         )
 
     st.sidebar.header("Energy Mix (Simulation)")
@@ -68,7 +82,7 @@ def main():
     for name in ProducerName:
         display_name = name.replace("_", " ").title()
         producer_counts[name.value] = st.sidebar.number_input(
-            display_name, value=0, min_value=0
+            display_name, value=0, min_value=0, max_value=1000
         )
 
     battery_str = st.sidebar.text_input("Battery Heights (comma separated)", value="")

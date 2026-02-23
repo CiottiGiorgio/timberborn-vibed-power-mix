@@ -26,7 +26,6 @@ streamlit = "^1.42.0"
 
 [project.scripts]
 tb-power-mix = "timberborn_power_mix.cli:cli"
-tb-power-gui = "timberborn_power_mix_gui.gui:main"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15"
@@ -80,6 +79,7 @@ lint = "ruff check . --fix"
 typecheck = "mypy --package timberborn_power_mix"
 test = "pytest"
 audit = "pip-audit"
+gui = "streamlit run timberborn_power_mix_gui/main.py"
 
 # Internal tasks for profiling
 _run-profile-sim = "scalene run -o profiling/profile_sim.json scripts/profile_sim.py"

@@ -2,7 +2,7 @@
 
 A simulation and optimization tool for power management in Timberborn. This tool helps you determine the optimal mix of power sources and batteries to sustain your factories through wet, dry, and badtide seasons.
 
-[**Try the deployed app on Streamlit**](https://timberborn-vibed-power-mix-5y757gpa6ykom3ccxeoj94.streamlit.app/)
+[**Try the deployed app on Streamlit**](https://timberborn-power-mix.streamlit.app/)
 
 ![Reference Visual Output](tests/reference_visual_output.png)
 

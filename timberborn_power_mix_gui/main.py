@@ -41,49 +41,47 @@ def main():
     """)
 
     # --- Sidebar: Configuration ---
-    st.sidebar.header("Common Configuration")
-    days = st.sidebar.number_input(
-        "Simulation Days", value=sim_consts.DEFAULT_DAYS, min_value=1, max_value=365
-    )
-    working_hours = st.sidebar.number_input(
-        "Working Hours",
-        value=sim_consts.DEFAULT_WORKING_HOURS,
-        min_value=0,
-        max_value=24,
-    )
-    wet_days = st.sidebar.number_input(
-        "Wet Season Days",
-        value=sim_consts.DEFAULT_WET_SEASON_DAYS,
-        min_value=1,
-        max_value=100,
-    )
-    dry_days = st.sidebar.number_input(
-        "Dry Season Days",
-        value=sim_consts.DEFAULT_DRY_SEASON_DAYS,
-        min_value=1,
-        max_value=100,
-    )
-    badtide_days = st.sidebar.number_input(
-        "Badtide Season Days",
-        value=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS,
-        min_value=1,
-        max_value=100,
-    )
+    with st.sidebar.expander("Common Configuration", expanded=True):
+        days = st.number_input(
+            "Simulation Days", value=sim_consts.DEFAULT_DAYS, min_value=1, max_value=365
+        )
+        working_hours = st.number_input(
+            "Working Hours",
+            value=sim_consts.DEFAULT_WORKING_HOURS,
+            min_value=0,
+            max_value=24,
+        )
+        wet_days = st.number_input(
+            "Wet Season Days",
+            value=sim_consts.DEFAULT_WET_SEASON_DAYS,
+            min_value=1,
+            max_value=100,
+        )
+        dry_days = st.number_input(
+            "Dry Season Days",
+            value=sim_consts.DEFAULT_DRY_SEASON_DAYS,
+            min_value=1,
+            max_value=100,
+        )
+        badtide_days = st.number_input(
+            "Badtide Season Days",
+            value=sim_consts.DEFAULT_BADTIDE_SEASON_DAYS,
+            min_value=1,
+            max_value=100,
+        )
 
     # Hidden/Fixed parameters
     samples = sim_consts.DEFAULT_SIMULATION_SAMPLES
     max_time = opt_consts.DEFAULT_MAX_TIME_SECONDS
     target_unreliability = opt_consts.DEFAULT_TARGET_UNRELIABILITY
 
-    st.sidebar.header("Factories")
     factory_counts = {}
-    for name in FactoryName:
-        display_name = name.replace("_", " ").title()
-        factory_counts[name.value] = st.sidebar.number_input(
-            display_name, value=0, min_value=0, max_value=1000
-        )
-
-    st.sidebar.header("Energy Mix (Simulation)")
+    with st.sidebar.expander("Factories", expanded=False):
+        for name in FactoryName:
+            display_name = name.replace("_", " ").title()
+            factory_counts[name.value] = st.number_input(
+                display_name, value=0, min_value=0, max_value=1000
+            )
 
     # Initialize session state for energy mix if not present
     if "energy_mix_state" not in st.session_state:
@@ -91,26 +89,27 @@ def main():
         st.session_state.energy_mix_state["battery_str"] = ""
 
     producer_counts = {}
-    for name in ProducerName:
-        display_name = name.replace("_", " ").title()
-        # Use session state to control the value
-        val = st.sidebar.number_input(
-            display_name,
-            value=st.session_state.energy_mix_state[name.value],
-            min_value=0,
-            max_value=1000,
-            key=f"input_{name.value}",
-        )
-        # Update session state when user changes input
-        st.session_state.energy_mix_state[name.value] = val
-        producer_counts[name.value] = val
+    with st.sidebar.expander("Energy Mix (Simulation)", expanded=False):
+        for name in ProducerName:
+            display_name = name.replace("_", " ").title()
+            # Use session state to control the value
+            val = st.number_input(
+                display_name,
+                value=st.session_state.energy_mix_state[name.value],
+                min_value=0,
+                max_value=1000,
+                key=f"input_{name.value}",
+            )
+            # Update session state when user changes input
+            st.session_state.energy_mix_state[name.value] = val
+            producer_counts[name.value] = val
 
-    battery_str = st.sidebar.text_input(
-        "Battery Heights (comma separated)",
-        value=st.session_state.energy_mix_state["battery_str"],
-        key="input_battery_str",
-    )
-    st.session_state.energy_mix_state["battery_str"] = battery_str
+        battery_str = st.text_input(
+            "Battery Heights (comma separated)",
+            value=st.session_state.energy_mix_state["battery_str"],
+            key="input_battery_str",
+        )
+        st.session_state.energy_mix_state["battery_str"] = battery_str
 
     battery_heights = [
         int(h.strip()) for h in battery_str.split(",") if h.strip().isdigit()

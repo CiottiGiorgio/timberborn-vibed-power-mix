@@ -39,11 +39,12 @@ def jit_stochastic_simulation_no_sample(
     seed: np.uint32,
     total_hours: int,
     base_surplus: NDArray[np.int64],
+    power_consumption: NDArray[np.uint32],
     is_working_hour: NDArray[np.bool_],
     total_battery_capacity: int,
     large_windmills: ProducerGroup,
     windmills: ProducerGroup,
-) -> np.uint32:
+) -> np.float64:
     """
     Executes a single Monte Carlo simulation run and returns the number of hours
     where the battery charge was zero. This optimized variant avoids allocating
@@ -54,7 +55,7 @@ def jit_stochastic_simulation_no_sample(
 
     current_hour = 0
     current_charge = np.int64(total_battery_capacity // 2)
-    empty_working_hours = 0
+    lost_working_hours = 0.0
 
     while current_hour < total_hours:
         duration = np.random.randint(
@@ -64,17 +65,31 @@ def jit_stochastic_simulation_no_sample(
 
         end_hour = min(current_hour + duration, total_hours)
         for h in range(current_hour, end_hour):
-            current_charge += base_surplus[h] + np.int64(wind_power)
+            wind_power_int = np.uint32(wind_power)
+            current_charge += base_surplus[h] + np.int64(wind_power_int)
+
+            # Check for battery underflow (empty battery)
             if current_charge < 0:
+                deficit = float(-current_charge)
                 current_charge = np.int64(0)
+
+                # If factories are running, calculate productivity loss
                 if is_working_hour[h]:
-                    empty_working_hours += 1
+                    consumption = float(power_consumption[h])
+                    if consumption > 0:
+                        # Productivity loss is the fraction of demand not met
+                        loss = deficit / consumption
+                        if loss > 1.0:
+                            loss = 1.0
+                        lost_working_hours += loss
+
+            # Check for battery overflow (full battery)
             elif current_charge > total_battery_capacity:
                 current_charge = np.int64(total_battery_capacity)
 
         current_hour = end_hour
 
-    return np.uint32(empty_working_hours)
+    return np.float64(lost_working_hours)
 
 
 @njit
@@ -112,10 +127,15 @@ def jit_stochastic_simulation(
             power_production[h] = base_power_production[h] + wind_power_int
 
             current_charge += base_surplus[h] + np.int64(wind_power_int)
+
+            # Check for battery underflow (empty battery)
             if current_charge < 0:
                 current_charge = np.int64(0)
+
+            # Check for battery overflow (full battery)
             elif current_charge > total_battery_capacity:
                 current_charge = np.int64(total_battery_capacity)
+
             battery_charge[h] = np.uint32(current_charge)
 
         current_hour = end_hour

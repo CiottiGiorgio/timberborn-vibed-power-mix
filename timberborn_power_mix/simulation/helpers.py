@@ -181,7 +181,7 @@ def jit_simulation_prelude(
 
 @njit
 def jit_simulation_epilogue(
-    all_hours_empty: NDArray[np.uint32],
+    all_lost_hours: NDArray[np.float64],
     all_seeds: NDArray[np.uint32],
     base_surplus: NDArray[np.int64],
     base_power_production: NDArray[np.uint32],
@@ -199,12 +199,12 @@ def jit_simulation_epilogue(
     """
     aggregated = AggregatedSamples(
         power_consumption=power_consumption,
-        hours_empty_results=all_hours_empty,
+        lost_working_hours_results=all_lost_hours,
     )
 
     # Find p95 sample (Second Pass)
-    p95_hours_empty = np.percentile(all_hours_empty, 95)
-    p95_idx = np.where(all_hours_empty >= p95_hours_empty)[0][0]
+    p95_lost_hours = np.percentile(all_lost_hours, 95)
+    p95_idx = np.where(all_lost_hours >= p95_lost_hours)[0][0]
     p95_seed = all_seeds[p95_idx]
 
     p95_sample = jit_stochastic_simulation(

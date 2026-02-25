@@ -21,7 +21,7 @@ from timberborn_power_mix.structures import CommonConfigName
 def create_simulation_figure(config: SimulationConfig, res: SimulationResult) -> Figure:
     # Unpack data
     data = res.p95_sample
-    run_empty_hours = res.aggregated_samples.hours_empty_results
+    run_lost_hours = res.aggregated_samples.lost_working_hours_results
     power_consumption = res.aggregated_samples.power_consumption
 
     days = getattr(config, CommonConfigName.DAYS)
@@ -125,7 +125,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     # Add Disclaimer about p95 Case
     disclaimer_text = (
         "Note: The time-series plots (2-5) show the 'p95' sample\n"
-        "(the one representing the 95th percentile of working time spent with an empty battery)."
+        "(the one representing the 95th percentile of productivity loss)."
     )
     fig.text(
         0.5,
@@ -145,7 +145,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
     total_working_hours = days * working_hours_per_day
     plot_empty_hours_percentage(
         ax1,
-        run_empty_hours,
+        run_lost_hours,
         total_working_hours,
     )
 

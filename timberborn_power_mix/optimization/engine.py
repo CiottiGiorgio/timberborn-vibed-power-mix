@@ -34,7 +34,7 @@ class PowerMixProblem(ElementwiseProblem):
 
     Objectives:
     1. Minimize total wood cost.
-    2. Minimize unreliability (percentile of working hours empty).
+    2. Minimize unreliability (percentile of lost working hours).
     """
 
     def __init__(self, opt_config: OptimizationConfig, **kwargs: Any):
@@ -106,13 +106,13 @@ class PowerMixProblem(ElementwiseProblem):
         # 3. Calculate Objectives
         cost = opt_helpers.calculate_total_wood_cost(mix)
 
-        # Objective 2: Minimize Unreliability (percentile of working hours empty)
+        # Objective 2: Minimize Unreliability (percentile of lost working hours)
         total_working_hours = getattr(self.opt_config, CommonConfigName.DAYS) * getattr(
             self.opt_config, CommonConfigName.WORKING_HOURS
         )
-        hours_empty_pct = float(result / total_working_hours)
+        lost_hours_pct = float(result / total_working_hours)
 
-        out["F"] = [cost, hours_empty_pct]
+        out["F"] = [cost, lost_hours_pct]
         out["mix"] = mix
 
 
@@ -171,7 +171,7 @@ def run_optimization(
 
     logger.info(
         f"Optimization complete. Selected solution with {unreliability:.2%} "
-        f"unreliability at cost {best_cost}."
+        f"productivity loss at cost {best_cost}."
     )
 
     return OptimizationResult(

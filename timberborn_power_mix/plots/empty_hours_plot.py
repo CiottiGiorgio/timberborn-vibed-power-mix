@@ -6,15 +6,20 @@ import matplotlib.ticker as ticker
 
 def plot_empty_hours_percentage(
     ax: Axes,
-    run_empty_hours: np.ndarray,
+    run_lost_hours: np.ndarray,
     total_working_hours: int,
 ) -> None:
     # Calculate percentages
-    run_empty_percentages = [(h / total_working_hours) * 100 for h in run_empty_hours]
+    # run_lost_hours is now a float array representing "equivalent lost hours"
+    # (sum of productivity loss).
+    # So (run_lost_hours / total_working_hours) * 100 is the percentage of
+    # total potential productivity lost.
+
+    run_lost_percentages = (run_lost_hours / total_working_hours) * 100
 
     # Create bins of 1% width (default)
-    if run_empty_percentages:
-        max_val = max(run_empty_percentages)
+    if len(run_lost_percentages) > 0:
+        max_val = np.max(run_lost_percentages)
         # Ensure we have at least one bin if max_val is 0
         if max_val == 0:
             bins = np.arange(0, 2, 1, dtype=float)  # 0-1%
@@ -23,7 +28,7 @@ def plot_empty_hours_percentage(
 
         # Plot the histogram
         n_raw, bins_out, patches_raw = ax.hist(
-            run_empty_percentages,
+            run_lost_percentages,
             bins=cast(Any, bins),
             color="red",
             alpha=0.7,
@@ -47,11 +52,11 @@ def plot_empty_hours_percentage(
                 ax.set_ylim(0, float(max_freq_excluding_first * 1.1))
 
         # Calculate percentiles and mean for ALL samples
-        if run_empty_percentages:
-            p5 = float(np.percentile(run_empty_percentages, 5))
-            p50 = float(np.percentile(run_empty_percentages, 50))
-            p95 = float(np.percentile(run_empty_percentages, 95))
-            mean_val = float(np.mean(run_empty_percentages))
+        if len(run_lost_percentages) > 0:
+            p5 = float(np.percentile(run_lost_percentages, 5))
+            p50 = float(np.percentile(run_lost_percentages, 50))
+            p95 = float(np.percentile(run_lost_percentages, 95))
+            mean_val = float(np.mean(run_lost_percentages))
 
             # Add vertical lines for percentiles
             ax.axvline(
@@ -86,8 +91,8 @@ def plot_empty_hours_percentage(
 
             # Add explanatory text for 95th percentile
             explanation_text = (
-                f"In 95% of all cases, the system spends less\n"
-                f"than {p95:.1f}% of working time with an empty battery."
+                f"In 95% of all cases, the system loses less\n"
+                f"than {p95:.1f}% of total potential productivity."
             )
 
             # Place text below the legend (using relative coordinates)
@@ -105,8 +110,8 @@ def plot_empty_hours_percentage(
                 ),
             )
 
-    ax.set_title("Distribution of working time spent with empty battery")
-    ax.set_xlabel("Percentage of working time with empty battery (%)")
+    ax.set_title("Distribution of productivity loss")
+    ax.set_xlabel("Percentage of productivity lost (%)")
     ax.set_ylabel("Number of Samples")
     ax.grid(True, linestyle="--", alpha=0.5)
 

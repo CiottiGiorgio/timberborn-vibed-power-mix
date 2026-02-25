@@ -28,15 +28,15 @@ def test_visual_output(tmp_path):
 
     # 2. Verify some deterministic outputs (sanity check)
     res, config = generate_reference_simulation_data()
-    run_empty_hours = res.aggregated_samples.hours_empty_results
-    max_hours_empty = max(run_empty_hours) if len(run_empty_hours) > 0 else -1
+    run_lost_hours = res.aggregated_samples.lost_working_hours_results
+    max_lost_hours = max(run_lost_hours) if len(run_lost_hours) > 0 else -1
 
     # Cost calculation:
     # Windmills: 4 * 40 = 160
     # Batteries: 1 * (84 + 1*6) = 90
     # Total: 250
     assert calculate_total_wood_cost(config.energy_mix) == 250
-    assert max_hours_empty >= 0
+    assert max_lost_hours >= 0
 
     # 3. Compare with reference image
     # compare_images returns None if images are identical

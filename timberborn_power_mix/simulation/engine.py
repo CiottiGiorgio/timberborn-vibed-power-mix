@@ -40,16 +40,17 @@ def jit_singlethread_simulation(
 
     prelude = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
-    all_hours_empty = jit_batched_simulation(
+    all_lost_hours = jit_batched_simulation(
         all_seeds,
         prelude.total_hours,
         prelude.base_surplus,
+        prelude.power_consumption,
         prelude.is_working_hour,
         sim_consts,
     )
 
     return sim_helpers.jit_simulation_epilogue(
-        all_hours_empty,
+        all_lost_hours,
         all_seeds,
         prelude.base_surplus,
         prelude.base_power_production,
@@ -64,7 +65,7 @@ def jit_singlethread_simulation_no_plots(
     config: JitSimulationConfig,
     sim_consts: JitSimulationCachedConsts,
     percentile: int,
-) -> np.uint32:
+) -> np.float64:
     """
     Runs a batched simulation and returns only the unreliability metric for a given percentile.
 
@@ -77,15 +78,16 @@ def jit_singlethread_simulation_no_plots(
 
     prelude = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
-    all_hours_empty = jit_batched_simulation(
+    all_lost_hours = jit_batched_simulation(
         all_seeds,
         prelude.total_hours,
         prelude.base_surplus,
+        prelude.power_consumption,
         prelude.is_working_hour,
         sim_consts,
     )
 
-    return np.percentile(all_hours_empty, percentile)
+    return np.percentile(all_lost_hours, percentile)
 
 
 @njit(cache=True)
@@ -102,7 +104,7 @@ def jit_multithread_simulation(
     """
     prelude = sim_helpers.jit_simulation_prelude(config, sim_consts)
 
-    with objmode(all_seeds="uint32[:]", all_hours_empty="uint32[:]"):
+    with objmode(all_seeds="uint32[:]", all_lost_hours="float64[:]"):
         executor = ThreadPoolExecutor(max_workers=threads)
 
         # Generate seeds for all samples
@@ -116,15 +118,16 @@ def jit_multithread_simulation(
                 seed_chunks,
                 repeat(prelude.total_hours),
                 repeat(prelude.base_surplus),
+                repeat(prelude.power_consumption),
                 repeat(prelude.is_working_hour),
                 repeat(sim_consts),
             )
-            all_hours_empty = np.concatenate([r for r in results])
+            all_lost_hours = np.concatenate([r for r in results])
         finally:
             executor.shutdown()
 
     return sim_helpers.jit_simulation_epilogue(
-        all_hours_empty,
+        all_lost_hours,
         all_seeds,
         prelude.base_surplus,
         prelude.base_power_production,
@@ -139,27 +142,29 @@ def jit_batched_simulation(
     seeds: NDArray[np.uint32],
     total_hours: int,
     base_surplus: NDArray[np.int64],
+    power_consumption: NDArray[np.uint32],
     is_working_hour: NDArray[np.bool_],
     sim_consts: JitSimulationCachedConsts,
-) -> NDArray[np.uint32]:
+) -> NDArray[np.float64]:
     """
     Executes a batch of Monte Carlo simulations and aggregates metrics.
 
     Does NOT store full time-series for every sample to save memory.
-    Returns an array containing the number of empty-battery hours for each seed.
+    Returns an array containing the number of lost working hours for each seed.
     """
     n_samples = len(seeds)
-    hours_empty_results = np.zeros(n_samples, dtype=np.uint32)
+    lost_hours_results = np.zeros(n_samples, dtype=np.float64)
 
     for s in range(n_samples):
-        hours_empty_results[s] = jit_stochastic_simulation_no_sample(
+        lost_hours_results[s] = jit_stochastic_simulation_no_sample(
             seeds[s],
             total_hours,
             base_surplus,
+            power_consumption,
             is_working_hour,
             sim_consts.total_battery_capacity,
             sim_consts.large_windmills,
             sim_consts.windmills,
         )
 
-    return hours_empty_results
+    return lost_hours_results

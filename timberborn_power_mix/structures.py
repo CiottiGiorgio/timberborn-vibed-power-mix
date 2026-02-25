@@ -73,7 +73,7 @@ class AggregatedSamples(NamedTuple):
     """Holds aggregated metrics and consumption profiles collected across all samples in a simulation."""
 
     power_consumption: NDArray[np.uint32]
-    hours_empty_results: NDArray[np.uint32]
+    lost_working_hours_results: NDArray[np.float64]
 
 
 class SimulationResult(NamedTuple):

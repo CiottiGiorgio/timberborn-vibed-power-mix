@@ -36,12 +36,14 @@ def test_jit_stochastic_simulation_no_sample_reproducibility(sample_jit_inputs):
     seed = 12345
     total_hours = 240
     base_surplus = np.random.randint(-500, 500, size=total_hours).astype(np.int64)
+    power_consumption = np.random.randint(0, 1000, size=total_hours).astype(np.uint32)
     is_working_hour = np.ones(total_hours, dtype=np.bool_)
 
     res1 = core.jit_stochastic_simulation_no_sample(
         seed,
         total_hours,
         base_surplus,
+        power_consumption,
         is_working_hour,
         sim_consts.total_battery_capacity,
         sim_consts.large_windmills,
@@ -51,6 +53,7 @@ def test_jit_stochastic_simulation_no_sample_reproducibility(sample_jit_inputs):
         seed,
         total_hours,
         base_surplus,
+        power_consumption,
         is_working_hour,
         sim_consts.total_battery_capacity,
         sim_consts.large_windmills,
@@ -58,7 +61,7 @@ def test_jit_stochastic_simulation_no_sample_reproducibility(sample_jit_inputs):
     )
 
     assert res1 == res2
-    assert isinstance(res1, int)
+    assert isinstance(res1, float)
 
 
 def test_jit_stochastic_simulation_reproducibility(sample_jit_inputs):
@@ -111,13 +114,24 @@ def test_jit_batched_simulation_reproducibility(sample_jit_inputs):
     seeds = np.array([1, 2, 3, 4, 5], dtype=np.uint32)
     total_hours = 240
     base_surplus = np.random.randint(-500, 500, size=total_hours).astype(np.int64)
+    power_consumption = np.random.randint(0, 1000, size=total_hours).astype(np.uint32)
     is_working_hour = np.ones(total_hours, dtype=np.bool_)
 
     res1 = engine.jit_batched_simulation(
-        seeds, total_hours, base_surplus, is_working_hour, sim_consts
+        seeds,
+        total_hours,
+        base_surplus,
+        power_consumption,
+        is_working_hour,
+        sim_consts,
     )
     res2 = engine.jit_batched_simulation(
-        seeds, total_hours, base_surplus, is_working_hour, sim_consts
+        seeds,
+        total_hours,
+        base_surplus,
+        power_consumption,
+        is_working_hour,
+        sim_consts,
     )
 
     np.testing.assert_array_equal(res1, res2)

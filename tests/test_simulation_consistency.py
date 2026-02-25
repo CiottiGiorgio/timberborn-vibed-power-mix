@@ -74,11 +74,11 @@ def test_single_vs_multithread_consistency(simulation_config):
     )
     res_multi = jit_multithread_simulation(jit_config, threads, sim_consts_jit)
 
-    # 1. Check Aggregated Metrics (Hours Empty)
+    # 1. Check Aggregated Metrics (Lost Hours)
     np.testing.assert_array_equal(
-        res_single.aggregated_samples.hours_empty_results,
-        res_multi.aggregated_samples.hours_empty_results,
-        err_msg="Aggregated hours_empty_results differ between single and multi-thread runs",
+        res_single.aggregated_samples.lost_working_hours_results,
+        res_multi.aggregated_samples.lost_working_hours_results,
+        err_msg="Aggregated lost_working_hours_results differ between single and multi-thread runs",
     )
 
     # 2. Check p95 Sample Data
@@ -111,8 +111,8 @@ def test_seed_determinism(simulation_config):
     res2 = run_simulation(simulation_config)
 
     np.testing.assert_array_equal(
-        res1.aggregated_samples.hours_empty_results,
-        res2.aggregated_samples.hours_empty_results,
+        res1.aggregated_samples.lost_working_hours_results,
+        res2.aggregated_samples.lost_working_hours_results,
         err_msg="Simulation is not deterministic across repeated runs",
     )
 
@@ -137,7 +137,9 @@ def test_orchestrator_calls_correct_engine(
         ),
         aggregated_samples=AggregatedSamples(
             power_consumption=np.zeros(total_hours, dtype=np.uint32),
-            hours_empty_results=np.zeros(simulation_config.samples, dtype=np.uint32),
+            lost_working_hours_results=np.zeros(
+                simulation_config.samples, dtype=np.float64
+            ),
         ),
     )
     mock_multi.return_value = dummy_res

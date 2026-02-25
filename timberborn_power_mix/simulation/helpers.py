@@ -203,8 +203,10 @@ def jit_simulation_epilogue(
     )
 
     # Find p95 sample (Second Pass)
-    p95_lost_hours = np.percentile(all_lost_hours, 95)
-    p95_idx = np.where(all_lost_hours >= p95_lost_hours)[0][0]
+    sorted_hours = np.sort(all_lost_hours)
+    p95_idx_in_sorted = int(len(sorted_hours) * 0.95) - 1
+    p95_lost_hours = sorted_hours[p95_idx_in_sorted]
+    p95_idx = np.where(all_lost_hours == p95_lost_hours)[0][0]
     p95_seed = all_seeds[p95_idx]
 
     p95_sample = jit_stochastic_simulation(

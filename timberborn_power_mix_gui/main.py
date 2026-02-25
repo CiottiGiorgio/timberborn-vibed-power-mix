@@ -43,6 +43,7 @@ def main():
     - **Costs**: All building costs (planks, gears, metal blocks, etc.) are converted into an equivalent **raw wood cost** for comparison.
     - **Optimization**: The optimization process runs for **{opt_consts.DEFAULT_MAX_TIME_SECONDS} seconds** and returns the best solution found within that time limit.
     - **Overwrite**: Running an optimization will overwrite your current Energy Mix configuration with the optimal result found.
+    - **Reliability**: The tool optimizes for **productivity loss**, meaning it tries to minimize the percentage of potential work lost due to power shortages.
     """)
 
     # Initialize and update state

@@ -10,7 +10,7 @@ from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
-
+from pymoo.operators.repair.rounding import RoundingRepair
 
 import timberborn_power_mix.simulation.helpers as sim_helpers
 from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
@@ -137,12 +137,12 @@ def run_optimization(
             crossover=SBX(
                 prob=opt_consts.CROSSOVER_PROBABILITY,
                 eta=opt_consts.CROSSOVER_ETA,
-                vtype=float,
+                repair=RoundingRepair(),
             ),
             mutation=PM(
                 prob=opt_consts.MUTATION_PROBABILITY,
                 eta=opt_consts.MUTATION_ETA,
-                vtype=float,
+                repair=RoundingRepair(),
             ),
             eliminate_duplicates=True,
         )

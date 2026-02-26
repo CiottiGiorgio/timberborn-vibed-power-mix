@@ -47,7 +47,7 @@ The optimizer searches for a **Pareto Frontier** of solutions that minimize both
 **Key Parameters:**
 - `--[factory-name] [count]`: Specify the factories you need to power.
 - `--days [count]`: Duration of the simulation cycle.
-- `--max-time [seconds]`: Maximum time to run the optimization (default: 40s).
+- `--max-time [seconds]`: Maximum time to run the optimization (default: 20s).
 
 ## Data Insights
 

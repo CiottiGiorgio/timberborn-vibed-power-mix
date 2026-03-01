@@ -33,7 +33,7 @@ pytest = "*"
 mypy = "*"
 scalene = "^2"
 pre-commit = "^4.5.1"
-poethepoet = "^0.32.2"
+poethepoet = "^0.42.1"
 pip-audit = "^2.10.0"
 
 [build-system]

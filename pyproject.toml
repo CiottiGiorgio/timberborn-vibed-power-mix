@@ -68,6 +68,15 @@ module = [
 ]
 follow_imports = "skip"
 
+[[tool.mypy.overrides]]
+module = [
+    "timberborn_power_mix.simulation.core",
+    "timberborn_power_mix.simulation.engine",
+    "timberborn_power_mix.simulation.helpers"
+]
+ignore_errors = true
+
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true

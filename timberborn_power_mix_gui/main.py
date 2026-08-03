@@ -1,26 +1,25 @@
 import streamlit as st
 
 from timberborn_power_mix.machines import (
-    ProducerName,
     BatteryName,
+    ProducerName,
 )
-from timberborn_power_mix.simulation import consts as sim_consts
-from timberborn_power_mix.optimization import consts as opt_consts
-from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
-from timberborn_power_mix.optimization.models import OptimizationConfig
 from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.optimization import consts as opt_consts
+from timberborn_power_mix.optimization.engine import run_optimization
+from timberborn_power_mix.optimization.models import OptimizationConfig
+from timberborn_power_mix.simulation import consts as sim_consts
+from timberborn_power_mix.simulation.models import EnergyMixConfig, SimulationConfig
+from timberborn_power_mix.simulation.orchestrator import run_simulation
 from timberborn_power_mix.structures import (
     CommonConfigName,
     OptimizeConfigName,
     Percentile,
 )
-from timberborn_power_mix.simulation.orchestrator import run_simulation
-from timberborn_power_mix.optimization.engine import run_optimization
-
-from timberborn_power_mix_gui.state import init_session_state, update_inputs_from_state
+from timberborn_power_mix_gui.components.results import render_results
 from timberborn_power_mix_gui.components.sidebar import render_sidebar
 from timberborn_power_mix_gui.components.templates import render_template_button
-from timberborn_power_mix_gui.components.results import render_results
+from timberborn_power_mix_gui.state import init_session_state, update_inputs_from_state
 
 
 def main():

@@ -1,5 +1,6 @@
 import streamlit as st
-from timberborn_power_mix.machines import ProducerName, FactoryName
+
+from timberborn_power_mix.machines import FactoryName, ProducerName
 
 
 def init_session_state():

@@ -1,15 +1,18 @@
-import click
 import logging
-from typing import Any, Callable, TypeVar
-from timberborn_power_mix.simulation import consts as sim_consts
+from collections.abc import Callable
+from typing import Any, TypeVar
+
+import click
+
+from timberborn_power_mix.machines import BatteryName, FactoryName, ProducerName
+from timberborn_power_mix.models import CommonConfig, FactoryConfig
 from timberborn_power_mix.optimization import consts as opt_consts
-from timberborn_power_mix.machines import FactoryName, ProducerName, BatteryName
+from timberborn_power_mix.optimization.models import OptimizationConfig
+from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
 )
-from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.models import CommonConfig, FactoryConfig
 from timberborn_power_mix.structures import (
     CommonConfigName,
     OptimizeConfigName,
@@ -19,7 +22,7 @@ from timberborn_power_mix.structures import (
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def add_common_params(func: F) -> F:
+def add_common_params[F: Callable[..., Any]](func: F) -> F:
     """Decorator to add common simulation parameters to a click command."""
 
     for name in reversed(FactoryName):
@@ -77,7 +80,7 @@ def add_common_params(func: F) -> F:
     return func
 
 
-def add_energy_mix_params(func: F) -> F:
+def add_energy_mix_params[F: Callable[..., Any]](func: F) -> F:
     """Decorator to add energy mix parameters (for simulate command)."""
 
     # Producers

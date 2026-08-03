@@ -1,7 +1,8 @@
 from typing import Any, cast
+
 import numpy as np
+from matplotlib import ticker
 from matplotlib.axes import Axes
-import matplotlib.ticker as ticker
 
 
 def plot_empty_hours_percentage(
@@ -27,7 +28,7 @@ def plot_empty_hours_percentage(
             bins = np.arange(0, max_val + 2, 1, dtype=float)
 
         # Plot the histogram
-        n_raw, bins_out, patches_raw = ax.hist(
+        n_raw, _bins_out, patches_raw = ax.hist(
             run_lost_percentages,
             bins=cast(Any, bins),
             color="red",
@@ -105,9 +106,12 @@ def plot_empty_hours_percentage(
                 fontsize=9,
                 verticalalignment="top",
                 horizontalalignment="right",
-                bbox=dict(
-                    boxstyle="round", facecolor="white", alpha=0.8, edgecolor="gray"
-                ),
+                bbox={
+                    "boxstyle": "round",
+                    "facecolor": "white",
+                    "alpha": 0.8,
+                    "edgecolor": "gray",
+                },
             )
 
     ax.set_title("Distribution of productivity loss")

@@ -1,4 +1,5 @@
 import streamlit as st
+
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 
 

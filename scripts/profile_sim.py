@@ -1,20 +1,21 @@
 import logging
 
 from scalene import scalene_profiler
-from timberborn_power_mix.simulation.orchestrator import run_simulation
-from timberborn_power_mix.simulation.models import (
-    SimulationConfig,
-    EnergyMixConfig,
-)
-from timberborn_power_mix.models import FactoryConfig
+
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
     PRODUCER_DATABASE,
+    BatteryName,
     FactoryName,
     ProducerName,
-    BatteryName,
 )
+from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.simulation import consts as sim_consts
+from timberborn_power_mix.simulation.models import (
+    EnergyMixConfig,
+    SimulationConfig,
+)
+from timberborn_power_mix.simulation.orchestrator import run_simulation
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,12 +25,12 @@ def run_profiled_simulation():
     # Configuration based on 'simulate-simple' run configuration:
     # --lumber-mills 1 --wood-workshops 1 --windmills 4 --battery-heights 10
 
-    factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
+    factory_data = {key: 0 for key in FACTORY_DATABASE}
     factory_data[FactoryName.LUMBER_MILLS] = 1
     factory_data[FactoryName.WOOD_WORKSHOPS] = 1
     factories = FactoryConfig(**factory_data)
 
-    energy_data = {key: 0 for key in PRODUCER_DATABASE.keys()}
+    energy_data = {key: 0 for key in PRODUCER_DATABASE}
     energy_data[BatteryName.BATTERY_HEIGHTS] = [10]
     energy_data[ProducerName.WINDMILLS] = 4
     energy_mix = EnergyMixConfig(**energy_data)

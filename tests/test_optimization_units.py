@@ -1,16 +1,17 @@
 import numpy as np
 import pytest
+
+from timberborn_power_mix.machines import FACTORY_DATABASE, BatteryName
+from timberborn_power_mix.models import FactoryConfig
 from timberborn_power_mix.optimization import engine
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.machines import FACTORY_DATABASE, BatteryName
 from timberborn_power_mix.simulation.models import EnergyMixConfig
 from timberborn_power_mix.structures import Percentile
 
 
 @pytest.fixture
 def opt_config():
-    factories_data = {key.value: 0 for key in FACTORY_DATABASE.keys()}
+    factories_data = {key.value: 0 for key in FACTORY_DATABASE}
     factories_data["lumber_mills"] = 1
     factories = FactoryConfig(**factories_data)
 

@@ -1,32 +1,30 @@
-from typing import Tuple, List
-
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit
+from numpy.typing import NDArray
 
-from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.machines import (
-    PRODUCER_DATABASE,
     FACTORY_DATABASE,
-    ProducerName,
+    PRODUCER_DATABASE,
     BatteryName,
+    ProducerName,
     battery_capacity,
 )
+from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.simulation.core import jit_stochastic_simulation
 from timberborn_power_mix.simulation.models import (
     EnergyMixConfig,
     SimulationConfig,
 )
 from timberborn_power_mix.structures import (
-    ProducerGroup,
+    AggregatedSamples,
+    CommonConfigName,
     JitSimulationCachedConsts,
     JitSimulationConfig,
-    SimulationResult,
-    AggregatedSamples,
     JitSimulationPrelude,
+    ProducerGroup,
+    SimulationResult,
 )
-from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.structures import CommonConfigName
 
 
 def calculate_total_battery_capacity(energy_mix: EnergyMixConfig) -> int:
@@ -82,7 +80,7 @@ def calculate_jit_cached_consts(
 
 def calculate_season_boundaries(
     config: SimulationConfig,
-) -> List[Tuple[int, str]]:
+) -> list[tuple[int, str]]:
     """
     Determines the start hour and name of each season in the simulation timeline.
 

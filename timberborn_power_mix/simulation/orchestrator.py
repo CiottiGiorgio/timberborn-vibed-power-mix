@@ -2,7 +2,7 @@ import logging
 
 from matplotlib import pyplot as plt
 
-from timberborn_power_mix import helpers as helpers
+from timberborn_power_mix import helpers
 from timberborn_power_mix.plots.canvas import create_simulation_figure
 from timberborn_power_mix.simulation import helpers as sim_helpers
 from timberborn_power_mix.simulation.engine import (

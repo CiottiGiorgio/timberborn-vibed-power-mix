@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
-from timberborn_power_mix.simulation import core, helpers, engine
+
+from timberborn_power_mix.simulation import core, engine, helpers
 from timberborn_power_mix.structures import (
-    ProducerGroup,
-    JitSimulationConfig,
     JitSimulationCachedConsts,
+    JitSimulationConfig,
+    ProducerGroup,
 )
 
 

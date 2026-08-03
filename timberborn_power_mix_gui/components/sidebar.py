@@ -1,6 +1,7 @@
 import streamlit as st
-from timberborn_power_mix.simulation import consts as sim_consts
+
 from timberborn_power_mix.machines import FactoryName, ProducerName
+from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.structures import CommonConfigName
 
 

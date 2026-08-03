@@ -2,8 +2,10 @@ import matplotlib
 
 matplotlib.use("agg")
 import os
+
 import pytest
 from matplotlib.testing.compare import compare_images
+
 from tests.helpers import generate_reference_figure, generate_reference_simulation_data
 from timberborn_power_mix.optimization.helpers import calculate_total_wood_cost
 

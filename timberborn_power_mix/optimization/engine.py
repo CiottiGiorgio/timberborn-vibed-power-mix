@@ -1,29 +1,29 @@
 import logging
-import numpy as np
-from typing import Dict, Any
 from concurrent.futures.thread import ThreadPoolExecutor
+from typing import Any
 
-from pymoo.core.problem import ElementwiseProblem
+import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.operators.sampling.rnd import IntegerRandomSampling
+from pymoo.core.problem import ElementwiseProblem
 from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
+from pymoo.operators.repair.rounding import RoundingRepair
+from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
-from pymoo.operators.repair.rounding import RoundingRepair
 
+import timberborn_power_mix.optimization.helpers as opt_helpers
 import timberborn_power_mix.simulation.helpers as sim_helpers
-from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
+from timberborn_power_mix import helpers
+from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
+from timberborn_power_mix.optimization import consts as opt_consts
 from timberborn_power_mix.optimization.models import OptimizationConfig
+from timberborn_power_mix.optimization.structures import OptimizationResult
 from timberborn_power_mix.simulation.engine import (
     jit_singlethread_simulation_no_plots,
 )
-from timberborn_power_mix.machines import PRODUCER_DATABASE, BatteryName
-from timberborn_power_mix import helpers
-import timberborn_power_mix.optimization.helpers as opt_helpers
-from timberborn_power_mix.optimization import consts as opt_consts
+from timberborn_power_mix.simulation.models import EnergyMixConfig, SimulationConfig
 from timberborn_power_mix.structures import CommonConfigName, OptimizeConfigName
-from timberborn_power_mix.optimization.structures import OptimizationResult
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class PowerMixProblem(ElementwiseProblem):
 
     def _decision_vector_to_mix(self, decision_vector: np.ndarray) -> EnergyMixConfig:
         """Converts a decision vector into an EnergyMixConfig."""
-        mix_data: Dict[str, Any] = {}
+        mix_data: dict[str, Any] = {}
         for i, producer in enumerate(self.producers):
             mix_data[producer.value] = int(decision_vector[i])
 
@@ -80,7 +80,7 @@ class PowerMixProblem(ElementwiseProblem):
     def _evaluate(
         self,
         decision_vector: np.ndarray,
-        out: Dict[str, Any],
+        out: dict[str, Any],
         *args: Any,
         **kwargs: Any,
     ) -> None:

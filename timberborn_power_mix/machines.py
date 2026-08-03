@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import NamedTuple, Dict
+from typing import NamedTuple
 
 
 class MachineSpec(NamedTuple):
@@ -34,7 +34,7 @@ class BatteryName(StrEnum):
 
 
 # Consumers
-FACTORY_DATABASE: Dict[FactoryName, MachineSpec] = {
+FACTORY_DATABASE: dict[FactoryName, MachineSpec] = {
     FactoryName.LUMBER_MILLS: MachineSpec(power=50, cost=0),
     FactoryName.GEAR_WORKSHOPS: MachineSpec(power=120, cost=0),
     FactoryName.STEEL_FACTORIES: MachineSpec(power=200, cost=0),
@@ -50,7 +50,7 @@ FACTORY_DATABASE: Dict[FactoryName, MachineSpec] = {
 }
 
 # Producers
-PRODUCER_DATABASE: Dict[ProducerName, MachineSpec] = {
+PRODUCER_DATABASE: dict[ProducerName, MachineSpec] = {
     ProducerName.WATER_WHEELS: MachineSpec(power=150, cost=50),
     ProducerName.WINDMILLS: MachineSpec(power=150, cost=40),
     ProducerName.LARGE_WINDMILLS: MachineSpec(power=300, cost=75),

@@ -1,6 +1,7 @@
 import numpy as np
-import matplotlib.ticker as ticker
+from matplotlib import ticker
 from matplotlib.axes import Axes
+
 from timberborn_power_mix.simulation import consts as sim_consts
 
 

@@ -1,5 +1,6 @@
-from enum import StrEnum, IntEnum
+from enum import IntEnum, StrEnum
 from typing import NamedTuple
+
 import numpy as np
 from numpy.typing import NDArray
 

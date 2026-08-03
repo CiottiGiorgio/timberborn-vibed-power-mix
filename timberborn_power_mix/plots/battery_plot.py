@@ -1,7 +1,8 @@
-import matplotlib.ticker as ticker
-from matplotlib.axes import Axes
+from collections.abc import Sequence
+
 import numpy as np
-from typing import Sequence
+from matplotlib import ticker
+from matplotlib.axes import Axes
 
 
 def plot_battery(

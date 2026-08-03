@@ -1,9 +1,8 @@
 import os
-from typing import Optional
 
 
 def calculate_optimal_threads(
-    requested_threads: Optional[int], data_cardinality: int
+    requested_threads: int | None, data_cardinality: int
 ) -> int:
     """
     Determines the number of threads to use based on the system, user request,

@@ -1,37 +1,39 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
-from unittest.mock import patch
-from timberborn_power_mix.simulation.models import SimulationConfig, EnergyMixConfig
-from timberborn_power_mix.simulation.engine import (
-    jit_singlethread_simulation,
-    jit_multithread_simulation,
-)
-from timberborn_power_mix.simulation.orchestrator import (
-    simulation_orchestrator,
-    run_simulation,
-)
+
+import timberborn_power_mix.simulation.consts as sim_consts
+import timberborn_power_mix.simulation.helpers as sim_helpers
+from timberborn_power_mix import helpers
 from timberborn_power_mix.machines import (
-    BatteryName,
-    ProducerName,
-    PRODUCER_DATABASE,
     FACTORY_DATABASE,
+    PRODUCER_DATABASE,
+    BatteryName,
     FactoryName,
+    ProducerName,
 )
 from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.simulation.engine import (
+    jit_multithread_simulation,
+    jit_singlethread_simulation,
+)
+from timberborn_power_mix.simulation.models import EnergyMixConfig, SimulationConfig
+from timberborn_power_mix.simulation.orchestrator import (
+    run_simulation,
+    simulation_orchestrator,
+)
 from timberborn_power_mix.structures import (
+    AggregatedSamples,
     SimulationResult,
     SimulationSample,
-    AggregatedSamples,
 )
-import timberborn_power_mix.simulation.helpers as sim_helpers
-import timberborn_power_mix.helpers as helpers
-import timberborn_power_mix.simulation.consts as sim_consts
 
 
 @pytest.fixture
 def simulation_config():
     """Creates a standard simulation configuration for testing."""
-    mix_data: dict[str, int | list[int]] = {key: 0 for key in PRODUCER_DATABASE.keys()}
+    mix_data: dict[str, int | list[int]] = {key: 0 for key in PRODUCER_DATABASE}
     mix_data[ProducerName.WATER_WHEELS] = 5
     mix_data[ProducerName.WINDMILLS] = 5
     mix_data[ProducerName.LARGE_WINDMILLS] = 2
@@ -39,7 +41,7 @@ def simulation_config():
     mix_data[BatteryName.BATTERY_HEIGHTS] = [5, 5, 5]
     energy_mix = EnergyMixConfig(**mix_data)
 
-    factories_data = {key: 0 for key in FACTORY_DATABASE.keys()}
+    factories_data = {key: 0 for key in FACTORY_DATABASE}
     factories_data[FactoryName.LUMBER_MILLS] = 2
     factories = FactoryConfig(**factories_data)
 

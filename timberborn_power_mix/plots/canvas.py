@@ -1,21 +1,21 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.figure import Figure
-from timberborn_power_mix.simulation.models import SimulationConfig
-from timberborn_power_mix.structures import SimulationResult
-from timberborn_power_mix.plots.power_plot import plot_power
-from timberborn_power_mix.plots.energy_plot import plot_energy
-from timberborn_power_mix.plots.surplus_plot import plot_surplus
+
+from timberborn_power_mix.machines import BatteryName, ProducerName
+from timberborn_power_mix.optimization.helpers import calculate_total_wood_cost
 from timberborn_power_mix.plots.battery_plot import plot_battery
 from timberborn_power_mix.plots.empty_hours_plot import plot_empty_hours_percentage
+from timberborn_power_mix.plots.energy_plot import plot_energy
+from timberborn_power_mix.plots.power_plot import plot_power
+from timberborn_power_mix.plots.surplus_plot import plot_surplus
 from timberborn_power_mix.simulation import consts as sim_consts
-from timberborn_power_mix.optimization.helpers import calculate_total_wood_cost
 from timberborn_power_mix.simulation.helpers import (
-    calculate_total_battery_capacity,
     calculate_season_boundaries,
+    calculate_total_battery_capacity,
 )
-from timberborn_power_mix.machines import ProducerName, BatteryName
-from timberborn_power_mix.structures import CommonConfigName
+from timberborn_power_mix.simulation.models import SimulationConfig
+from timberborn_power_mix.structures import CommonConfigName, SimulationResult
 
 
 def create_simulation_figure(config: SimulationConfig, res: SimulationResult) -> Figure:
@@ -97,7 +97,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
         mix_info,
         fontsize=10,
         verticalalignment="top",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
 
     # Add Simulation Info Box
@@ -119,7 +119,7 @@ def create_simulation_figure(config: SimulationConfig, res: SimulationResult) ->
         fontsize=10,
         verticalalignment="top",
         horizontalalignment="right",
-        bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "lightblue", "alpha": 0.5},
     )
 
     # Add Disclaimer about p95 Case

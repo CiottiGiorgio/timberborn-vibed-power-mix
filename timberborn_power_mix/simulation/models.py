@@ -1,15 +1,14 @@
-from typing import List
-from pydantic import create_model, BaseModel
+from pydantic import BaseModel, create_model
 
 from timberborn_power_mix.machines import (
-    BatteryName,
     PRODUCER_DATABASE,
+    BatteryName,
 )
 from timberborn_power_mix.models import CommonConfig
 from timberborn_power_mix.structures import (
     CommonConfigName,
-    SimulateConfigName,
     JitSimulationConfig,
+    SimulateConfigName,
 )
 
 """
@@ -40,8 +39,8 @@ class SimulationConfig(BaseModel):
 
 EnergyMixConfig = create_model(
     "EnergyMixConfig",
-    **{BatteryName.BATTERY_HEIGHTS.value: List[int]},
-    **{key.value: int for key in PRODUCER_DATABASE.keys()},
+    **{BatteryName.BATTERY_HEIGHTS.value: list[int]},
+    **{key.value: int for key in PRODUCER_DATABASE},
 )
 
 

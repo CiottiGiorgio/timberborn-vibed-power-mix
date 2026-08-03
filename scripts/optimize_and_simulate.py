@@ -1,16 +1,17 @@
 import logging
+
+from timberborn_power_mix.machines import FACTORY_DATABASE
+from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.optimization import consts as opt_consts
 from timberborn_power_mix.optimization.engine import run_optimization
 from timberborn_power_mix.optimization.models import OptimizationConfig
-from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
+from timberborn_power_mix.simulation import consts as sim_consts
 from timberborn_power_mix.simulation.models import SimulationConfig
-from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.simulation.orchestrator import simulation_orchestrator
 from timberborn_power_mix.structures import (
     OptimizeConfigName,
     Percentile,
 )
-from timberborn_power_mix.simulation import consts as sim_consts
-from timberborn_power_mix.optimization import consts as opt_consts
-from timberborn_power_mix.machines import FACTORY_DATABASE
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def main():
     # 1. Define Factory Configuration
     # Initialize all factories to 0, then set specific ones
-    factory_data = {name.value: 0 for name in FACTORY_DATABASE.keys()}
+    factory_data = {name.value: 0 for name in FACTORY_DATABASE}
     factory_data["lumber_mills"] = 1
     factory_data["wood_workshops"] = 1
 

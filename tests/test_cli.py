@@ -1,6 +1,8 @@
-from click.testing import CliRunner
-from timberborn_power_mix.cli import cli
 from unittest.mock import patch
+
+from click.testing import CliRunner
+
+from timberborn_power_mix.cli import cli
 
 
 def test_simulate_no_options():

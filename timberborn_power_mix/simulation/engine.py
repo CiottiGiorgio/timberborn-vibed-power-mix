@@ -1,19 +1,19 @@
+import warnings
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-import warnings
 
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit, objmode
 from numba.core.errors import NumbaWarning
+from numpy.typing import NDArray
 
+import timberborn_power_mix.simulation.helpers as sim_helpers
 from timberborn_power_mix.simulation.core import jit_stochastic_simulation_no_sample
 from timberborn_power_mix.structures import (
-    JitSimulationConfig,
     JitSimulationCachedConsts,
+    JitSimulationConfig,
     SimulationResult,
 )
-import timberborn_power_mix.simulation.helpers as sim_helpers
 
 # Suppress NumbaWarning about objmode usage in nogil functions
 warnings.filterwarnings(

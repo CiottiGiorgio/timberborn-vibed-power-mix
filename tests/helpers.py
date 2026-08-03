@@ -1,10 +1,4 @@
-from timberborn_power_mix.simulation.models import (
-    SimulationConfig,
-    EnergyMixConfig,
-)
-from timberborn_power_mix.models import FactoryConfig
-from timberborn_power_mix.simulation.orchestrator import run_simulation
-from timberborn_power_mix.plots.canvas import create_simulation_figure
+from tests import consts
 from timberborn_power_mix.machines import (
     FACTORY_DATABASE,
     PRODUCER_DATABASE,
@@ -12,7 +6,13 @@ from timberborn_power_mix.machines import (
     FactoryName,
     ProducerName,
 )
-from tests import consts
+from timberborn_power_mix.models import FactoryConfig
+from timberborn_power_mix.plots.canvas import create_simulation_figure
+from timberborn_power_mix.simulation.models import (
+    EnergyMixConfig,
+    SimulationConfig,
+)
+from timberborn_power_mix.simulation.orchestrator import run_simulation
 
 
 def generate_reference_simulation_data():
@@ -21,12 +21,12 @@ def generate_reference_simulation_data():
     """
     # 1. Setup parameters
     # We must provide all fields because the models don't have defaults
-    factory_data = {key: 0 for key in FACTORY_DATABASE.keys()}
+    factory_data = {key: 0 for key in FACTORY_DATABASE}
     factory_data[FactoryName.LUMBER_MILLS] = 1
     factory_data[FactoryName.WOOD_WORKSHOPS] = 1
     factories = FactoryConfig(**factory_data)
 
-    energy_data = {key: 0 for key in PRODUCER_DATABASE.keys()}
+    energy_data = {key: 0 for key in PRODUCER_DATABASE}
     energy_data[BatteryName.BATTERY_HEIGHTS] = [1]
     energy_data[ProducerName.WINDMILLS] = 4
     energy_mix = EnergyMixConfig(**energy_data)

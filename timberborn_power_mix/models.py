@@ -1,6 +1,5 @@
-from typing import Optional
-
 from pydantic import create_model
+
 from timberborn_power_mix.machines import FACTORY_DATABASE
 from timberborn_power_mix.structures import CommonConfigName
 
@@ -30,13 +29,13 @@ class CommonConfig(BaseModel):
 
 
 FactoryConfig = create_model(
-    "FactoryConfig", **{key.value: int for key in FACTORY_DATABASE.keys()}
+    "FactoryConfig", **{key.value: int for key in FACTORY_DATABASE}
 )
 
 CommonConfig = create_model(
     "CommonConfig",
-    **{CommonConfigName.SEED.value: (Optional[int], None)},
-    **{CommonConfigName.THREADS.value: (Optional[int], None)},
+    **{CommonConfigName.SEED.value: (int | None, None)},
+    **{CommonConfigName.THREADS.value: (int | None, None)},
     **{CommonConfigName.SAMPLES.value: int},
     **{CommonConfigName.DAYS.value: int},
     **{CommonConfigName.WORKING_HOURS.value: int},

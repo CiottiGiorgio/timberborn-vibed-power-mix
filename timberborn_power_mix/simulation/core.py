@@ -1,6 +1,6 @@
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit
+from numpy.typing import NDArray
 
 from timberborn_power_mix.simulation import consts
 from timberborn_power_mix.structures import (
@@ -79,8 +79,7 @@ def jit_stochastic_simulation_no_sample(
                     if consumption > 0:
                         # Productivity loss is the fraction of demand not met
                         loss = deficit / consumption
-                        if loss > 1.0:
-                            loss = 1.0
+                        loss = min(loss, 1.0)
                         lost_working_hours += loss
 
             # Check for battery overflow (full battery)
